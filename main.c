@@ -22,17 +22,19 @@ int main(int argc, char** argv) {
     // Generate the list of file names (example for June, 24 files per day)
     int num_days = 2;
     int num_hours_per_day = 5;
+    char** file_names = generate_file_names(num_days, num_hours_per_day);
+
+    // Calculate total number of files
     int num_files = num_days * num_hours_per_day;
-    char** file_names = (char**)malloc(num_files * sizeof(char*));
-    for (int day = 1; day <= num_days; day++) {
-        for (int hour = 0; hour < num_hours_per_day; hour++) {
-            file_names[(day-1) * num_hours_per_day + hour] = (char*)malloc(30 * sizeof(char));
-            sprintf(file_names[(day-1) * num_hours_per_day + hour], "data/bus_locations_%02d_%02d.txt", day, hour);
-        }
-    }
 
     // Distribute file names among processes
-    distribute_file_names(file_names, num_files, rank, size);
+    char** assigned_files = distribute_file_names(file_names, num_files, rank, size);
+    
+    // Each process reads its assigned files
+    for (int i = 0; assigned_files[i] != NULL; i++) {
+        printf("Process %d reading file %s\n", rank, assigned_files[i]);
+        // read_file_and_process_data(assigned_files[i]);
+    }
 
     // Read and distribute schedule data
     // read_schedule_data_and_distribute(schedule_file, rank, size);
