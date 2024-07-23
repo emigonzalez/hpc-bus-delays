@@ -61,7 +61,7 @@ make
 # To run the code in same machine
 mpirun –np <num> ./main
 # To run the code in multiple machines
-mpirun –np <num> -hosts pcunix40,pcunix42 ./main
+mpirun –np <num> -hosts pcunix140,pcunix142 ./main
 # You can also specify a hosts file
-mpirun -np <num> --hostfile <file> ./main
+mpirun -np <num> --hostfile hosts-file.txt ./main
 ```
