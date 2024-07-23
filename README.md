@@ -1,6 +1,6 @@
 # HPC parallel programming in C using MPI
 ## Bus delays
-The idea is to calculate the delay of the buses in my city within a specific month. We have a big file that captured the bus location (latitude, longitude) of the whole month every 20 seconds. We also have a file with the bus schedule by stop. We have to map the coordinates of the bus location with the stops and the expected arrival time. The delay calculation is already done in python so no need to consider that. 
+The idea is to calculate the delay of the buses in Montevideo within a the month of June 2024. Every hour, CSV files were generated capturing the bus locations (latitude, longitude) of the whole month every 20 seconds. There's also a file with the bus schedule by stop. The delay calculation is done in Python by using QGIS buffer and closest neighbours algortihm.
 
 The main idea is:
  1) Split bus location file between processes.
