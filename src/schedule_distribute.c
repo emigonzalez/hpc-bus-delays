@@ -65,4 +65,6 @@ void read_schedule_data_and_distribute(char* schedule_filename, int rank, int si
         }
         free(schedule_data);
     }
+
+    return;
 }

@@ -17,17 +17,17 @@ int main(int argc, char** argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     // File names and schedule file
-    char* schedule_file = "bus_schedules.csv";
+    // char* schedule_file = "data/bus_schedules.csv";
 
     // Generate the list of file names (example for June, 24 files per day)
-    int num_days = 30;
-    int num_hours_per_day = 24;
+    int num_days = 2;
+    int num_hours_per_day = 5;
     int num_files = num_days * num_hours_per_day;
     char** file_names = (char**)malloc(num_files * sizeof(char*));
     for (int day = 1; day <= num_days; day++) {
         for (int hour = 0; hour < num_hours_per_day; hour++) {
             file_names[(day-1) * num_hours_per_day + hour] = (char*)malloc(30 * sizeof(char));
-            sprintf(file_names[(day-1) * num_hours_per_day + hour], "bus_locations_%02d_%02d.txt", day, hour);
+            sprintf(file_names[(day-1) * num_hours_per_day + hour], "data/bus_locations_%02d_%02d.txt", day, hour);
         }
     }
 
@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
     distribute_file_names(file_names, num_files, rank, size);
 
     // Read and distribute schedule data
-    read_schedule_data_and_distribute(schedule_file, rank, size);
+    // read_schedule_data_and_distribute(schedule_file, rank, size);
 
     // Group data by bus number, time, and day of month/type of day
     group_data_by_bus_and_time();

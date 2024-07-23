@@ -4,5 +4,5 @@
 #include "data_grouping.h"
 
 void map_locations_to_schedules() {
-    return 0;
+    return;
 }

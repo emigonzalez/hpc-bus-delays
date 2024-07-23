@@ -4,5 +4,5 @@
 #include "delay_calculation.h"
 
 void calculate_delays() {
-    return 0;
+    return;
 }
