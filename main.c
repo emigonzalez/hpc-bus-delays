@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     // File names and schedule file
-    // char* schedule_file = "data/bus_schedules.csv";
+    char* schedule_file = "data/bus_schedules.csv";
 
     // Generate the list of file names (example for June, 24 files per day)
     int num_days = 2;
@@ -29,15 +29,18 @@ int main(int argc, char** argv) {
 
     // Distribute file names among processes
     char** assigned_files = distribute_file_names(file_names, num_files, rank, size);
-    
-    // Each process reads its assigned files
+
+    printf("BUS LOCATIONS \n");
+    // Each process reads its assigned location files
     for (int i = 0; assigned_files[i] != NULL; i++) {
         printf("Process %d reading file %s\n", rank, assigned_files[i]);
         // read_file_and_process_data(assigned_files[i]);
     }
 
-    // Read and distribute schedule data
-    // read_schedule_data_and_distribute(schedule_file, rank, size);
+    printf("BUS SCHEDULES \n");
+    // Each process reads the entire schedule file
+    printf("Process %d reading schedule file %s\n", rank, schedule_file);
+    read_schedule_data(schedule_file, rank);
 
     // Group data by bus number, time, and day of month/type of day
     group_data_by_bus_and_time();
