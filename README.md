@@ -5,8 +5,8 @@ The idea is to calculate the delay of the buses in Montevideo within a the month
 The main idea is:
  1) Split bus location file between processes.
  2) Share the bus schedules file between processes.
- 3) Group locations by **#bus, scheduled time and day of month**.
- 4) Group schedules by **#bus, scheduled time and day type**: weekday, saturday or sunday.
+ 3) Group locations by **#bus, scheduled time and day of month** called VFD.
+ 4) Group schedules by **#bus, scheduled time and day type**: weekday, saturday or sunday. It's called VFT
  5) Map grouped locations with grouped schedules and send it to the black box algorithm that calculates the delay.
  6) Gather the results and store them in a file.
 
@@ -30,8 +30,8 @@ Given that the bus location data is divided into multiple files (one per hour pe
    - Broadcast the bus schedule file to all processes.
 
 5. **Data Grouping**:
-   - Group the loaded location data by bus number, scheduled time, and day of the month.
-   - Group the schedule data by bus number, scheduled time, and type of day (weekday, Saturday, Sunday).
+   - Group the loaded location data by bus variant, scheduled time, and day of the month.
+   - Group the schedule data by bus variant, scheduled time, and type of day (weekday, Saturday, Sunday).
 
 6. **Mapping Locations to Schedules**:
    - Each process maps its grouped location data to the grouped schedule data.

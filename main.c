@@ -1,6 +1,7 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
 
 #include "file_distribute.h"
 #include "schedule_distribute.h"
@@ -9,6 +10,15 @@
 #include "delay_calculation.h"
 #include "result_gathering.h"
 
+#define NUM_DAYS 30
+#define NUM_HOURS_PER_DAY 24
+
+char** file_names = NULL;
+char** assigned_files = NULL;
+
+void handle_signal(int signal);
+void free_memory();
+
 int main(int argc, char** argv) {
     MPI_Init(&argc, &argv);
 
@@ -16,19 +26,24 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
+    // Error handling setup
+    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+
+    // Register signal handler
+    signal(SIGINT, handle_signal);  // Handle Ctrl+C (interrupt signal)
+    signal(SIGTERM, handle_signal); // Handle termination signal
+
     // File names and schedule file
     char* schedule_file = "data/bus_schedules.csv";
 
     // Generate the list of file names (example for June, 24 files per day)
-    int num_days = 2;
-    int num_hours_per_day = 5;
-    char** file_names = generate_file_names(num_days, num_hours_per_day);
+    file_names = generate_file_names(NUM_DAYS, NUM_HOURS_PER_DAY);
 
     // Calculate total number of files
-    int num_files = num_days * num_hours_per_day;
+    int num_files = NUM_DAYS * NUM_HOURS_PER_DAY;
 
     // Distribute file names among processes
-    char** assigned_files = distribute_file_names(file_names, num_files, rank, size);
+    assigned_files = distribute_file_names(file_names, num_files, rank, size);
 
     printf("BUS LOCATIONS \n");
     // Each process reads its assigned location files
@@ -42,7 +57,7 @@ int main(int argc, char** argv) {
     printf("Process %d reading schedule file %s\n", rank, schedule_file);
     read_schedule_data(schedule_file, rank);
 
-    // Group data by bus number, time, and day of month/type of day
+    // Group data by bus variant, time, and day of month/type of day
     group_data_by_bus_and_time();
 
     // Map grouped locations to grouped schedules
@@ -62,4 +77,33 @@ int main(int argc, char** argv) {
 
     MPI_Finalize();
     return 0;
+}
+
+void free_memory() {
+    // Perform any necessary cleanup here
+    if (file_names != NULL) {
+        for (int i = 0; i < NUM_DAYS * NUM_HOURS_PER_DAY; i++) {
+            free(file_names[i]);
+        }
+        free(file_names);
+    }
+
+    if (assigned_files != NULL) {
+        for (int i = 0; assigned_files[i] != NULL; i++) {
+            free(assigned_files[i]);
+        }
+        free(assigned_files);
+    }
+}
+
+void handle_signal(int signal) {
+    printf("Received signal %d, performing cleanup...\n", signal);
+
+    // Perform any necessary cleanup
+    free_memory();
+
+    MPI_Finalize();
+
+    printf("Cleanup done, exiting...\n");
+    exit(EXIT_SUCCESS);
 }
