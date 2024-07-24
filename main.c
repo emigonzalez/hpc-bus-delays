@@ -70,10 +70,7 @@ int main(int argc, char** argv) {
     gather_results();
 
     // Free allocated memory
-    for (int i = 0; i < num_files; i++) {
-        free(file_names[i]);
-    }
-    free(file_names);
+    free_memory();
 
     MPI_Finalize();
     return 0;
