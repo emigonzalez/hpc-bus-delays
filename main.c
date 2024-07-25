@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
     read_schedule_data(schedule_file, rank);
 
     // Group data by bus variant, time, and day of month/type of day
-    group_data_by_bus_and_time();
+    group_data_by_bus_and_time(assigned_files);
 
     // Map grouped locations to grouped schedules
     map_locations_to_schedules();
@@ -96,7 +96,7 @@ void free_memory() {
 void handle_signal(int signal) {
     printf("Received signal %d, performing cleanup...\n", signal);
 
-    // Perform any necessary cleanup
+    // Perform cleanup
     free_memory();
 
     MPI_Finalize();
