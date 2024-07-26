@@ -7,7 +7,8 @@
 #include <string.h>
 #include <time.h>
 
-// #include "data_grouping.h"
+#include "data_grouping.h"
+#include "date_to_day_type.h"
 
 /** TODO
  * Al agrupar por vfd, conseguir vft.
@@ -121,13 +122,34 @@ void add_to_group(const char* key, const char* row) {
     groups[group_count++] = new_group;
 }
 
-void parse_date_and_create_key(char* date_str, const char* variante, const char* frecuencia, char* key) {
+void create_vfd(char* date_str, const char* variante, const char* frecuencia, char* key) {
     // Extract the date (yyyy-mm-dd) from the date string
     char date[11]; // yyyy-mm-dd is 10 characters + null terminator    
     ajustar_fecha(date_str, frecuencia, date);
 
     // Create the key in the format variante_frecuencia_yyyy-mm-dd
     sprintf(key, "%s_%s_%s", variante, frecuencia, date);
+}
+
+void create_vft(char* fecha, const char* variante, const char* frecuencia, char* key) {
+    // Split fecha into date and time
+    char date_part[11];
+    char time_part[6]; // HH:MM without seconds
+    sscanf(fecha, "%10s %5s", date_part, time_part);
+    char day[3];
+    char month[3];
+    char year[5];
+    sscanf(date_part, "%4s-%2s-%2s", year, month, day);
+
+    int day_type = 0;
+    if (atoi(year) == 2024 && atoi(month) == 6 && atoi(day) == 19) {
+        day_type = 3;
+    } else {
+        day_type = day_to_date_type(date_part);
+    }
+
+    // Create the key in the format variante_frecuencia_daytype
+    sprintf(key, "%s_%s_%d", variante, frecuencia, day_type);
 }
 
 void group_data_by_bus_and_time(char** assigned_files) {
@@ -173,7 +195,7 @@ void group_data_by_bus_and_time(char** assigned_files) {
 
             // Create the group key
             char key[50];
-            parse_date_and_create_key(fecha, variante, frecuencia, key);
+            create_vfd(fecha, variante, frecuencia, key);
 
             printf("%s.%s \n", key, fecha);
 
