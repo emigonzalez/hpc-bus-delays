@@ -1,10 +1,13 @@
+#define _XOPEN_SOURCE 700 // to suppress warning about strptime
+#define MAX_LINE_LENGTH 1024
+#define MAX_GROUPS 10000
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-// #include "data_grouping.h"
+#include <time.h>
 
-#define MAX_LINE_LENGTH 1024
-#define MAX_GROUPS 10000
+// #include "data_grouping.h"
 
 /** TODO
  * Al agrupar por vfd, conseguir vft.
@@ -30,6 +33,66 @@ int is_valid_departure_time(const char* frecuencia) {
     int hours = atoi(strndup(frecuencia, len - 3)); // Remaining digits for hours
 
     return (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59);
+}
+
+// Function to convert frecuencia to minutes
+int convertir_a_minutos(const char* frecuencia) {
+    // Extract hours and minutes from the padded string
+    int frecuencia_number = atoi(frecuencia) / 10;
+    int horas = frecuencia_number / 100;
+    int minutos = frecuencia_number % 100;
+
+    // printf("Frecuencia: %d, hora: %d in minutes: %d\n", frecuencia_number, horas, minutos);
+
+    // Convert hours to minutes and add minutes
+    int total_minutos = (horas * 60) + minutos;
+
+    return total_minutos;
+}
+
+void time_to_frecuencia(const char* time, char* resultado) {
+    // Remove colon (:) from the time part
+    char time_without_colon[5]; // HHMM + null terminator
+    snprintf(time_without_colon, sizeof(time_without_colon), "%c%c%c%c",
+             time[0], time[1], time[3], time[4]);
+
+    // Add a 0 at the end of time string without colon
+    strcat(time_without_colon, "0");
+    strcpy(resultado, time_without_colon);
+}
+
+// Function to adjust the date based on time and frequency
+void ajustar_fecha(const char* fecha, const char* frecuencia, char* resultado) {
+    // Split fecha into date and time
+    char date_part[11];
+    char time_part[6]; // HH:MM without seconds
+    sscanf(fecha, "%10s %5s", date_part, time_part);
+
+    char time_frecuencia[6];
+    time_to_frecuencia(time_part, time_frecuencia);
+
+    int time_number = convertir_a_minutos(time_frecuencia);
+    int frecuencia_number = convertir_a_minutos(frecuencia);
+
+    // printf("FECHA: %s, FRECUENCIA: %s, TIMEN: %d, FN: %d \n", fecha, frecuencia, time_number, frecuencia_number);
+
+    // If time_number is less than frecuencia_number, subtract a day from the date
+    if (frecuencia_number - time_number > 20) {
+        struct tm tm_date;
+        memset(&tm_date, 0, sizeof(struct tm));
+        strptime(date_part, "%Y-%m-%d", &tm_date);
+
+        // Subtract one day
+        time_t t = mktime(&tm_date);
+        t -= 86400; // Subtract one day in seconds
+        struct tm* new_tm_date = localtime(&t);
+
+        // Format new date back to string
+        strftime(resultado, 11, "%Y-%m-%d", new_tm_date);
+    } else {
+        // If no adjustment needed, return the original date
+        strcpy(resultado, date_part);
+    }
 }
 
 void add_to_group(const char* key, const char* row) {
@@ -59,9 +122,8 @@ void add_to_group(const char* key, const char* row) {
 
 void parse_date_and_create_key(char* date_str, char* key, const char* variante, const char* frecuencia) {
     // Extract the date (yyyy-mm-dd) from the date string
-    char date[11]; // yyyy-mm-dd is 10 characters + null terminator
-    strncpy(date, date_str, 10);
-    date[10] = '\0';
+    char date[11]; // yyyy-mm-dd is 10 characters + null terminator    
+    ajustar_fecha(date_str, frecuencia, date);
 
     // Create the key in the format variante_frecuencia_yyyy-mm-dd
     sprintf(key, "%s_%s_%s", variante, frecuencia, date);
@@ -103,7 +165,7 @@ void group_data_by_bus_and_time(char** assigned_files) {
 
             // Check if latitud or longitud is 0
             if (strcmp(latitud, "0") == 0 || strcmp(longitud, "0") == 0 || !is_valid_departure_time(frecuencia)) {
-                printf("VARIANTE: %s. frecuencia: %s LATITUD: %s. LONGITUD: %s. \n", variante, frecuencia, latitud, longitud);
+                // printf("VARIANTE: %s. frecuencia: %s LATITUD: %s. LONGITUD: %s. \n", variante, frecuencia, latitud, longitud);
                 free(line_copy); // Free the copy if the row is skipped
                 continue; // Skip this row
             }
@@ -111,6 +173,8 @@ void group_data_by_bus_and_time(char** assigned_files) {
             // Create the group key
             char key[50];
             parse_date_and_create_key(fecha, key, variante, frecuencia);
+
+            printf("VFD: %s. FECHA: %s \n", key, fecha);
 
             // Add the row to the corresponding group
             add_to_group(key, line);
@@ -121,12 +185,12 @@ void group_data_by_bus_and_time(char** assigned_files) {
     }
 
     // Example: Print grouped data
-    for (int i = 0; i < group_count; i++) {
-        printf("Group: %s\n", groups[i]->key);
-        for (int j = 0; j < groups[i]->row_count; j++) {
-            printf("  %s", groups[i]->rows[j]); // Print the entire row as it was read
-        }
-    }
+    // for (int i = 0; i < group_count; i++) {
+    //     printf("VFD: %s\n", groups[i]->key);
+    //     for (int j = 0; j < groups[i]->row_count; j++) {
+    //         printf(" %d ", groups[i]->rows[j]); // Print the entire row as it was read
+    //     }
+    // }
 
     // Free allocated memory for groups
     for (int i = 0; i < group_count; i++) {
@@ -139,10 +203,10 @@ void group_data_by_bus_and_time(char** assigned_files) {
     }
 }
 
-// int main() {
-//     char** assigned_files = (char**)malloc(sizeof(char*));
-//     assigned_files[0] = "stm-buses-2024-06-09_09.csv";
+int main() {
+    char** assigned_files = (char**)malloc(sizeof(char*));
+    assigned_files[0] = "stm-buses-2024-07-16_00.csv";
 
-//     group_data_by_bus_and_time(assigned_files);
-//     return 0;
-// }
+    group_data_by_bus_and_time(assigned_files);
+    return 0;
+}
