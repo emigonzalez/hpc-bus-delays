@@ -76,8 +76,9 @@ void ajustar_fecha(const char* fecha, const char* frecuencia, char* resultado) {
 
     // printf("FECHA: %s, FRECUENCIA: %s, TIMEN: %d, FN: %d \n", fecha, frecuencia, time_number, frecuencia_number);
 
-    // If time_number is less than frecuencia_number, subtract a day from the date
-    if (frecuencia_number - time_number > 20) {
+    // If difference more than 21 hour difference, it means that bus departues the day before snapshot.
+    // Subtract a day from the date
+    if (frecuencia_number > time_number && frecuencia_number - time_number > (21 * 60)) {
         struct tm tm_date;
         memset(&tm_date, 0, sizeof(struct tm));
         strptime(date_part, "%Y-%m-%d", &tm_date);
@@ -108,7 +109,7 @@ void add_to_group(const char* key, const char* row) {
             return;
         }
     }
-    
+
     // Create new group
     Group* new_group = malloc(sizeof(Group));
     new_group->key = strdup(key);
@@ -116,11 +117,11 @@ void add_to_group(const char* key, const char* row) {
     new_group->rows = malloc(new_group->row_capacity * sizeof(char*));
     new_group->row_count = 0; // Initialize row count to 0
     new_group->rows[new_group->row_count++] = strdup(row);
-    
+
     groups[group_count++] = new_group;
 }
 
-void parse_date_and_create_key(char* date_str, char* key, const char* variante, const char* frecuencia) {
+void parse_date_and_create_key(char* date_str, const char* variante, const char* frecuencia, char* key) {
     // Extract the date (yyyy-mm-dd) from the date string
     char date[11]; // yyyy-mm-dd is 10 characters + null terminator    
     ajustar_fecha(date_str, frecuencia, date);
@@ -136,11 +137,11 @@ void group_data_by_bus_and_time(char** assigned_files) {
             fprintf(stderr, "Error opening file: %s\n", assigned_files[i]);
             continue;
         }
-        
+
         char line[MAX_LINE_LENGTH];
         // Skip header
         fgets(line, MAX_LINE_LENGTH, file);
-        
+
         while (fgets(line, MAX_LINE_LENGTH, file)) {
             // Split the line into columns
             char* line_copy = strdup(line);
@@ -172,9 +173,9 @@ void group_data_by_bus_and_time(char** assigned_files) {
 
             // Create the group key
             char key[50];
-            parse_date_and_create_key(fecha, key, variante, frecuencia);
+            parse_date_and_create_key(fecha, variante, frecuencia, key);
 
-            printf("VFD: %s. FECHA: %s \n", key, fecha);
+            printf("%s.%s \n", key, fecha);
 
             // Add the row to the corresponding group
             add_to_group(key, line);
