@@ -1,9 +1,5 @@
 #define _XOPEN_SOURCE 700 // to suppress warning about strptime
-#define UNUSED(x) (void)(x)
-
-#define MAX_LINE_LENGTH_VFD 256
-#define MAX_LINE_LENGTH_VFT 128
-#define MAX_GROUPS 1000000
+#define UNUSED(x) (void)(x) // to suppress warning about unused variable
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -124,7 +120,7 @@ void create_vfd(char* date_str, const char* variante, const char* frecuencia, ch
 
 
 void group_data_by_vfd(char** assigned_files) {
-        if (assigned_files == NULL) {
+    if (assigned_files == NULL) {
         fprintf(stderr, "Error: assigned_files pointer is NULL\n");
         exit(EXIT_FAILURE);
     }
@@ -139,11 +135,19 @@ void group_data_by_vfd(char** assigned_files) {
             continue;
         }
 
-        char line[MAX_LINE_LENGTH_VFD];
-        // Skip header
-        fgets(line, MAX_LINE_LENGTH_VFD, file);
+        char *line = NULL;
+        size_t len = 0;
+        ssize_t read;
 
-        while (fgets(line, MAX_LINE_LENGTH_VFD, file)) {
+        // Read and skip the header line
+        if ((read = getline(&line, &len, file)) != -1) {
+            // Optionally, print or process the header line
+            printf("Header: %s", line);
+        }
+
+        while ((read = getline(&line, &len, file)) != -1) {
+            if (read <= 1) continue; // Skip empty lines
+
             // Split the line into columns
             char* line_copy = strdup(line);
             char* id = strtok(line_copy, ",");
@@ -198,6 +202,7 @@ void group_data_by_vfd(char** assigned_files) {
         }
 
         fclose(file);
+        free(line);
     }
 
     // Example: Print grouped data
@@ -223,10 +228,19 @@ void group_data_by_vft(char** assigned_files) {
             continue;
         }
 
-        char line[MAX_LINE_LENGTH_VFT];
-        // Skip header
-        fgets(line, MAX_LINE_LENGTH_VFT, file);
-        while (fgets(line, MAX_LINE_LENGTH_VFT, file)) {
+        char *line = NULL;
+        size_t len = 0;
+        ssize_t read;
+
+        // Read and skip the header line
+        if ((read = getline(&line, &len, file)) != -1) {
+            // Optionally, print or process the header line
+            printf("Header: %s", line);
+        }
+
+        while ((read = getline(&line, &len, file)) != -1) {
+            if (read <= 1) continue; // Skip empty lines
+
             // Split the line into columns
             char* line_copy = strdup(line);
             char* tipo_dia = strtok(line_copy, ";");
@@ -261,6 +275,7 @@ void group_data_by_vft(char** assigned_files) {
         }
 
         fclose(file);
+        free(line);
     }
 
     // Example: Print grouped data
