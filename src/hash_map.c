@@ -1,9 +1,11 @@
 #include "hash_map.h"
+#include <string.h>
+#include <stdio.h>
 
 #define INITIAL_SIZE 16
 #define LOAD_FACTOR 0.75
+#define INITIAL_ROW_CAPACITY 4
 
-// Simple hash function
 static unsigned long hash(const char *str) {
     unsigned long hash = 5381;
     int c;
@@ -13,7 +15,6 @@ static unsigned long hash(const char *str) {
     return hash;
 }
 
-// Create a new hash map
 HashMap *create_hash_map() {
     HashMap *map = malloc(sizeof(HashMap));
     if (!map) {
@@ -31,13 +32,16 @@ HashMap *create_hash_map() {
     return map;
 }
 
-// Free the hash map
 void free_hash_map(HashMap *map) {
     for (size_t i = 0; i < map->size; i++) {
         Entry *entry = map->buckets[i];
         while (entry) {
             Entry *tmp = entry;
             entry = entry->next;
+            for (size_t j = 0; j < tmp->row_count; j++) {
+                free(tmp->rows[j]);
+            }
+            free(tmp->rows);
             free(tmp->key);
             free(tmp);
         }
@@ -46,7 +50,6 @@ void free_hash_map(HashMap *map) {
     free(map);
 }
 
-// Resize the hash map
 void resize_hash_map(HashMap *map) {
     size_t new_size = map->size * 2;
     Entry **new_buckets = calloc(new_size, sizeof(Entry *));
@@ -55,7 +58,6 @@ void resize_hash_map(HashMap *map) {
         exit(EXIT_FAILURE);
     }
 
-    // Rehash all entries
     for (size_t i = 0; i < map->size; i++) {
         Entry *entry = map->buckets[i];
         while (entry) {
@@ -71,13 +73,33 @@ void resize_hash_map(HashMap *map) {
     map->size = new_size;
 }
 
-// Insert a key into the hash map
-int hash_map_insert(HashMap *map, const char *key) {
+int hash_map_insert(HashMap *map, const char *key, const char *row) {
     if ((float)map->count / map->size > LOAD_FACTOR) {
         resize_hash_map(map);
     }
 
     unsigned long index = hash(key) % map->size;
+    Entry *entry = map->buckets[index];
+
+    while (entry) {
+        if (strcmp(entry->key, key) == 0) {
+            // Key exists, add the row
+            if (entry->row_count == entry->row_capacity) {
+                entry->row_capacity *= 2;
+                entry->rows = realloc(entry->rows, entry->row_capacity * sizeof(char *));
+                if (!entry->rows) {
+                    fprintf(stderr, "Error: memory allocation failed\n");
+                    return 0;
+                }
+            }
+            entry->rows[entry->row_count] = strdup(row);
+            entry->row_count++;
+            return 1;
+        }
+        entry = entry->next;
+    }
+
+    // Key does not exist, create a new entry
     Entry *new_entry = malloc(sizeof(Entry));
     if (!new_entry) {
         fprintf(stderr, "Error: memory allocation failed\n");
@@ -89,13 +111,22 @@ int hash_map_insert(HashMap *map, const char *key) {
         free(new_entry);
         return 0;
     }
+    new_entry->row_capacity = INITIAL_ROW_CAPACITY;
+    new_entry->rows = malloc(new_entry->row_capacity * sizeof(char *));
+    if (!new_entry->rows) {
+        fprintf(stderr, "Error: memory allocation failed\n");
+        free(new_entry->key);
+        free(new_entry);
+        return 0;
+    }
+    new_entry->rows[0] = strdup(row);
+    new_entry->row_count = 1;
     new_entry->next = map->buckets[index];
     map->buckets[index] = new_entry;
     map->count++;
     return 1;
 }
 
-// Search for a key in the hash map
 Entry *hash_map_search(HashMap *map, const char *key) {
     unsigned long index = hash(key) % map->size;
     Entry *entry = map->buckets[index];
