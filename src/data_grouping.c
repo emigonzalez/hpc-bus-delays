@@ -8,24 +8,15 @@
 #include <string.h>
 #include <time.h>
 
-// #include "data_grouping.h"
-// #include "date_to_day_type.h"
+#include "data_grouping.h"
+#include "date_to_day_type.h"
+#include "hash_map.h"
 
 /** TODO
  * Al agrupar por vfd, conseguir vft.
  * Almacenar los descartes. Descartar vfds sin vft.
  * retornar lista de vfds (solo nombres)
  */
-
-typedef struct {
-    char* key;
-    char** rows;
-    int row_count;
-    int row_capacity;
-} Group;
-
-Group* groups[MAX_GROUPS];
-int group_count = 0;
 
 int is_valid_departure_time(const char* frecuencia) {
     int len = strlen(frecuencia);
@@ -98,29 +89,11 @@ void ajustar_fecha(const char* fecha, const char* frecuencia, char* resultado) {
     }
 }
 
-void add_to_group(const char* key, const char* row) {
-    // Search for the group
-    for (int i = 0; i < group_count; i++) {
-        if (strcmp(groups[i]->key, key) == 0) {
-            // Add row to existing group
-            if (groups[i]->row_count == groups[i]->row_capacity) {
-                groups[i]->row_capacity *= 2;
-                groups[i]->rows = realloc(groups[i]->rows, groups[i]->row_capacity * sizeof(char*));
-            }
-            groups[i]->rows[groups[i]->row_count++] = strdup(row);
-            return;
-        }
+void add_to_group(HashMap *groups, const char *key, const char *row) {
+    if (!hash_map_insert(groups, key, row)) {
+        fprintf(stderr, "Error: failed to add row to group\n");
+        exit(EXIT_FAILURE);
     }
-
-    // Create new group
-    Group* new_group = malloc(sizeof(Group));
-    new_group->key = strdup(key);
-    new_group->row_capacity = 10;
-    new_group->rows = malloc(new_group->row_capacity * sizeof(char*));
-    new_group->row_count = 0; // Initialize row count to 0
-    new_group->rows[new_group->row_count++] = strdup(row);
-
-    groups[group_count++] = new_group;
 }
 
 void create_vfd(char* date_str, const char* variante, const char* frecuencia, char* key) {
@@ -134,6 +107,14 @@ void create_vfd(char* date_str, const char* variante, const char* frecuencia, ch
 
 
 void group_data_by_vfd(char** assigned_files) {
+        if (assigned_files == NULL) {
+        fprintf(stderr, "Error: assigned_files pointer is NULL\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Create a hash map for groups
+    HashMap *groups = create_hash_map();
+
     for (int i = 0; assigned_files[i] != NULL; i++) {
         FILE* file = fopen(assigned_files[i], "r");
         if (file == NULL) {
@@ -181,7 +162,7 @@ void group_data_by_vfd(char** assigned_files) {
             printf("%s.%s \n", key, fecha);
 
             // Add the row to the corresponding group
-            add_to_group(key, line);
+            add_to_group(groups, key, line);
             free(line_copy); // Free the copy after processing
         }
 
@@ -189,46 +170,21 @@ void group_data_by_vfd(char** assigned_files) {
     }
 
     // Example: Print grouped data
-    // for (int i = 0; i < group_count; i++) {
-    //     printf("VFD: %s\n", groups[i]->key);
-    //     for (int j = 0; j < groups[i]->row_count; j++) {
-    //         printf(" %d ", groups[i]->rows[j]); // Print the entire row as it was read
-    //     }
-    // }
+    print_map(groups);
 
-    // Free allocated memory for groups
-    for (int i = 0; i < group_count; i++) {
-        free(groups[i]->key);
-        for (int j = 0; j < groups[i]->row_count; j++) {
-            free(groups[i]->rows[j]);
-        }
-        free(groups[i]->rows);
-        free(groups[i]);
-    }
-}
-
-void create_vft(char* fecha, const char* variante, const char* frecuencia, char* key) {
-    // Split fecha into date and time
-    char date_part[11];
-    char time_part[6]; // HH:MM without seconds
-    sscanf(fecha, "%10s %5s", date_part, time_part);
-    char day[3];
-    char month[3];
-    char year[5];
-    sscanf(date_part, "%4s-%2s-%2s", year, month, day);
-
-    int day_type = 0;
-    // if (atoi(year) == 2024 && atoi(month) == 6 && atoi(day) == 19) {
-    //     day_type = 3;
-    // } else {
-    //     day_type = day_to_date_type(date_part);
-    // }
-
-    // Create the key in the format variante_frecuencia_daytype
-    sprintf(key, "%s_%s_%d", variante, frecuencia, day_type);
+    // Free the hash map
+    free_hash_map(groups);
 }
 
 void group_data_by_vft(char** assigned_files) {
+    if (assigned_files == NULL) {
+        fprintf(stderr, "Error: assigned_files pointer is NULL\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Create a hash map for groups
+    HashMap *groups = create_hash_map();
+
     for (int i = 0; assigned_files[i] != NULL; i++) {
         FILE* file = fopen(assigned_files[i], "r");
         if (file == NULL) {
@@ -263,7 +219,7 @@ void group_data_by_vft(char** assigned_files) {
             sprintf(key, "%s_%s_%s", variante, frecuencia, tipo_dia);
 
             // Add the row to the corresponding group
-            add_to_group(key, line);
+            add_to_group(groups, key, line);
             free(line_copy); // Free the copy after processing
         }
 
@@ -271,21 +227,24 @@ void group_data_by_vft(char** assigned_files) {
     }
 
     // Example: Print grouped data
-    for (int i = 0; i < group_count; i++) {
-        printf("VFT %d: %s\n", i, groups[i]->key);
-        // for (int j = 0; j < groups[i]->row_count; j++) {
-        //     printf(" %d ", groups[i]->rows[j]); // Print the entire row as it was read
-        // }
-    }
+    print_map(groups);
 
-    // Free allocated memory for groups
-    for (int i = 0; i < group_count; i++) {
-        free(groups[i]->key);
-        for (int j = 0; j < groups[i]->row_count; j++) {
-            free(groups[i]->rows[j]);
+    // Free the hash map
+    free_hash_map(groups);
+}
+
+void print_map(HashMap *groups) {
+    // Display the keys and rows in the hash map
+    printf("Keys and rows in hash map:\n");
+    for (size_t i = 0; i < groups->size; i++) {
+        Entry *entry = groups->buckets[i];
+        while (entry) {
+            printf("Key: %s\n", entry->key);
+            for (size_t j = 0; j < entry->row_count; j++) {
+                printf("  Row: %s", entry->rows[j]);
+            }
+            entry = entry->next;
         }
-        free(groups[i]->rows);
-        free(groups[i]);
     }
 }
 
