@@ -1,14 +1,15 @@
 #define _XOPEN_SOURCE 700 // to suppress warning about strptime
-#define MAX_LINE_LENGTH 1024
-#define MAX_GROUPS 10000
+#define MAX_LINE_LENGTH_VFD 256
+#define MAX_LINE_LENGTH_VFT 128
+#define MAX_GROUPS 1000000
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
-#include "data_grouping.h"
-#include "date_to_day_type.h"
+// #include "data_grouping.h"
+// #include "date_to_day_type.h"
 
 /** TODO
  * Al agrupar por vfd, conseguir vft.
@@ -131,28 +132,8 @@ void create_vfd(char* date_str, const char* variante, const char* frecuencia, ch
     sprintf(key, "%s_%s_%s", variante, frecuencia, date);
 }
 
-void create_vft(char* fecha, const char* variante, const char* frecuencia, char* key) {
-    // Split fecha into date and time
-    char date_part[11];
-    char time_part[6]; // HH:MM without seconds
-    sscanf(fecha, "%10s %5s", date_part, time_part);
-    char day[3];
-    char month[3];
-    char year[5];
-    sscanf(date_part, "%4s-%2s-%2s", year, month, day);
 
-    int day_type = 0;
-    if (atoi(year) == 2024 && atoi(month) == 6 && atoi(day) == 19) {
-        day_type = 3;
-    } else {
-        day_type = day_to_date_type(date_part);
-    }
-
-    // Create the key in the format variante_frecuencia_daytype
-    sprintf(key, "%s_%s_%d", variante, frecuencia, day_type);
-}
-
-void group_data_by_bus_and_time(char** assigned_files) {
+void group_data_by_vfd(char** assigned_files) {
     for (int i = 0; assigned_files[i] != NULL; i++) {
         FILE* file = fopen(assigned_files[i], "r");
         if (file == NULL) {
@@ -160,11 +141,11 @@ void group_data_by_bus_and_time(char** assigned_files) {
             continue;
         }
 
-        char line[MAX_LINE_LENGTH];
+        char line[MAX_LINE_LENGTH_VFD];
         // Skip header
-        fgets(line, MAX_LINE_LENGTH, file);
+        fgets(line, MAX_LINE_LENGTH_VFD, file);
 
-        while (fgets(line, MAX_LINE_LENGTH, file)) {
+        while (fgets(line, MAX_LINE_LENGTH_VFD, file)) {
             // Split the line into columns
             char* line_copy = strdup(line);
             char* id = strtok(line_copy, ",");
@@ -226,10 +207,92 @@ void group_data_by_bus_and_time(char** assigned_files) {
     }
 }
 
+void create_vft(char* fecha, const char* variante, const char* frecuencia, char* key) {
+    // Split fecha into date and time
+    char date_part[11];
+    char time_part[6]; // HH:MM without seconds
+    sscanf(fecha, "%10s %5s", date_part, time_part);
+    char day[3];
+    char month[3];
+    char year[5];
+    sscanf(date_part, "%4s-%2s-%2s", year, month, day);
+
+    int day_type = 0;
+    // if (atoi(year) == 2024 && atoi(month) == 6 && atoi(day) == 19) {
+    //     day_type = 3;
+    // } else {
+    //     day_type = day_to_date_type(date_part);
+    // }
+
+    // Create the key in the format variante_frecuencia_daytype
+    sprintf(key, "%s_%s_%d", variante, frecuencia, day_type);
+}
+
+void group_data_by_vft(char** assigned_files) {
+    for (int i = 0; assigned_files[i] != NULL; i++) {
+        FILE* file = fopen(assigned_files[i], "r");
+        if (file == NULL) {
+            fprintf(stderr, "Error opening file: %s\n", assigned_files[i]);
+            continue;
+        }
+
+        char line[MAX_LINE_LENGTH_VFT];
+        // Skip header
+        fgets(line, MAX_LINE_LENGTH_VFT, file);
+        while (fgets(line, MAX_LINE_LENGTH_VFT, file)) {
+            // Split the line into columns
+            char* line_copy = strdup(line);
+            char* tipo_dia = strtok(line_copy, ";");
+            char* variante = strtok(NULL, ";");
+            char* frecuencia = strtok(NULL, ";");
+            char* cod_ubic_parada = strtok(NULL, ";");
+            char* ordinal = strtok(NULL, ";");
+            char* hora = strtok(NULL, ";");
+            char* dia_anterior = strtok(NULL, ";");
+            // char* latitud = strtok(NULL, ";");
+            // char* longitud = strtok(NULL, ";");
+
+            // Check if bus is from day before
+            int tipo_dia_int = atoi(tipo_dia);
+            if (strcmp(dia_anterior, "S") == 0) {
+                tipo_dia_int = (tipo_dia_int == 1) ? 3 : tipo_dia_int - 1;
+            }
+
+            // Create the group key
+            char key[20];
+            sprintf(key, "%s_%s_%s", variante, frecuencia, tipo_dia);
+
+            // Add the row to the corresponding group
+            add_to_group(key, line);
+            free(line_copy); // Free the copy after processing
+        }
+
+        fclose(file);
+    }
+
+    // Example: Print grouped data
+    for (int i = 0; i < group_count; i++) {
+        printf("VFT %d: %s\n", i, groups[i]->key);
+        // for (int j = 0; j < groups[i]->row_count; j++) {
+        //     printf(" %d ", groups[i]->rows[j]); // Print the entire row as it was read
+        // }
+    }
+
+    // Free allocated memory for groups
+    for (int i = 0; i < group_count; i++) {
+        free(groups[i]->key);
+        for (int j = 0; j < groups[i]->row_count; j++) {
+            free(groups[i]->rows[j]);
+        }
+        free(groups[i]->rows);
+        free(groups[i]);
+    }
+}
+
 int main() {
     char** assigned_files = (char**)malloc(sizeof(char*));
-    assigned_files[0] = "stm-buses-2024-07-16_00.csv";
+    assigned_files[0] = "uptu_pasada_variante.csv";
 
-    group_data_by_bus_and_time(assigned_files);
+    group_data_by_vft(assigned_files);
     return 0;
 }
