@@ -50,10 +50,10 @@ int date_to_date_type(const char* date_str) {
     }
 }
 
-int main() {
-    const char* date_str = "2024-06-11"; // Example date
+// int main() {
+//     const char* date_str = "2024-06-11"; // Example date
 
-    printf("Date %s is a %d\n", date_str, date_to_date_type(date_str));
+//     printf("Date %s is a %d\n", date_str, date_to_date_type(date_str));
 
-    return 0;
-}
+//     return 0;
+// }

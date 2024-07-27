@@ -1,4 +1,6 @@
 #define _XOPEN_SOURCE 700 // to suppress warning about strptime
+#define UNUSED(x) (void)(x)
+
 #define MAX_LINE_LENGTH_VFD 256
 #define MAX_LINE_LENGTH_VFT 128
 #define MAX_GROUPS 1000000
@@ -17,6 +19,21 @@
  * Almacenar los descartes. Descartar vfds sin vft.
  * retornar lista de vfds (solo nombres)
  */
+
+void print_map(HashMap *groups) {
+    // Display the keys and rows in the hash map
+    printf("Keys and rows in hash map:\n");
+    for (size_t i = 0; i < groups->size; i++) {
+        Entry *entry = groups->buckets[i];
+        while (entry) {
+            printf("Key: %s\n", entry->key);
+            for (size_t j = 0; j < entry->row_count; j++) {
+                printf("  Row: %s", entry->rows[j]);
+            }
+            entry = entry->next;
+        }
+    }
+}
 
 int is_valid_departure_time(const char* frecuencia) {
     int len = strlen(frecuencia);
@@ -148,6 +165,20 @@ void group_data_by_vfd(char** assigned_files) {
             char* longitud = strtok(NULL, ",");
             char* fecha = strtok(NULL, ",");
 
+            UNUSED(id);
+            UNUSED(codigoEmpresa);
+            UNUSED(codigoBus);
+            UNUSED(linea);
+            UNUSED(sublinea);
+            UNUSED(tipoLinea);
+            UNUSED(tipoLineaDesc);
+            UNUSED(destino);
+            UNUSED(destinoDesc);
+            UNUSED(subsistema);
+            UNUSED(subsistemaDesc);
+            UNUSED(version);
+            UNUSED(velocidad);
+
             // Check if latitud or longitud is 0
             if (strcmp(latitud, "0") == 0 || strcmp(longitud, "0") == 0 || !is_valid_departure_time(frecuencia)) {
                 // printf("VARIANTE: %s. frecuencia: %s LATITUD: %s. LONGITUD: %s. \n", variante, frecuencia, latitud, longitud);
@@ -159,7 +190,7 @@ void group_data_by_vfd(char** assigned_files) {
             char key[50];
             create_vfd(fecha, variante, frecuencia, key);
 
-            printf("%s.%s \n", key, fecha);
+            // printf("%s.%s \n", key, fecha);
 
             // Add the row to the corresponding group
             add_to_group(groups, key, line);
@@ -208,6 +239,12 @@ void group_data_by_vft(char** assigned_files) {
             // char* latitud = strtok(NULL, ";");
             // char* longitud = strtok(NULL, ";");
 
+            UNUSED(cod_ubic_parada);
+            UNUSED(ordinal);
+            UNUSED(hora);
+            // UNUSED(latitud);
+            // UNUSED(longitud);
+
             // Check if bus is from day before
             int tipo_dia_int = atoi(tipo_dia);
             if (strcmp(dia_anterior, "S") == 0) {
@@ -231,27 +268,4 @@ void group_data_by_vft(char** assigned_files) {
 
     // Free the hash map
     free_hash_map(groups);
-}
-
-void print_map(HashMap *groups) {
-    // Display the keys and rows in the hash map
-    printf("Keys and rows in hash map:\n");
-    for (size_t i = 0; i < groups->size; i++) {
-        Entry *entry = groups->buckets[i];
-        while (entry) {
-            printf("Key: %s\n", entry->key);
-            for (size_t j = 0; j < entry->row_count; j++) {
-                printf("  Row: %s", entry->rows[j]);
-            }
-            entry = entry->next;
-        }
-    }
-}
-
-int main() {
-    char** assigned_files = (char**)malloc(sizeof(char*));
-    assigned_files[0] = "uptu_pasada_variante.csv";
-
-    group_data_by_vft(assigned_files);
-    return 0;
 }

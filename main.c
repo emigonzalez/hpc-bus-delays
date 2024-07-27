@@ -1,4 +1,4 @@
-#include <mpi.h>
+// #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -10,6 +10,7 @@
 #include "delay_calculation.h"
 #include "result_gathering.h"
 
+/*
 #define NUM_DAYS 30
 #define NUM_HOURS_PER_DAY 24
 
@@ -103,4 +104,14 @@ void handle_signal(int signal) {
 
     printf("Cleanup done, exiting...\n");
     exit(EXIT_SUCCESS);
+}
+
+*/
+
+int main() {
+    char** assigned_files = (char**)malloc(sizeof(char*));
+    assigned_files[0] = "data/uptu_pasada_variante_min.csv";
+
+    group_data_by_vft(assigned_files);
+    return 0;
 }
