@@ -20,7 +20,7 @@ int is_valid_departure_time(const char* frecuencia) {
     if (len < 4 || len > 6) return 0; // Must be 4 to 6 characters long to include the trailing zero
 
     int minutes = (atoi(frecuencia + len - 3) / 10) % 60; // Last three digits divided by 10 for minutes
-    int hours = atoi(strndup(frecuencia, len - 3)); // Remaining digits for hours
+    int hours = atoi(frecuencia + len - 3); // Remaining digits for hours
 
     return (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59);
 }
@@ -377,7 +377,6 @@ HashMap* group_data_by_vfd(char** assigned_files, HashMap* vft_map) {
                     } else {
                         printf("VFT %s does not exist.\n", vft_key);
                         add_vfd_to_map(discarded_vfds, vfd_key, NULL);
-                        continue;
                     }
 
                     free(vft_key);
@@ -386,8 +385,7 @@ HashMap* group_data_by_vfd(char** assigned_files, HashMap* vft_map) {
                 free(vfd_key);
                 printf("FIN FOR i!\n");
             } else {
-                perror("Invalid VFD data");
-                continue;
+                perror("COULD NOT CREATE VFT KEY");
             }
 
             free(line_copy); // Free the copy after processing

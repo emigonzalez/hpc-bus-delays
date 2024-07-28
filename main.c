@@ -132,10 +132,11 @@ int main() {
     print_hash_map(vfd_map);
 
     // Free the hash map
-    //free_hash_map(vft_map);
+    free_hash_map(vft_map);
     free_hash_map(vfd_map);
 
     free(capturas);
     free(horarios);
+    printf("END\n");
     return EXIT_SUCCESS;
 }
