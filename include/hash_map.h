@@ -7,7 +7,7 @@
 #define LOAD_FACTOR 0.75
 
 typedef struct {
-    char *tipo_dia;
+    int tipo_dia;
     char *variante;
     char *frecuencia;
     char *cod_ubic_parada;
@@ -61,5 +61,9 @@ Entry *hash_map_search(HashMap *map, const char *key);
 void resize_hash_map(HashMap *map);
 char **get_all_keys(HashMap *map, size_t *key_count);
 void print_hash_map(HashMap *map);
+void free_vft(VFT *vft);
+void free_vfd(VFD *vfd);
+VFT* create_vft();
+VFD* create_vfd();
 
 #endif // HASH_MAP_H

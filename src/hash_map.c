@@ -20,40 +20,51 @@ HashMap *create_hash_map() {
     return map;
 }
 
+void free_vft(VFT *vft) {
+    if (vft) {
+        if (vft->variante) free(vft->variante);
+        if (vft->frecuencia) free(vft->frecuencia);
+        if (vft->cod_ubic_parada) free(vft->cod_ubic_parada);
+        if (vft->ordinal) free(vft->ordinal);
+        if (vft->hora) free(vft->hora);
+        if (vft->dia_anterior) free(vft->dia_anterior);
+        if (vft->latitud) free(vft->latitud);
+        if (vft->longitud) free(vft->longitud);
+        free(vft);
+    }
+}
+
 void free_vfts(VFT **vfts, size_t count) {
     for (size_t i = 0; i < count; i++) {
-        free(vfts[i]->tipo_dia);
-        free(vfts[i]->variante);
-        free(vfts[i]->frecuencia);
-        free(vfts[i]->cod_ubic_parada);
-        free(vfts[i]->ordinal);
-        free(vfts[i]->hora);
-        free(vfts[i]->dia_anterior);
-        free(vfts[i]->latitud);
-        free(vfts[i]->longitud);
-        free(vfts[i]);
+        free_vft(vfts[i]);
     }
     free(vfts);
 }
 
+void free_vfd(VFD *vfd) {
+    if (vfd) {
+        if (vfd->id) free(vfd->id);
+        if (vfd->codigoEmpresa) free(vfd->codigoEmpresa);
+        if (vfd->frecuencia) free(vfd->frecuencia);
+        if (vfd->codigoBus) free(vfd->codigoBus);
+        if (vfd->variante) free(vfd->variante);
+        if (vfd->linea) free(vfd->linea);
+        if (vfd->sublinea) free(vfd->sublinea);
+        if (vfd->tipoLinea) free(vfd->tipoLinea);
+        if (vfd->destino) free(vfd->destino);
+        if (vfd->subsistema) free(vfd->subsistema);
+        if (vfd->version) free(vfd->version);
+        if (vfd->velocidad) free(vfd->velocidad);
+        if (vfd->latitud) free(vfd->latitud);
+        if (vfd->longitud) free(vfd->longitud);
+        if (vfd->fecha) free(vfd->fecha);
+        free(vfd);
+    }
+}
+
 void free_vfds(VFD **vfds, size_t count) {
     for (size_t i = 0; i < count; i++) {
-        free(vfds[i]->id);
-        free(vfds[i]->codigoEmpresa);
-        free(vfds[i]->frecuencia);
-        free(vfds[i]->codigoBus);
-        free(vfds[i]->variante);
-        free(vfds[i]->linea);
-        free(vfds[i]->sublinea);
-        free(vfds[i]->tipoLinea);
-        free(vfds[i]->destino);
-        free(vfds[i]->subsistema);
-        free(vfds[i]->version);
-        free(vfds[i]->velocidad);
-        free(vfds[i]->latitud);
-        free(vfds[i]->longitud);
-        free(vfds[i]->fecha);
-        free(vfds[i]);
+        free_vfd(vfds[i]);
     }
     free(vfds);
 }
@@ -88,7 +99,7 @@ int insert_to_vfts(Entry *entry, VFT *vft) {
     }
     entry->vfts[entry->vft_count] = vft;
     entry->vft_count++;
-    return 0;
+    return (int) entry->vft_count;
 }
 
 int insert_to_vfds(Entry *entry, VFD *vfd) {
@@ -101,7 +112,7 @@ int insert_to_vfds(Entry *entry, VFD *vfd) {
     }
     entry->vfds[entry->vfd_count] = vfd;
     entry->vfd_count++;
-    return 0;
+    return (int) entry->vfd_count;
 }
 
 void resize_hash_map(HashMap *map) {
@@ -225,7 +236,7 @@ void print_hash_map(HashMap *map) {
             printf("VFTs:\n");
             for (size_t j = 0; j < entry->vft_count; j++) {
                 VFT *vft = entry->vfts[j];
-                printf("  Tipo Dia: %s, Variante: %s, Frecuencia: %s, Cod Ubic Parada: %s, Ordinal: %s, Hora: %s, Dia Anterior: %s, Latitud: %s, Longitud: %s\n",
+                printf("  Tipo Dia: %d, Variante: %s, Frecuencia: %s, Cod Ubic Parada: %s, Ordinal: %s, Hora: %s, Dia Anterior: %s, Latitud: %s, Longitud: %s\n",
                        vft->tipo_dia, vft->variante, vft->frecuencia, vft->cod_ubic_parada, vft->ordinal, vft->hora, vft->dia_anterior, vft->latitud, vft->longitud);
             }
 
@@ -239,4 +250,42 @@ void print_hash_map(HashMap *map) {
             entry = entry->next;
         }
     }
+}
+
+VFT* create_vft() {
+    VFT *vft = (VFT *)malloc(sizeof(VFT));
+    if (vft) {
+        vft->tipo_dia = 0;
+        vft->variante = NULL;
+        vft->frecuencia = NULL;
+        vft->cod_ubic_parada = NULL;
+        vft->ordinal = NULL;
+        vft->hora = NULL;
+        vft->dia_anterior = NULL;
+        vft->latitud = NULL;
+        vft->longitud = NULL;
+    }
+    return vft;
+}
+
+VFD* create_vfd() {
+    VFD *vfd = (VFD *)malloc(sizeof(VFD));
+    if (vfd) {
+        vfd->id = NULL;
+        vfd->codigoEmpresa = NULL;
+        vfd->frecuencia = NULL;
+        vfd->codigoBus = NULL;
+        vfd->variante = NULL;
+        vfd->linea = NULL;
+        vfd->sublinea = NULL;
+        vfd->tipoLinea = NULL;
+        vfd->destino = NULL;
+        vfd->subsistema = NULL;
+        vfd->version = NULL;
+        vfd->velocidad = NULL;
+        vfd->latitud = NULL;
+        vfd->longitud = NULL;
+        vfd->fecha = NULL;
+    }
+    return vfd;
 }
