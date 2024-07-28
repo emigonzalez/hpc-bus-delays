@@ -192,26 +192,26 @@ Entry *hash_map_search(HashMap *map, const char *key) {
     return entry;
 }
 
-char **get_all_keys(HashMap *map, size_t *key_count) {
+char** get_all_keys(HashMap *map, size_t *key_count) {
     *key_count = 0;
-    char **keys = (char **)malloc(map->count * sizeof(char *));
-    if (keys == NULL) {
-        perror("Failed to allocate memory for keys array");
-        exit(EXIT_FAILURE);
-    }
+    size_t capacity = 10;
+    char **keys = malloc(capacity * sizeof(char*));
 
     for (size_t i = 0; i < map->size; i++) {
         Entry *entry = map->buckets[i];
         while (entry != NULL) {
-            keys[*key_count] = strdup(entry->key);
-            if (keys[*key_count] == NULL) {
-                perror("Failed to allocate memory for key");
-                exit(EXIT_FAILURE);
+            if (*key_count == capacity) {
+                capacity *= 2;
+                keys = realloc(keys, capacity * sizeof(char*));
             }
+            keys[*key_count] = strdup(entry->key);
             (*key_count)++;
             entry = entry->next;
         }
     }
+
+    // Sort the keys alphabetically
+    qsort(keys, *key_count, sizeof(char*), (int (*)(const void*, const void*)) strcmp);
 
     return keys;
 }
