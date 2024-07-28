@@ -113,9 +113,7 @@ int main() {
     assigned_files[0] = "data/uptu_pasada_variante.csv";
     assigned_files[1] = NULL; // Terminate the list
 
-    KeyType vft = VFT;
-
-    group_data_by_type(assigned_files, vft);
+    group_data_by_vft(assigned_files);
 
     free(assigned_files);
     return EXIT_SUCCESS;
