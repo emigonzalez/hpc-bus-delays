@@ -33,17 +33,19 @@ HashMap *create_hash_map() {
 }
 
 void free_hash_map(HashMap *map) {
-    for (size_t i = 0; i < map->size; i++) {
+    if (map == NULL) return;
+    
+    for (size_t i = 0; i < map->size; ++i) {
         Entry *entry = map->buckets[i];
         while (entry) {
-            Entry *tmp = entry;
-            entry = entry->next;
-            for (size_t j = 0; j < tmp->row_count; j++) {
-                free(tmp->rows[j]);
+            Entry *next = entry->next;
+            free(entry->key);
+            for (size_t j = 0; j < entry->row_count; ++j) {
+                free(entry->rows[j]);
             }
-            free(tmp->rows);
-            free(tmp->key);
-            free(tmp);
+            free(entry->rows);
+            free(entry);
+            entry = next;
         }
     }
     free(map->buckets);
