@@ -102,17 +102,17 @@ int insert_to_vfts(Entry *entry, VFT *vft) {
     return (int) entry->vft_count;
 }
 
-int insert_to_vfds(Entry *entry, VFD *vfd) {
+Entry * insert_to_vfds(Entry *entry, VFD *vfd) {
     if (entry->vfd_count >= entry->vfd_capacity) {
         entry->vfd_capacity *= 2;
         entry->vfds = (VFD **)realloc(entry->vfds, entry->vfd_capacity * sizeof(VFD *));
         if (entry->vfds == NULL) {
-            return -1; // Allocation failed
+            return NULL; // Allocation failed
         }
     }
     entry->vfds[entry->vfd_count] = vfd;
     entry->vfd_count++;
-    return (int) entry->vfd_count;
+    return entry;
 }
 
 void resize_hash_map(HashMap *map) {
@@ -187,15 +187,19 @@ int hash_map_insert_vft(HashMap *map, const char *key, VFT *vft) {
     return insert_to_vfts(entry, vft);
 }
 
-int hash_map_insert_vfd(HashMap *map, const char *key, VFD *vfd) {
+Entry* hash_map_insert_vfd(HashMap *map, const char *key, VFD *vfd) {
     Entry *entry = find_or_create_entry(map, key);
     return insert_to_vfds(entry, vfd);
 }
 
 Entry *hash_map_search(HashMap *map, const char *key) {
-    unsigned long index = hash(key, map->size);
-    Entry *entry = map->buckets[index];
+    if (!map || !key) return NULL;
 
+    // Compute the hash value for the key
+    unsigned long index = hash(key, map->size);
+
+    // Traverse the linked list at the corresponding bucket
+    Entry *entry = map->buckets[index];
     while (entry != NULL && strcmp(entry->key, key) != 0) {
         entry = entry->next;
     }
@@ -288,4 +292,16 @@ VFD* create_vfd() {
         vfd->fecha = NULL;
     }
     return vfd;
+}
+
+void repoint_vfts_to_vfd_map(Entry* vfd_entry, Entry *vft_entry) {
+    // Repoint the vfd entry's vfts to the new entry's vfts
+    vfd_entry->vfts = vft_entry->vfts;
+    vfd_entry->vft_count = vft_entry->vft_count;
+    vfd_entry->vft_capacity = vft_entry->vft_capacity;
+
+    // Nullify the vft entry's vfts to avoid double free
+    vft_entry->vfts = NULL;
+    vft_entry->vft_count = 0;
+    vft_entry->vft_capacity = 0;
 }
