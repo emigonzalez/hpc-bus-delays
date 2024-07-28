@@ -8,7 +8,6 @@
 
 #include "data_grouping.h"
 #include "date_to_day_type.h"
-#include "hash_map.h"
 
 /** TODO
  * Al agrupar por vfd, conseguir vft.
@@ -222,7 +221,7 @@ char* create_vft_key(char* line) {
     return key;
 }
 
-void group_data_by_vft(char** assigned_files) {
+HashMap* group_data_by_vft(char** assigned_files) {
     if (assigned_files == NULL) {
         fprintf(stderr, "Error: assigned_files pointer is NULL\n");
         exit(EXIT_FAILURE);
@@ -282,9 +281,5 @@ void group_data_by_vft(char** assigned_files) {
         fclose(file);
     }
 
-    // Example: Print grouped data
-    print_hash_map(map);
-
-    // Free the hash map
-    free_hash_map(map);
+    return map;
 }
