@@ -93,11 +93,12 @@ void add_vft_to_map(HashMap *map, const char *key, VFT *vft) {
     }
 }
 
-void add_vfd_to_map(HashMap *map, const char *key, VFD *vfd) {
-    if (!hash_map_insert_vfd(map, key, vfd)) {
+Entry* add_vfd_to_map(HashMap *map, const char *key, VFD *vfd) {
+    Entry* vfd_entry = hash_map_insert_vfd(map, key, vfd);
+    if (!vfd_entry) {
         fprintf(stderr, "Error: failed to add VFD to map\n");
-        exit(EXIT_FAILURE);
     }
+    return vfd_entry;
 }
 
 VFT* row_to_vft(char* line) {
@@ -191,6 +192,7 @@ VFD* row_to_vfd(char* line) {
 
 char* create_vfd_key(char* line) {
     VFD* vfd = row_to_vfd(line);
+    if (vfd == NULL) return NULL;
 
     // Extract the date (yyyy-mm-dd) from the date string
     char date[11]; // yyyy-mm-dd is 10 characters + null terminator    
@@ -282,4 +284,119 @@ HashMap* group_data_by_vft(char** assigned_files) {
     }
 
     return map;
+}
+
+char* create_vft_from_vfd(char* vfd) {
+    if (vfd == NULL) return NULL;
+    
+    char* vfd_copy = strdup(vfd);
+    char* variante = strtok(vfd_copy, "_");
+    char* frecuencia = strtok(NULL, "_");
+    char* date = strtok(NULL, "_");
+
+    if (variante == NULL || frecuencia == NULL || date == NULL) return NULL;
+
+    int tipo_dia_int = date_to_date_type(date);
+
+    size_t key_length = strlen(variante) + strlen(frecuencia) + 3 + 1; // "<variante>_<frecuencia>_<tipo_dia>\0"
+    char* key = (char*)malloc(key_length * sizeof(char));
+
+    // Create the vft key
+    snprintf(key, key_length, "%s_%s_%d", variante, frecuencia, tipo_dia_int);
+
+    free(vfd_copy);
+    return key;
+}
+
+HashMap* group_data_by_vfd(char** assigned_files, HashMap* vft_map) {
+    if (assigned_files == NULL) {
+        fprintf(stderr, "Error: assigned_files pointer is NULL\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Create a hash map for vfd_map
+    HashMap *vfd_map = create_hash_map();
+
+    HashMap *discarded_vfds = create_hash_map();
+
+    for (int i = 0; assigned_files[i] != NULL; i++) {
+        FILE* file = fopen(assigned_files[i], "r");
+        if (file == NULL) {
+            fprintf(stderr, "Error opening file: %s\n", assigned_files[i]);
+            continue;
+        }
+
+        char *line = NULL;
+        size_t len = 0;
+        ssize_t read;
+
+        // Read and skip the header line
+        if ((read = getline(&line, &len, file)) != -1) {
+            // Optionally, print or process the header line
+            printf("Header: %s", line);
+        }
+
+        // Ensure line is freed before the next read
+        free(line);
+        line = NULL;
+
+        while ((read = getline(&line, &len, file)) != -1) {
+            if (read <= 1) continue; // Skip empty lines
+
+            // Split the line into columns
+            char* line_copy = strdup(line);
+            if (line_copy == NULL) {
+                perror("Failed to duplicate line");
+                continue;
+            }
+
+            char* vfd_key = NULL;
+            printf("ROW: %s\n", line_copy);
+            vfd_key = create_vfd_key(line_copy);
+            printf("VFD KEY: %s\n", vfd_key);
+
+            if (vfd_key != NULL) {
+                Entry* vfd_entry = hash_map_search(vfd_map, vfd_key);
+
+                if (vfd_entry != NULL) {
+                    printf("ENCONTRO VFD EN MAP!\n");
+                    // Add the row to the vfd_map
+                    VFD* vfd = row_to_vfd(line);
+                    vfd_entry = insert_to_vfds(vfd_entry, vfd);
+                } else if (!hash_map_search(discarded_vfds, vfd_key)) {
+                    // Generate VFT and look for data in the vft_map
+                    char* vft_key = create_vft_from_vfd(vfd_key);
+                    printf("VFT KEY: %s\n", vft_key);
+                    Entry* vft_entry = hash_map_search(vft_map, vft_key);
+
+                    if (vft_entry != NULL) {
+                        printf("ENCONTRO VFT EN MAP!\n");
+                        VFD* vfd = row_to_vfd(line);
+                        Entry* vfd_entry = add_vfd_to_map(vfd_map, vfd_key, vfd);
+                        repoint_vfts_to_vfd_map(vfd_entry, vft_entry);
+                    } else {
+                        printf("VFT %s does not exist.\n", vft_key);
+                        add_vfd_to_map(discarded_vfds, vfd_key, NULL);
+                        continue;
+                    }
+
+                    free(vft_key);
+                }
+
+                free(vfd_key);
+                printf("FIN FOR i!\n");
+            } else {
+                perror("Invalid VFD data");
+                continue;
+            }
+
+            free(line_copy); // Free the copy after processing
+        }
+
+        free(line);
+        fclose(file);
+    }
+
+    free_hash_map(discarded_vfds);
+    return vfd_map;
 }
