@@ -24,6 +24,6 @@ $(OBJDIR)/%.o: $(TESTDIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -rf $(OBJDIR) $(EXEC)
+	rm -rf $(OBJDIR) $(EXEC) $(EXEC).80s*
 
 .PHONY: all clean
