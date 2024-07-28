@@ -109,9 +109,14 @@ void handle_signal(int signal) {
 */
 
 int main() {
-    char** assigned_files = (char**)malloc(sizeof(char*));
-    assigned_files[0] = "data/uptu_pasada_variante_min.csv";
+    char** assigned_files = (char**)malloc(2 * sizeof(char*));
+    assigned_files[0] = "data/uptu_pasada_variante.csv";
+    assigned_files[1] = NULL; // Terminate the list
+
+    KeyType vft = VFT;
 
     group_data_by_vft(assigned_files);
-    return 0;
+
+    free(assigned_files);
+    return EXIT_SUCCESS;
 }

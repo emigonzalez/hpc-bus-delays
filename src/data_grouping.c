@@ -109,17 +109,101 @@ void add_to_group(HashMap *groups, const char *key, const char *row) {
     }
 }
 
-void create_vfd(char* date_str, const char* variante, const char* frecuencia, char* key) {
+char* create_vfd(char* line) {
+    char* id = strtok(line, ",");
+    char* codigoEmpresa = strtok(NULL, ",");
+    char* frecuencia = strtok(NULL, ",");
+    char* codigoBus = strtok(NULL, ",");
+    char* variante = strtok(NULL, ",");
+    char* linea = strtok(NULL, ",");
+    char* sublinea = strtok(NULL, ",");
+    char* tipoLinea = strtok(NULL, ",");
+    char* tipoLineaDesc = strtok(NULL, ",");
+    char* destino = strtok(NULL, ",");
+    char* destinoDesc = strtok(NULL, ",");
+    char* subsistema = strtok(NULL, ",");
+    char* subsistemaDesc = strtok(NULL, ",");
+    char* version = strtok(NULL, ",");
+    char* velocidad = strtok(NULL, ",");
+    char* latitud = strtok(NULL, ",");
+    char* longitud = strtok(NULL, ",");
+    char* fecha = strtok(NULL, ",");
+
+    UNUSED(id);
+    UNUSED(codigoEmpresa);
+    UNUSED(codigoBus);
+    UNUSED(linea);
+    UNUSED(sublinea);
+    UNUSED(tipoLinea);
+    UNUSED(tipoLineaDesc);
+    UNUSED(destino);
+    UNUSED(destinoDesc);
+    UNUSED(subsistema);
+    UNUSED(subsistemaDesc);
+    UNUSED(version);
+    UNUSED(velocidad);
+
+    // Check if latitud or longitud is 0
+    if (
+        strcmp(latitud, "0") == 0 ||
+        strcmp(longitud, "0") == 0 ||
+        !is_valid_departure_time(frecuencia)
+    ) {
+        return NULL; // Skip this row
+    }
+
     // Extract the date (yyyy-mm-dd) from the date string
     char date[11]; // yyyy-mm-dd is 10 characters + null terminator    
-    ajustar_fecha(date_str, frecuencia, date);
+    ajustar_fecha(fecha, frecuencia, date);
+
+    // Create the group key "<variante>_<frecuencia>_<dia>\0"
+    size_t key_length = strlen(variante) + strlen(frecuencia) + strlen(date) + 2 + 1; 
+    char* key = (char*)malloc(key_length * sizeof(char));
 
     // Create the key in the format variante_frecuencia_yyyy-mm-dd
-    sprintf(key, "%s_%s_%s", variante, frecuencia, date);
+    snprintf(key, key_length, "%s_%s_%s", variante, frecuencia, date);
+
+    return key;
 }
 
+char* create_vft(char* line) {
+    char* tipo_dia = strtok(line, ";");
+    char* variante = strtok(NULL, ";");
+    char* frecuencia = strtok(NULL, ";");
+    char* cod_ubic_parada = strtok(NULL, ";");
+    char* ordinal = strtok(NULL, ";");
+    char* hora = strtok(NULL, ";");
+    char* dia_anterior = strtok(NULL, ";");
+    // char* latitud = strtok(NULL, ";");
+    // char* longitud = strtok(NULL, ";");
 
-void group_data_by_vfd(char** assigned_files) {
+    UNUSED(cod_ubic_parada);
+    UNUSED(ordinal);
+    UNUSED(hora);
+    // UNUSED(latitud);
+    // UNUSED(longitud);
+
+    if (tipo_dia == NULL || variante == NULL || frecuencia == NULL || dia_anterior == NULL) {
+        fprintf(stderr, "Error: Missing data in line: %s", line);
+        return NULL;
+    }
+
+    // Check if bus is from day before
+    int tipo_dia_int = atoi(tipo_dia);
+    if (strcmp(dia_anterior, "S") == 0) {
+        tipo_dia_int = (tipo_dia_int == 1) ? 3 : tipo_dia_int - 1;
+    }
+
+    size_t key_length = strlen(variante) + strlen(frecuencia) + 3 + 1; // "<variante>_<frecuencia>_<tipo_dia>\0"
+    char* key = (char*)malloc(key_length * sizeof(char));
+
+    // Create the group key
+    snprintf(key, key_length, "%s_%s_%d", variante, frecuencia, tipo_dia_int);
+
+    return key;
+}
+
+void group_data_by_type(char** assigned_files, KeyType key_type) {
     if (assigned_files == NULL) {
         fprintf(stderr, "Error: assigned_files pointer is NULL\n");
         exit(EXIT_FAILURE);
@@ -145,137 +229,42 @@ void group_data_by_vfd(char** assigned_files) {
             printf("Header: %s", line);
         }
 
-        while ((read = getline(&line, &len, file)) != -1) {
-            if (read <= 1) continue; // Skip empty lines
-
-            // Split the line into columns
-            char* line_copy = strdup(line);
-            char* id = strtok(line_copy, ",");
-            char* codigoEmpresa = strtok(NULL, ",");
-            char* frecuencia = strtok(NULL, ",");
-            char* codigoBus = strtok(NULL, ",");
-            char* variante = strtok(NULL, ",");
-            char* linea = strtok(NULL, ",");
-            char* sublinea = strtok(NULL, ",");
-            char* tipoLinea = strtok(NULL, ",");
-            char* tipoLineaDesc = strtok(NULL, ",");
-            char* destino = strtok(NULL, ",");
-            char* destinoDesc = strtok(NULL, ",");
-            char* subsistema = strtok(NULL, ",");
-            char* subsistemaDesc = strtok(NULL, ",");
-            char* version = strtok(NULL, ",");
-            char* velocidad = strtok(NULL, ",");
-            char* latitud = strtok(NULL, ",");
-            char* longitud = strtok(NULL, ",");
-            char* fecha = strtok(NULL, ",");
-
-            UNUSED(id);
-            UNUSED(codigoEmpresa);
-            UNUSED(codigoBus);
-            UNUSED(linea);
-            UNUSED(sublinea);
-            UNUSED(tipoLinea);
-            UNUSED(tipoLineaDesc);
-            UNUSED(destino);
-            UNUSED(destinoDesc);
-            UNUSED(subsistema);
-            UNUSED(subsistemaDesc);
-            UNUSED(version);
-            UNUSED(velocidad);
-
-            // Check if latitud or longitud is 0
-            if (strcmp(latitud, "0") == 0 || strcmp(longitud, "0") == 0 || !is_valid_departure_time(frecuencia)) {
-                // printf("VARIANTE: %s. frecuencia: %s LATITUD: %s. LONGITUD: %s. \n", variante, frecuencia, latitud, longitud);
-                free(line_copy); // Free the copy if the row is skipped
-                continue; // Skip this row
-            }
-
-            // Create the group key
-            char key[50];
-            create_vfd(fecha, variante, frecuencia, key);
-
-            // printf("%s.%s \n", key, fecha);
-
-            // Add the row to the corresponding group
-            add_to_group(groups, key, line);
-            free(line_copy); // Free the copy after processing
-        }
-
-        fclose(file);
+        // Ensure line is freed before the next read
         free(line);
-    }
-
-    // Example: Print grouped data
-    print_map(groups);
-
-    // Free the hash map
-    free_hash_map(groups);
-}
-
-void group_data_by_vft(char** assigned_files) {
-    if (assigned_files == NULL) {
-        fprintf(stderr, "Error: assigned_files pointer is NULL\n");
-        exit(EXIT_FAILURE);
-    }
-
-    // Create a hash map for groups
-    HashMap *groups = create_hash_map();
-
-    for (int i = 0; assigned_files[i] != NULL; i++) {
-        FILE* file = fopen(assigned_files[i], "r");
-        if (file == NULL) {
-            fprintf(stderr, "Error opening file: %s\n", assigned_files[i]);
-            continue;
-        }
-
-        char *line = NULL;
-        size_t len = 0;
-        ssize_t read;
-
-        // Read and skip the header line
-        if ((read = getline(&line, &len, file)) != -1) {
-            // Optionally, print or process the header line
-            printf("Header: %s", line);
-        }
+        line = NULL;
 
         while ((read = getline(&line, &len, file)) != -1) {
             if (read <= 1) continue; // Skip empty lines
 
             // Split the line into columns
             char* line_copy = strdup(line);
-            char* tipo_dia = strtok(line_copy, ";");
-            char* variante = strtok(NULL, ";");
-            char* frecuencia = strtok(NULL, ";");
-            char* cod_ubic_parada = strtok(NULL, ";");
-            char* ordinal = strtok(NULL, ";");
-            char* hora = strtok(NULL, ";");
-            char* dia_anterior = strtok(NULL, ";");
-            // char* latitud = strtok(NULL, ";");
-            // char* longitud = strtok(NULL, ";");
-
-            UNUSED(cod_ubic_parada);
-            UNUSED(ordinal);
-            UNUSED(hora);
-            // UNUSED(latitud);
-            // UNUSED(longitud);
-
-            // Check if bus is from day before
-            int tipo_dia_int = atoi(tipo_dia);
-            if (strcmp(dia_anterior, "S") == 0) {
-                tipo_dia_int = (tipo_dia_int == 1) ? 3 : tipo_dia_int - 1;
+            if (line_copy == NULL) {
+                perror("Failed to duplicate line");
+                continue;
             }
 
-            // Create the group key
-            char key[20];
-            sprintf(key, "%s_%s_%s", variante, frecuencia, tipo_dia);
+            char* key = NULL;
+            switch (key_type) {
+                case VFD: key = create_vfd(line);
+                case VFT: key = create_vft(line);
+                default:
+                    perror("Invalid Key Type");
+                    continue;
+            }
 
             // Add the row to the corresponding group
-            add_to_group(groups, key, line);
+            if (key != NULL) {
+                add_to_group(groups, key, line);
+            } else {
+                perror("Invalid Data");
+                continue;
+            }
+
             free(line_copy); // Free the copy after processing
         }
 
-        fclose(file);
         free(line);
+        fclose(file);
     }
 
     // Example: Print grouped data
