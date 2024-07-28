@@ -115,7 +115,7 @@ int main() {
 
     KeyType vft = VFT;
 
-    group_data_by_vft(assigned_files);
+    group_data_by_type(assigned_files, vft);
 
     free(assigned_files);
     return EXIT_SUCCESS;

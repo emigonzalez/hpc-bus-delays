@@ -245,16 +245,14 @@ void group_data_by_type(char** assigned_files, KeyType key_type) {
 
             char* key = NULL;
             switch (key_type) {
-                case VFD: key = create_vfd(line);
-                case VFT: key = create_vft(line);
-                default:
-                    perror("Invalid Key Type");
-                    continue;
+                case VFD: key = create_vfd(line_copy);
+                case VFT: key = create_vft(line_copy);
             }
 
             // Add the row to the corresponding group
             if (key != NULL) {
                 add_to_group(groups, key, line);
+                free(key);
             } else {
                 perror("Invalid Data");
                 continue;
