@@ -61,9 +61,9 @@ char** get_campos_capturas(HashMap* map);
 char** get_campos_horarios(HashMap* map);
 // return map->campos_horarios
 
-VFT** get_capturas(Entry*);
+VFT** get_capturas(Entry* entry);
     // return Entry->vfds
-VFD** get_horarios(Entry*);
+VFD** get_horarios(Entry* entry);
     // return Entry->vfts
 
 HashMap *create_hash_map();
@@ -82,3 +82,4 @@ void repoint_vfts_to_vfd_map(Entry* vfd_entry, Entry *vft_entry);
 Entry * insert_to_vfds(Entry *entry, VFD *vfd);
 
 #endif // HASH_MAP_H
+ 

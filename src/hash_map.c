@@ -338,3 +338,19 @@ void repoint_vfts_to_vfd_map(Entry* vfd_entry, Entry *vft_entry) {
     vft_entry->vft_count = 0;
     vft_entry->vft_capacity = 0;
 }
+
+char** get_campos_capturas(HashMap* map){
+    return map->campos_capturas;
+}
+
+char** get_campos_horarios(HashMap* map){
+    return map->campos_horarios;
+}
+
+VFT** get_capturas(Entry* entry){
+    return entry->vfds;
+}
+
+VFD** get_horarios(Entry* entry){
+    return entry->vfts;
+}
