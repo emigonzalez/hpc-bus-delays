@@ -55,10 +55,6 @@ typedef struct {
     char** campos_horarios;
 } HashMap;
 
-// Function to get and set the address of the existing vfd_map
-HashMap* get_vfd_map();
-void set_vfd_map(HashMap *map);
-
 char** get_campos_capturas(HashMap* map);
 char** get_campos_horarios(HashMap* map);
 
@@ -79,5 +75,5 @@ VFT* create_vft();
 VFD* create_vfd();
 void repoint_vfts_to_vfd_map(Entry* vfd_entry, Entry *vft_entry);
 Entry * insert_to_vfds(Entry *entry, VFD *vfd);
-
+void hello_world();
 #endif // HASH_MAP_H

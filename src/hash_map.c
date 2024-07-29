@@ -3,15 +3,8 @@
 #include <string.h>
 #include "hash_map.h"
 
-// Define the vfd_map variable
-HashMap *shared_vfd_map = NULL;
-
-HashMap* get_vfd_map() {
-    return shared_vfd_map;
-}
-
-void set_vfd_map(HashMap *map) {
-    shared_vfd_map = map;
+void hello_world() {
+    printf("HELLO WORLD FROM PYTHON!\n");
 }
 
 char** set_campos_capturas() {
