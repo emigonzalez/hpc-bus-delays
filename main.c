@@ -118,11 +118,146 @@ void handle_signal(int signal) {
 
 #define SHM_NAME "/vfd_map_shm"
 #define SEM_NAME "/vfd_map_sem"
-#define SHM_SIZE sizeof(HashMap)
+// #define SHM_SIZE sizeof(HashMap)
 
 HashMap *vfd_map = NULL;
 
+void copy_hash_map_to_shared_memory(HashMap *vfd_map, void *shared_memory) {
+    // Puntero para recorrer la memoria compartida
+    void *current_position = shared_memory;
+    // Copiar HashMap
+    HashMap *shm_hash_map = (HashMap *)current_position;
+    memcpy(shm_hash_map, vfd_map, sizeof(HashMap));
+    current_position += sizeof(HashMap);
+
+    // Copiar campos_capturas
+    char **src_campos_capturas = vfd_map->campos_capturas;
+    char **dst_campos_capturas = (char **)current_position;
+    size_t num_campos_capturas = 15; //vfd_map->size; // Asegúrate de usar el número correcto
+    current_position += num_campos_capturas * sizeof(char *);
+
+    for (size_t i = 0; i < num_campos_capturas; ++i) {
+        size_t str_len = strlen(src_campos_capturas[i]) + 1;
+        dst_campos_capturas[i] = (char *)current_position;
+        memcpy(dst_campos_capturas[i], src_campos_capturas[i], str_len);
+        current_position += str_len;
+    }
+    
+    shm_hash_map->campos_capturas = (char **)shared_memory + sizeof(HashMap);
+
+    
+    // Copiar campos_horarios de forma similar
+    char **src_campos_horarios = vfd_map->campos_horarios;
+    char **dst_campos_horarios = (char **)current_position;
+    size_t num_campos_horarios = 9; //vfd_map->size; // Ajusta según sea necesario
+    current_position += num_campos_horarios * sizeof(char *);
+
+    for (size_t i = 0; i < num_campos_horarios; ++i) {
+        size_t str_len = strlen(src_campos_horarios[i]) + 1;
+        dst_campos_horarios[i] = (char *)current_position;
+        memcpy(dst_campos_horarios[i], src_campos_horarios[i], str_len);
+        current_position += str_len;
+    }
+    
+    shm_hash_map->campos_horarios = (char **)shared_memory + sizeof(HashMap) + num_campos_capturas * sizeof(char *);
+
+    // Copiar las entradas del HashMap
+    Entry **src_entries = vfd_map->buckets;
+    Entry **dst_entries = (Entry **)current_position;
+    current_position += vfd_map->size * sizeof(Entry *);
+
+    for (size_t i = 0; i < vfd_map->size; ++i) {
+        if (src_entries[i] != NULL) {
+            size_t entry_size = sizeof(Entry) + src_entries[i]->vft_count * sizeof(VFT *);
+            dst_entries[i] = (Entry *)current_position;
+            memcpy(dst_entries[i], src_entries[i], entry_size);
+            current_position += entry_size;
+
+            // Copiar VFTs y VFDs si están presentes
+            VFT **src_vfts = src_entries[i]->vfts;
+            VFT **dst_vfts = dst_entries[i]->vfts;
+            for (size_t j = 0; j < src_entries[i]->vft_count; ++j) {
+                size_t vft_size = sizeof(VFT);
+                dst_vfts[j] = (VFT *)current_position;
+                memcpy(dst_vfts[j], src_vfts[j], vft_size);
+                current_position += vft_size;
+            }
+
+            VFD **src_vfds = src_entries[i]->vfds;
+            VFD **dst_vfds = dst_entries[i]->vfds;
+            for (size_t j = 0; j < src_entries[i]->vfd_count; ++j) {
+                size_t vfd_size = sizeof(VFD);
+                dst_vfds[j] = (VFD *)current_position;
+                memcpy(dst_vfds[j], src_vfds[j], vfd_size);
+                current_position += vfd_size;
+            }
+        }
+    }
+}
+
+
+size_t calculate_hash_map_size(HashMap *map) {
+    size_t size = sizeof(HashMap);
+
+    // Suponiendo que map->buckets es un array de punteros a Entry
+    size += sizeof(Entry*) * map->size;
+
+    // Calcular tamaño de campos_capturas
+    if (map->campos_capturas) {
+        size += sizeof(char*) * map->count;
+        for (size_t i = 0; i < map->count; ++i) {
+            size += strlen(map->campos_capturas[i]) + 1; // +1 para el carácter null
+        }
+    }
+
+    // Calcular tamaño de campos_horarios
+    if (map->campos_horarios) {
+        size += sizeof(char*) * map->count;
+        for (size_t i = 0; i < map->count; ++i) {
+            size += strlen(map->campos_horarios[i]) + 1; // +1 para el carácter null
+        }
+    }
+
+    // Añadir tamaño de cada Entry
+    for (size_t i = 0; i < map->size; ++i) {
+        Entry *entry = map->buckets[i];
+        while (entry) {
+            // Añadir tamaño de cada Entry
+            size += sizeof(Entry);
+
+            // Añadir tamaño de VFT* y VFD* en Entry
+            size += sizeof(VFT*) * entry->vft_capacity;
+            for (size_t j = 0; j < entry->vft_count; ++j) {
+                size += sizeof(VFT);
+                // Añadir tamaño de los campos en VFT
+                size += strlen(entry->vfts[j]->cod_variante) + 1;
+                size += strlen(entry->vfts[j]->frecuencia) + 1;
+                // ... Hacer lo mismo para otros campos en VFT
+            }
+
+            size += sizeof(VFD*) * entry->vfd_capacity;
+            for (size_t j = 0; j < entry->vfd_count; ++j) {
+                size += sizeof(VFD);
+                // Añadir tamaño de los campos en VFD
+                size += strlen(entry->vfds[j]->id) + 1;
+                size += strlen(entry->vfds[j]->codigoEmpresa) + 1;
+                // ... Hacer lo mismo para otros campos en VFD
+            }
+
+            entry = entry->next;
+        }
+    }
+
+    return size;
+}
+
+
+
+
+
 void run_python_script(const char *script_name) {
+    size_t SHM_SIZE = calculate_hash_map_size(vfd_map);
+    printf("SHM_SIZE: %zu\n", SHM_SIZE);
     // Create a shared memory object
     int shm_fd = shm_open(SHM_NAME, O_CREAT | O_RDWR, 0666);
     if (shm_fd == -1) {
@@ -142,9 +277,11 @@ void run_python_script(const char *script_name) {
         perror("mmap");
         exit(1);
     }
-
+    
     // Copy vfd_map to the shared memory
-    memcpy(shm_map, vfd_map, SHM_SIZE);
+    // memcpy(shm_map, vfd_map, SHM_SIZE);
+    copy_hash_map_to_shared_memory(vfd_map,shm_map);
+    
 
     // Synchronize the shared memory
     msync(shm_map, SHM_SIZE, MS_SYNC);
@@ -158,7 +295,8 @@ void run_python_script(const char *script_name) {
 
     // Call the Python script
     char command[256];
-    snprintf(command, sizeof(command), "python3 access_vfd_map.py");
+    snprintf(command, sizeof(command), "python3.10 access_vfd_map.py");
+    // snprintf(command, sizeof(command), "python3.10 calcular-retrasos_conC.py");
     FILE *fp = popen(command, "r");
     if (fp == NULL) {
         perror("popen");
@@ -191,11 +329,11 @@ int main() {
     printf("BEGIN in C \n");
 
     char** capturas = (char**)malloc(2 * sizeof(char*));
-    capturas[0] = "data/stm-buses-2024-06-09_09_min.csv";
+    capturas[0] = "data/stm-buses-2024-06-09_09.csv";
     capturas[1] = NULL; // Terminate the list
 
     char** horarios = (char**)malloc(2 * sizeof(char*));
-    horarios[0] = "data/uptu_pasada_variante_min.csv";
+    horarios[0] = "data/uptu_pasada_variante.csv";
     horarios[1] = NULL; // Terminate the list
 
     printf("GENERATING VFT...\n");
@@ -210,6 +348,18 @@ int main() {
     // Example: Print grouped data
     print_hash_map(vfd_map);
 
+    char** campos = (get_campos_capturas(vfd_map));
+    for (size_t i = 0; i < 15; ++i) {
+        char*  campo = campos[i];
+        printf(campo);
+        printf("\n");
+        
+    }
+
+    printf("HashMap size: %zu\n", vfd_map->size);
+    printf("HashMap count: %zu\n", vfd_map->count);
+
+    
     // Path to the Python script
     const char *script_name = "access_vfd_map.py";
 

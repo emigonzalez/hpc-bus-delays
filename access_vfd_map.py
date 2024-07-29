@@ -61,8 +61,16 @@ class HashMap(Structure):
         ('campos_horarios', POINTER(c_char_p))
     ]
 
+# Configuración de las funciones
+lib.get_campos_capturas.restype = POINTER(c_char_p)
+lib.get_campos_capturas.argtypes = [POINTER(HashMap)]
+
+lib.get_campos_horarios.restype = POINTER(c_char_p)
+lib.get_campos_horarios.argtypes = [POINTER(HashMap)]
+
+
 SHM_NAME = '/vfd_map_shm'
-SHM_SIZE = 4096  # Adjust size according to your needs
+SHM_SIZE = 8040  # Adjust size according to your needs
 
 def main():
     try:
@@ -78,7 +86,26 @@ def main():
             # Print or process the data
             print(f"HashMap size: {hashmap.size}")
             print(f"HashMap count: {hashmap.count}")
+            
+            campos_horarios_ptr = hashmap.campos_horarios
+            index = 0
+            print(f"Campo horario {index}: {campos_horarios_ptr[index].decode('utf-8')}")
+            # while True:
+            #     # Leer cada cadena
+            #     campo = campos_horarios_ptr[index]
+            #     if campo == 0:
+            #         break
+            #     print(f"Campo horario {index}: {campo.decode('utf-8')}")
+            #     index += 1
 
+
+            # char** campos = (get_campos_capturas(vfd_map))
+            # for (size_t i = 0; i < 15; ++i) {
+            #     char*  campo = campos[i];
+            #     printf(campo);
+            #     printf("\n");}
+        
+        
     except ExistentialError:
         print(f"Shared memory object '{SHM_NAME}' not found.")
     except Exception as e:

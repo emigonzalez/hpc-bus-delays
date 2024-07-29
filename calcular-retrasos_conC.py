@@ -2,14 +2,19 @@
 import sys
 import csv
 import os
+import mmap
+from posix_ipc import SharedMemory, ExistentialError
 
 from ctypes import *
 
-try:
-    lib = CDLL('./hash_map.so')
-    print('Biblioteca cargada exitosamente')
-except Exception as e:
-    print('Error al cargar la biblioteca:', e)
+
+lib = cdll.LoadLibrary('./hash_map.so')
+
+# try:
+#     lib = CDLL.LoadLibrary('./hash_map.so')
+#     print('Biblioteca cargada exitosamente')
+# except Exception as e:
+#     print('Error al cargar la biblioteca:', e)
 
 class VFT(Structure):
     _fields_ = [
@@ -86,11 +91,6 @@ lib.hash_map_search.argtypes = [POINTER(HashMap), c_char_p]
 
 lib.get_all_keys.restype = POINTER(c_char_p)
 lib.get_all_keys.argtypes = [POINTER(HashMap), POINTER(c_size_t)]
-
-lib.get_vfd_map.restype = POINTER(HashMap)
-lib.get_vfd_map.argtypes = []
-
-
 
 # Configurar las variables de entorno necesarias maquina gabriel
 
@@ -925,25 +925,25 @@ salida = os.getcwd() + '/retrasos.csv'  #csv de los atrasos
 
 # procesar_vfd_vft(archivo_vfd, archivo_vft)
 
-if len(sys.argv) > 1:
-    try:
-        hash_map_address = int(sys.argv[1], 16)
-        print("Dirección recibida en Python:", hex(hash_map_address))
+# if len(sys.argv) > 1:
+#     try:
+#         hash_map_address = int(sys.argv[1], 16)
+#         print("Dirección recibida en Python:", hex(hash_map_address))
         
-        hash_map = POINTER(HashMap).from_address(hash_map_address)
+#         hash_map = POINTER(HashMap).from_address(hash_map_address)
         
-        # Verificar si el puntero es NULL
-        if hash_map_address == 0:
-            print('Error: El puntero HashMap es NULL')
-        else:
-            print('Dirección del puntero HashMap:', hex(addressof(hash_map.contents)))
-            print('Size:', hash_map.contents.size)
-            print('Count:', hash_map.contents.count)
-    except Exception as e:
-        print('Error al acceder al puntero HashMap:', e)
+#         # Verificar si el puntero es NULL
+#         if hash_map_address == 0:
+#             print('Error: El puntero HashMap es NULL')
+#         else:
+#             print('Dirección del puntero HashMap:', hex(addressof(hash_map.contents)))
+#             print('Size:', hash_map.contents.size)
+#             print('Count:', hash_map.contents.count)
+#     except Exception as e:
+#         print('Error al acceder al puntero HashMap:', e)
 
 
-hash_map = lib.get_vfd_map()
+# hash_map = lib.get_vfd_map()
 # hash_map_address = addressof(hash_map.contents)
 # print('Dirección del puntero HashMap:', hex(hash_map_address))
 
@@ -959,7 +959,31 @@ hash_map = lib.get_vfd_map()
 # print('Count:', hash_map.contents.count)
 # hash_map_pointer = POINTER(HashMap).from_address(hash_map)
 # print(' a ver qu imprime', hash_map_pointer)
-procesar_Hash(hash_map)
+
+SHM_NAME = '/vfd_map_shm'
+SHM_SIZE = 4096  # Adjust size according to your needs
+
+try:
+    shm = SharedMemory(SHM_NAME)
+    with mmap.mmap(shm.fd, shm.size) as mm:
+        # Read the raw data
+        raw_data = mm.read(shm.size)
+
+        # Create a ctypes pointer to the shared memory
+        hashmap_ptr = cast(raw_data, POINTER(HashMap))
+        # Access the contents
+        hashmap = hashmap_ptr.contents
+        # Print or process the data
+        print(f"HashMap size: {hashmap.size}")
+        print(f"HashMap count: {hashmap.count}")
+        campos_capturas = lib.get_campos_capturas(hashmap)
+        print(campos_capturas[0].decode('utf-8'))
+except ExistentialError:
+    print(f"Shared memory object '{SHM_NAME}' not found.")
+except Exception as e:
+    print(f"Error: {e}")
+
+# procesar_Hash(hash_map)
 
 # Recibir el argumento como un puntero a HashMap
 # nombreHash = int(sys.argv[1], 16)
