@@ -51,7 +51,20 @@ typedef struct {
     Entry **buckets;
     size_t size;
     size_t count;
+    char** campos_capturas;
+    char** campos_horarios;
 } HashMap;
+
+char** get_campos_capturas(HashMap* map);
+// return map->campos_capturas
+
+char** get_campos_horarios(HashMap* map);
+// return map->campos_horarios
+
+VFT** get_capturas(Entry*);
+    // return Entry->vfds
+VFD** get_horarios(Entry*);
+    // return Entry->vfts
 
 HashMap *create_hash_map();
 void free_hash_map(HashMap *map);

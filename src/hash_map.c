@@ -17,6 +17,39 @@ HashMap *create_hash_map() {
     map->buckets = (Entry **)calloc(INITIAL_CAPACITY, sizeof(Entry *));
     map->size = INITIAL_CAPACITY;
     map->count = 0;
+
+    char** campos_capturas = (char**)malloc(2 * sizeof(char*));
+    campos_capturas[0] = "id";
+    campos_capturas[1] = "codigoEmpresa";
+    campos_capturas[2] = "frecuencia";
+    campos_capturas[3] = "codigoBus";
+    campos_capturas[4] = "variante";
+    campos_capturas[5] = "linea";
+    campos_capturas[6] = "sublinea";
+    campos_capturas[7] = "tipoLinea";
+    campos_capturas[8] = "destino";
+    campos_capturas[9] = "subsistema";
+    campos_capturas[10] = "version";
+    campos_capturas[11] = "velocidad";
+    campos_capturas[12] = "latitud";
+    campos_capturas[13] = "longitud";
+    campos_capturas[14] = "fecha";
+    campos_capturas[15] = NULL; 
+    map->campos_capturas = campos_capturas;
+
+    char** campos_horarios = (char**)malloc(2 * sizeof(char*));
+    campos_horarios[0] = "tipo_dia";
+    campos_horarios[1] = "cod_variante";
+    campos_horarios[2] = "frecuencia";
+    campos_horarios[3] = "cod_ubic_parada";
+    campos_horarios[4] = "ordinal";
+    campos_horarios[5] = "hora";
+    campos_horarios[6] = "dia_anterior";
+    campos_horarios[7] = "X";
+    campos_horarios[8] = "Y";
+    campos_capturas[9] = NULL; 
+    map->campos_horarios = campos_horarios;
+
     return map;
 }
 
