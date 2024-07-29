@@ -251,10 +251,6 @@ size_t calculate_hash_map_size(HashMap *map) {
     return size;
 }
 
-
-
-
-
 void run_python_script(const char *script_name) {
     size_t SHM_SIZE = calculate_hash_map_size(vfd_map);
     printf("SHM_SIZE: %zu\n", SHM_SIZE);
@@ -280,8 +276,7 @@ void run_python_script(const char *script_name) {
     
     // Copy vfd_map to the shared memory
     // memcpy(shm_map, vfd_map, SHM_SIZE);
-    copy_hash_map_to_shared_memory(vfd_map,shm_map);
-    
+    shm_map = deep_copy_hashmap(vfd_map);
 
     // Synchronize the shared memory
     msync(shm_map, SHM_SIZE, MS_SYNC);
@@ -295,7 +290,7 @@ void run_python_script(const char *script_name) {
 
     // Call the Python script
     char command[256];
-    snprintf(command, sizeof(command), "python3.10 access_vfd_map.py");
+    snprintf(command, sizeof(command), "python3 access_vfd_map.py");
     // snprintf(command, sizeof(command), "python3.10 calcular-retrasos_conC.py");
     FILE *fp = popen(command, "r");
     if (fp == NULL) {
@@ -317,6 +312,7 @@ void run_python_script(const char *script_name) {
 
     // Clean up
     munmap(shm_map, SHM_SIZE);
+    free(shm_map);
     close(shm_fd);
 
     // Unlink the shared memory object and semaphore only after Python script finishes
@@ -329,11 +325,11 @@ int main() {
     printf("BEGIN in C \n");
 
     char** capturas = (char**)malloc(2 * sizeof(char*));
-    capturas[0] = "data/stm-buses-2024-06-09_09.csv";
+    capturas[0] = "data/stm-buses-2024-06-09_09_min.csv";
     capturas[1] = NULL; // Terminate the list
 
     char** horarios = (char**)malloc(2 * sizeof(char*));
-    horarios[0] = "data/uptu_pasada_variante.csv";
+    horarios[0] = "data/uptu_pasada_variante_min.csv";
     horarios[1] = NULL; // Terminate the list
 
     printf("GENERATING VFT...\n");
@@ -351,7 +347,7 @@ int main() {
     char** campos = (get_campos_capturas(vfd_map));
     for (size_t i = 0; i < 15; ++i) {
         char*  campo = campos[i];
-        printf(campo);
+        printf("%s", campo);
         printf("\n");
         
     }

@@ -70,7 +70,7 @@ lib.get_campos_horarios.argtypes = [POINTER(HashMap)]
 
 
 SHM_NAME = '/vfd_map_shm'
-SHM_SIZE = 8040  # Adjust size according to your needs
+SHM_SIZE = 22287  # Adjust size according to your needs
 
 def main():
     try:
@@ -87,9 +87,10 @@ def main():
             print(f"HashMap size: {hashmap.size}")
             print(f"HashMap count: {hashmap.count}")
             
-            campos_horarios_ptr = hashmap.campos_horarios
+            campos_horarios_ptr = lib.get_campos_horarios(hashmap)
             index = 0
-            print(f"Campo horario {index}: {campos_horarios_ptr[index].decode('utf-8')}")
+            print(f"Campo horario {index}: {hashmap.campos_horarios}")
+            print(f"Campo horario {index}: {campos_horarios_ptr.contents.decode('utf-8')}")
             # while True:
             #     # Leer cada cadena
             #     campo = campos_horarios_ptr[index]

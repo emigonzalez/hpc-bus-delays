@@ -76,4 +76,6 @@ VFD* create_vfd();
 void repoint_vfts_to_vfd_map(Entry* vfd_entry, Entry *vft_entry);
 Entry * insert_to_vfds(Entry *entry, VFD *vfd);
 void hello_world();
+HashMap* deep_copy_hashmap(HashMap* map);
+
 #endif // HASH_MAP_H

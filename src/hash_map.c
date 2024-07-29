@@ -368,3 +368,127 @@ VFD** get_capturas(Entry* entry){
 VFT** get_horarios(Entry* entry){
     return entry->vfts;
 }
+
+// Function to deep copy a string
+char* deep_copy_string(const char* str) {
+    if (str == NULL) {
+        return NULL;
+    }
+    char* copy = malloc(strlen(str) + 1);
+    if (copy) {
+        strcpy(copy, str);
+    }
+    return copy;
+}
+
+// Function to deep copy a VFT structure
+VFT* deep_copy_vft(VFT* vft) {
+    if (vft == NULL) {
+        return NULL;
+    }
+    VFT* copy = malloc(sizeof(VFT));
+    if (copy) {
+        copy->tipo_dia = vft->tipo_dia;
+        copy->cod_variante = deep_copy_string(vft->cod_variante);
+        copy->frecuencia = deep_copy_string(vft->frecuencia);
+        copy->cod_ubic_parada = deep_copy_string(vft->cod_ubic_parada);
+        copy->ordinal = deep_copy_string(vft->ordinal);
+        copy->hora = deep_copy_string(vft->hora);
+        copy->dia_anterior = deep_copy_string(vft->dia_anterior);
+        copy->X = deep_copy_string(vft->X);
+        copy->Y = deep_copy_string(vft->Y);
+    }
+    return copy;
+}
+
+// Function to deep copy a VFD structure
+VFD* deep_copy_vfd(VFD* vfd) {
+    if (vfd == NULL) {
+        return NULL;
+    }
+    VFD* copy = malloc(sizeof(VFD));
+    if (copy) {
+        copy->id = deep_copy_string(vfd->id);
+        copy->codigoEmpresa = deep_copy_string(vfd->codigoEmpresa);
+        copy->frecuencia = deep_copy_string(vfd->frecuencia);
+        copy->codigoBus = deep_copy_string(vfd->codigoBus);
+        copy->variante = deep_copy_string(vfd->variante);
+        copy->linea = deep_copy_string(vfd->linea);
+        copy->sublinea = deep_copy_string(vfd->sublinea);
+        copy->tipoLinea = deep_copy_string(vfd->tipoLinea);
+        copy->destino = deep_copy_string(vfd->destino);
+        copy->subsistema = deep_copy_string(vfd->subsistema);
+        copy->version = deep_copy_string(vfd->version);
+        copy->velocidad = deep_copy_string(vfd->velocidad);
+        copy->latitud = deep_copy_string(vfd->latitud);
+        copy->longitud = deep_copy_string(vfd->longitud);
+        copy->fecha = deep_copy_string(vfd->fecha);
+    }
+    return copy;
+}
+
+// Function to deep copy an Entry structure
+Entry* deep_copy_entry(Entry* entry) {
+    if (entry == NULL) {
+        return NULL;
+    }
+    Entry* copy = malloc(sizeof(Entry));
+    if (copy) {
+        copy->key = deep_copy_string(entry->key);
+
+        copy->vft_count = entry->vft_count;
+        copy->vft_capacity = entry->vft_capacity;
+        if (entry->vfts) {
+            copy->vfts = malloc(sizeof(VFT*) * copy->vft_capacity);
+            for (size_t i = 0; i < copy->vft_count; i++) {
+                copy->vfts[i] = deep_copy_vft(entry->vfts[i]);
+            }
+        }
+
+        copy->vfd_count = entry->vfd_count;
+        copy->vfd_capacity = entry->vfd_capacity;
+        if (entry->vfds) {
+            copy->vfds = malloc(sizeof(VFD*) * copy->vfd_capacity);
+            for (size_t i = 0; i < copy->vfd_count; i++) {
+                copy->vfds[i] = deep_copy_vfd(entry->vfds[i]);
+            }
+        }
+
+        copy->next = deep_copy_entry(entry->next);
+    }
+    return copy;
+}
+
+// Function to deep copy a HashMap structure
+HashMap* deep_copy_hashmap(HashMap* map) {
+    if (map == NULL) {
+        return NULL;
+    }
+    HashMap* copy = malloc(sizeof(HashMap));
+    if (copy) {
+        copy->size = map->size;
+        copy->count = map->count;
+
+        if (map->buckets) {
+            copy->buckets = malloc(sizeof(Entry*) * map->size);
+            for (size_t i = 0; i < map->size; i++) {
+                copy->buckets[i] = deep_copy_entry(map->buckets[i]);
+            }
+        }
+
+        if (map->campos_capturas) {
+            copy->campos_capturas = malloc(sizeof(char*) * map->count);
+            for (size_t i = 0; i < map->count; i++) {
+                copy->campos_capturas[i] = deep_copy_string(map->campos_capturas[i]);
+            }
+        }
+
+        if (map->campos_horarios) {
+            copy->campos_horarios = malloc(sizeof(char*) * map->count);
+            for (size_t i = 0; i < map->count; i++) {
+                copy->campos_horarios[i] = deep_copy_string(map->campos_horarios[i]);
+            }
+        }
+    }
+    return copy;
+}
