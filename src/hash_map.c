@@ -3,22 +3,19 @@
 #include <string.h>
 #include "hash_map.h"
 
-unsigned long hash(const char *str, size_t size) {
-    unsigned long hash = 5381;
-    int c;
-    while ((c = *str++)) {
-        hash = ((hash << 5) + hash) + c; // hash * 33 + c
-    }
-    return hash % size;
+// Define the vfd_map variable
+HashMap *shared_vfd_map = NULL;
+
+HashMap* get_vfd_map() {
+    return shared_vfd_map;
 }
 
-HashMap *create_hash_map() {
-    HashMap *map = (HashMap *)malloc(sizeof(HashMap));
-    map->buckets = (Entry **)calloc(INITIAL_CAPACITY, sizeof(Entry *));
-    map->size = INITIAL_CAPACITY;
-    map->count = 0;
+void set_vfd_map(HashMap *map) {
+    shared_vfd_map = map;
+}
 
-    char** campos_capturas = (char**)malloc(2 * sizeof(char*));
+char** set_campos_capturas() {
+    char** campos_capturas = (char**)malloc(16 * sizeof(char*));
     campos_capturas[0] = "id";
     campos_capturas[1] = "codigoEmpresa";
     campos_capturas[2] = "frecuencia";
@@ -34,10 +31,13 @@ HashMap *create_hash_map() {
     campos_capturas[12] = "latitud";
     campos_capturas[13] = "longitud";
     campos_capturas[14] = "fecha";
-    campos_capturas[15] = NULL; 
-    map->campos_capturas = campos_capturas;
+    campos_capturas[15] = NULL;
 
-    char** campos_horarios = (char**)malloc(2 * sizeof(char*));
+    return campos_capturas;
+}
+
+char** set_campos_horarios() {
+    char** campos_horarios = (char**)malloc(16 * sizeof(char*));
     campos_horarios[0] = "tipo_dia";
     campos_horarios[1] = "cod_variante";
     campos_horarios[2] = "frecuencia";
@@ -47,8 +47,27 @@ HashMap *create_hash_map() {
     campos_horarios[6] = "dia_anterior";
     campos_horarios[7] = "X";
     campos_horarios[8] = "Y";
-    campos_capturas[9] = NULL; 
-    map->campos_horarios = campos_horarios;
+    campos_horarios[9] = NULL; 
+
+    return campos_horarios;
+}
+
+unsigned long hash(const char *str, size_t size) {
+    unsigned long hash = 5381;
+    int c;
+    while ((c = *str++)) {
+        hash = ((hash << 5) + hash) + c; // hash * 33 + c
+    }
+    return hash % size;
+}
+
+HashMap *create_hash_map() {
+    HashMap *map = (HashMap *)malloc(sizeof(HashMap));
+    map->buckets = (Entry **)calloc(INITIAL_CAPACITY, sizeof(Entry *));
+    map->size = INITIAL_CAPACITY;
+    map->count = 0;
+    map->campos_capturas = set_campos_capturas();
+    map->campos_horarios = set_campos_horarios();
 
     return map;
 }
@@ -119,6 +138,8 @@ void free_hash_map(HashMap *map) {
         }
     }
     free(map->buckets);
+    free(map->campos_capturas);
+    free(map->campos_horarios);
     free(map);
 }
 
@@ -347,10 +368,10 @@ char** get_campos_horarios(HashMap* map){
     return map->campos_horarios;
 }
 
-VFT** get_capturas(Entry* entry){
+VFD** get_capturas(Entry* entry){
     return entry->vfds;
 }
 
-VFD** get_horarios(Entry* entry){
+VFT** get_horarios(Entry* entry){
     return entry->vfts;
 }

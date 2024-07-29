@@ -125,6 +125,8 @@ int main() {
     printf("VFT GENERATED.\n");
     printf("GENERATING VFD...\n");
     HashMap* vfd_map = group_data_by_vfd(capturas, vft_map);
+    
+    set_vfd_map(vfd_map);
 
     printf("VFD GENERATED.\n");
     printf("PRINTING MAP...\n");
