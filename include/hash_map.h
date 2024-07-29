@@ -8,14 +8,14 @@
 
 typedef struct {
     int tipo_dia;
-    char *variante;
+    char *cod_variante;
     char *frecuencia;
     char *cod_ubic_parada;
     char *ordinal;
     char *hora;
     char *dia_anterior;
-    char *latitud;
-    char *longitud;
+    char *X;
+    char *Y;
 } VFT;
 
 typedef struct {
@@ -69,7 +69,7 @@ VFD** get_horarios(Entry*);
 HashMap *create_hash_map();
 void free_hash_map(HashMap *map);
 int hash_map_insert_vft(HashMap *map, const char *key, VFT *vft);
-int hash_map_insert_vfd(HashMap *map, const char *key, VFD *vfd);
+Entry *hash_map_insert_vfd(HashMap *map, const char *key, VFD *vfd);
 Entry *hash_map_search(HashMap *map, const char *key);
 void resize_hash_map(HashMap *map);
 char **get_all_keys(HashMap *map, size_t *key_count);
@@ -78,5 +78,7 @@ void free_vft(VFT *vft);
 void free_vfd(VFD *vfd);
 VFT* create_vft();
 VFD* create_vfd();
+void repoint_vfts_to_vfd_map(Entry* vfd_entry, Entry *vft_entry);
+Entry * insert_to_vfds(Entry *entry, VFD *vfd);
 
 #endif // HASH_MAP_H
