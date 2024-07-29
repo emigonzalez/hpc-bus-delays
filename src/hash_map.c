@@ -22,14 +22,14 @@ HashMap *create_hash_map() {
 
 void free_vft(VFT *vft) {
     if (vft) {
-        if (vft->variante) free(vft->variante);
+        if (vft->cod_variante) free(vft->cod_variante);
         if (vft->frecuencia) free(vft->frecuencia);
         if (vft->cod_ubic_parada) free(vft->cod_ubic_parada);
         if (vft->ordinal) free(vft->ordinal);
         if (vft->hora) free(vft->hora);
         if (vft->dia_anterior) free(vft->dia_anterior);
-        if (vft->latitud) free(vft->latitud);
-        if (vft->longitud) free(vft->longitud);
+        if (vft->X) free(vft->X);
+        if (vft->Y) free(vft->Y);
         free(vft);
     }
 }
@@ -241,7 +241,7 @@ void print_hash_map(HashMap *map) {
             for (size_t j = 0; j < entry->vft_count; j++) {
                 VFT *vft = entry->vfts[j];
                 printf("  Tipo Dia: %d, Variante: %s, Frecuencia: %s, Cod Ubic Parada: %s, Ordinal: %s, Hora: %s, Dia Anterior: %s, Latitud: %s, Longitud: %s\n",
-                       vft->tipo_dia, vft->variante, vft->frecuencia, vft->cod_ubic_parada, vft->ordinal, vft->hora, vft->dia_anterior, vft->latitud, vft->longitud);
+                       vft->tipo_dia, vft->cod_variante, vft->frecuencia, vft->cod_ubic_parada, vft->ordinal, vft->hora, vft->dia_anterior, vft->X, vft->Y);
             }
 
             printf("VFDs:\n");
@@ -260,14 +260,14 @@ VFT* create_vft() {
     VFT *vft = (VFT *)malloc(sizeof(VFT));
     if (vft) {
         vft->tipo_dia = 0;
-        vft->variante = NULL;
+        vft->cod_variante = NULL;
         vft->frecuencia = NULL;
         vft->cod_ubic_parada = NULL;
         vft->ordinal = NULL;
         vft->hora = NULL;
         vft->dia_anterior = NULL;
-        vft->latitud = NULL;
-        vft->longitud = NULL;
+        vft->X = NULL;
+        vft->Y = NULL;
     }
     return vft;
 }

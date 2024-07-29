@@ -127,14 +127,14 @@ VFT* row_to_vft(char* line) {
 
     VFT* vft = create_vft();
     vft->tipo_dia = tipo_dia_int;
-    vft->variante = strdup(variante);
+    vft->cod_variante = strdup(variante);
     vft->frecuencia = strdup(frecuencia);
     vft->cod_ubic_parada = strdup(cod_ubic_parada);
     vft->ordinal = strdup(ordinal);
     vft->hora = strdup(hora);
     vft->dia_anterior = strdup(dia_anterior);
-    vft->latitud = NULL;
-    vft->longitud = NULL;
+    vft->X = NULL;
+    vft->Y = NULL;
 
     return vft;
 }
@@ -215,11 +215,11 @@ char* create_vft_key(char* line) {
     VFT* vft = row_to_vft(line);
     if (vft == NULL) return NULL;
 
-    size_t key_length = strlen(vft->variante) + strlen(vft->frecuencia) + 3 + 1; // "<variante>_<frecuencia>_<tipo_dia>\0"
+    size_t key_length = strlen(vft->cod_variante) + strlen(vft->frecuencia) + 3 + 1; // "<cod_variante>_<frecuencia>_<tipo_dia>\0"
     char* key = (char*)malloc(key_length * sizeof(char));
 
     // Create the vft key
-    snprintf(key, key_length, "%s_%s_%d", vft->variante, vft->frecuencia, vft->tipo_dia);
+    snprintf(key, key_length, "%s_%s_%d", vft->cod_variante, vft->frecuencia, vft->tipo_dia);
 
     free_vft(vft);
     return key;

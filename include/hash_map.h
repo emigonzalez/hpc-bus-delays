@@ -8,14 +8,14 @@
 
 typedef struct {
     int tipo_dia;
-    char *variante;
+    char *cod_variante;
     char *frecuencia;
     char *cod_ubic_parada;
     char *ordinal;
     char *hora;
     char *dia_anterior;
-    char *latitud;
-    char *longitud;
+    char *X;
+    char *Y;
 } VFT;
 
 typedef struct {
