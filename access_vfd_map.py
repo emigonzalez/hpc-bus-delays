@@ -79,9 +79,6 @@ def main():
             print(f"HashMap size: {hashmap.size}")
             print(f"HashMap count: {hashmap.count}")
 
-            # Print or process the data
-            print(f"HashMap size: {hashmap.size}")
-            print(f"HashMap count: {hashmap.count}")
     except ExistentialError:
         print(f"Shared memory object '{SHM_NAME}' not found.")
     except Exception as e:
