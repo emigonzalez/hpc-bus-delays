@@ -20,8 +20,10 @@ int is_valid_departure_time(const char* frecuencia) {
     if (len < 4 || len > 6) return 0; // Must be 4 to 6 characters long to include the trailing zero
 
     int minutes = (atoi(frecuencia + len - 3) / 10) % 60; // Last three digits divided by 10 for minutes
-    int hours = atoi(frecuencia + len - 3); // Remaining digits for hours
+    char* hours_str = strndup(frecuencia, len - 3);
+    int hours = atoi(hours_str); // Remaining digits for hours
 
+    free(hours_str);
     return (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59);
 }
 
