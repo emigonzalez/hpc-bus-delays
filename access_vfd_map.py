@@ -68,9 +68,19 @@ lib.get_campos_capturas.argtypes = [POINTER(HashMap)]
 lib.get_campos_horarios.restype = POINTER(c_char_p)
 lib.get_campos_horarios.argtypes = [POINTER(HashMap)]
 
+# Define the return type and argument types for the C function
+lib.get_all_keys.restype = POINTER(c_char_p)
+lib.get_all_keys.argtypes = [POINTER(HashMap), POINTER(c_size_t)]
+
+# Example usage
+def get_all_keys_from_hashmap(hashmap_ptr):
+    key_count = c_size_t()
+    keys_ptr = lib.get_all_keys(hashmap_ptr, key_count)
+    keys = [keys_ptr[i].decode('utf-8') for i in range(key_count.value)]
+    return keys
 
 SHM_NAME = '/vfd_map_shm'
-SHM_SIZE = 22287  # Adjust size according to your needs
+SHM_SIZE = 1024*1024  # Adjust size according to your needs
 
 def main():
     try:

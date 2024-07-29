@@ -369,126 +369,154 @@ VFT** get_horarios(Entry* entry){
     return entry->vfts;
 }
 
-// Function to deep copy a string
-char* deep_copy_string(const char* str) {
+void* deep_copy_string_to_shared_memory(const char* str, void* shared_mem) {
     if (str == NULL) {
-        return NULL;
+        return shared_mem;
     }
-    char* copy = malloc(strlen(str) + 1);
-    if (copy) {
-        strcpy(copy, str);
-    }
-    return copy;
+    size_t len = strlen(str) + 1;
+    memcpy(shared_mem, str, len);
+    return (void*)((char*)shared_mem + len);
 }
 
-// Function to deep copy a VFT structure
-VFT* deep_copy_vft(VFT* vft) {
+void* deep_copy_vft_to_shared_memory(VFT* vft, void* shared_mem) {
     if (vft == NULL) {
-        return NULL;
+        return shared_mem;
     }
-    VFT* copy = malloc(sizeof(VFT));
-    if (copy) {
-        copy->tipo_dia = vft->tipo_dia;
-        copy->cod_variante = deep_copy_string(vft->cod_variante);
-        copy->frecuencia = deep_copy_string(vft->frecuencia);
-        copy->cod_ubic_parada = deep_copy_string(vft->cod_ubic_parada);
-        copy->ordinal = deep_copy_string(vft->ordinal);
-        copy->hora = deep_copy_string(vft->hora);
-        copy->dia_anterior = deep_copy_string(vft->dia_anterior);
-        copy->X = deep_copy_string(vft->X);
-        copy->Y = deep_copy_string(vft->Y);
-    }
-    return copy;
+    memcpy(shared_mem, vft, sizeof(VFT));
+    VFT* vft_copy = (VFT*)shared_mem;
+    shared_mem = (void*)((char*)shared_mem + sizeof(VFT));
+
+    vft_copy->cod_variante = (char*)shared_mem;
+    shared_mem = deep_copy_string_to_shared_memory(vft->cod_variante, shared_mem);
+    vft_copy->frecuencia = (char*)shared_mem;
+    shared_mem = deep_copy_string_to_shared_memory(vft->frecuencia, shared_mem);
+    vft_copy->cod_ubic_parada = (char*)shared_mem;
+    shared_mem = deep_copy_string_to_shared_memory(vft->cod_ubic_parada, shared_mem);
+    vft_copy->ordinal = (char*)shared_mem;
+    shared_mem = deep_copy_string_to_shared_memory(vft->ordinal, shared_mem);
+    vft_copy->hora = (char*)shared_mem;
+    shared_mem = deep_copy_string_to_shared_memory(vft->hora, shared_mem);
+    vft_copy->dia_anterior = (char*)shared_mem;
+    shared_mem = deep_copy_string_to_shared_memory(vft->dia_anterior, shared_mem);
+    vft_copy->X = (char*)shared_mem;
+    shared_mem = deep_copy_string_to_shared_memory(vft->X, shared_mem);
+    vft_copy->Y = (char*)shared_mem;
+    shared_mem = deep_copy_string_to_shared_memory(vft->Y, shared_mem);
+
+    return shared_mem;
 }
 
-// Function to deep copy a VFD structure
-VFD* deep_copy_vfd(VFD* vfd) {
+void* deep_copy_vfd_to_shared_memory(VFD* vfd, void* shared_mem) {
     if (vfd == NULL) {
-        return NULL;
+        return shared_mem;
     }
-    VFD* copy = malloc(sizeof(VFD));
-    if (copy) {
-        copy->id = deep_copy_string(vfd->id);
-        copy->codigoEmpresa = deep_copy_string(vfd->codigoEmpresa);
-        copy->frecuencia = deep_copy_string(vfd->frecuencia);
-        copy->codigoBus = deep_copy_string(vfd->codigoBus);
-        copy->variante = deep_copy_string(vfd->variante);
-        copy->linea = deep_copy_string(vfd->linea);
-        copy->sublinea = deep_copy_string(vfd->sublinea);
-        copy->tipoLinea = deep_copy_string(vfd->tipoLinea);
-        copy->destino = deep_copy_string(vfd->destino);
-        copy->subsistema = deep_copy_string(vfd->subsistema);
-        copy->version = deep_copy_string(vfd->version);
-        copy->velocidad = deep_copy_string(vfd->velocidad);
-        copy->latitud = deep_copy_string(vfd->latitud);
-        copy->longitud = deep_copy_string(vfd->longitud);
-        copy->fecha = deep_copy_string(vfd->fecha);
-    }
-    return copy;
+    memcpy(shared_mem, vfd, sizeof(VFD));
+    VFD* vfd_copy = (VFD*)shared_mem;
+    shared_mem = (void*)((char*)shared_mem + sizeof(VFD));
+
+    vfd_copy->id = (char*)shared_mem;
+    shared_mem = deep_copy_string_to_shared_memory(vfd->id, shared_mem);
+    vfd_copy->codigoEmpresa = (char*)shared_mem;
+    shared_mem = deep_copy_string_to_shared_memory(vfd->codigoEmpresa, shared_mem);
+    vfd_copy->frecuencia = (char*)shared_mem;
+    shared_mem = deep_copy_string_to_shared_memory(vfd->frecuencia, shared_mem);
+    vfd_copy->codigoBus = (char*)shared_mem;
+    shared_mem = deep_copy_string_to_shared_memory(vfd->codigoBus, shared_mem);
+    vfd_copy->variante = (char*)shared_mem;
+    shared_mem = deep_copy_string_to_shared_memory(vfd->variante, shared_mem);
+    vfd_copy->linea = (char*)shared_mem;
+    shared_mem = deep_copy_string_to_shared_memory(vfd->linea, shared_mem);
+    vfd_copy->sublinea = (char*)shared_mem;
+    shared_mem = deep_copy_string_to_shared_memory(vfd->sublinea, shared_mem);
+    vfd_copy->tipoLinea = (char*)shared_mem;
+    shared_mem = deep_copy_string_to_shared_memory(vfd->tipoLinea, shared_mem);
+    vfd_copy->destino = (char*)shared_mem;
+    shared_mem = deep_copy_string_to_shared_memory(vfd->destino, shared_mem);
+    vfd_copy->subsistema = (char*)shared_mem;
+    shared_mem = deep_copy_string_to_shared_memory(vfd->subsistema, shared_mem);
+    vfd_copy->version = (char*)shared_mem;
+    shared_mem = deep_copy_string_to_shared_memory(vfd->version, shared_mem);
+    vfd_copy->velocidad = (char*)shared_mem;
+    shared_mem = deep_copy_string_to_shared_memory(vfd->velocidad, shared_mem);
+    vfd_copy->latitud = (char*)shared_mem;
+    shared_mem = deep_copy_string_to_shared_memory(vfd->latitud, shared_mem);
+    vfd_copy->longitud = (char*)shared_mem;
+    shared_mem = deep_copy_string_to_shared_memory(vfd->longitud, shared_mem);
+    vfd_copy->fecha = (char*)shared_mem;
+    shared_mem = deep_copy_string_to_shared_memory(vfd->fecha, shared_mem);
+
+    return shared_mem;
 }
 
-// Function to deep copy an Entry structure
-Entry* deep_copy_entry(Entry* entry) {
+void* deep_copy_entry_to_shared_memory(Entry* entry, void* shared_mem) {
     if (entry == NULL) {
-        return NULL;
+        return shared_mem;
     }
-    Entry* copy = malloc(sizeof(Entry));
-    if (copy) {
-        copy->key = deep_copy_string(entry->key);
+    memcpy(shared_mem, entry, sizeof(Entry));
+    Entry* entry_copy = (Entry*)shared_mem;
+    shared_mem = (void*)((char*)shared_mem + sizeof(Entry));
 
-        copy->vft_count = entry->vft_count;
-        copy->vft_capacity = entry->vft_capacity;
-        if (entry->vfts) {
-            copy->vfts = malloc(sizeof(VFT*) * copy->vft_capacity);
-            for (size_t i = 0; i < copy->vft_count; i++) {
-                copy->vfts[i] = deep_copy_vft(entry->vfts[i]);
-            }
+    entry_copy->key = (char*)shared_mem;
+    shared_mem = deep_copy_string_to_shared_memory(entry->key, shared_mem);
+
+    if (entry->vfts) {
+        entry_copy->vfts = (VFT**)shared_mem;
+        shared_mem = (void*)((char*)shared_mem + sizeof(VFT*) * entry->vft_capacity);
+        for (size_t i = 0; i < entry->vft_count; i++) {
+            entry_copy->vfts[i] = (VFT*)shared_mem;
+            shared_mem = deep_copy_vft_to_shared_memory(entry->vfts[i], shared_mem);
         }
-
-        copy->vfd_count = entry->vfd_count;
-        copy->vfd_capacity = entry->vfd_capacity;
-        if (entry->vfds) {
-            copy->vfds = malloc(sizeof(VFD*) * copy->vfd_capacity);
-            for (size_t i = 0; i < copy->vfd_count; i++) {
-                copy->vfds[i] = deep_copy_vfd(entry->vfds[i]);
-            }
-        }
-
-        copy->next = deep_copy_entry(entry->next);
     }
-    return copy;
+
+    if (entry->vfds) {
+        entry_copy->vfds = (VFD**)shared_mem;
+        shared_mem = (void*)((char*)shared_mem + sizeof(VFD*) * entry->vfd_capacity);
+        for (size_t i = 0; i < entry->vfd_count; i++) {
+            entry_copy->vfds[i] = (VFD*)shared_mem;
+            shared_mem = deep_copy_vfd_to_shared_memory(entry->vfds[i], shared_mem);
+        }
+    }
+
+    entry_copy->next = (Entry*)shared_mem;
+    shared_mem = deep_copy_entry_to_shared_memory(entry->next, shared_mem);
+
+    return shared_mem;
 }
 
-// Function to deep copy a HashMap structure
-HashMap* deep_copy_hashmap(HashMap* map) {
+void* deep_copy_hashmap_to_shared_memory(HashMap* map, void* shared_mem) {
     if (map == NULL) {
-        return NULL;
+        return shared_mem;
     }
-    HashMap* copy = malloc(sizeof(HashMap));
-    if (copy) {
-        copy->size = map->size;
-        copy->count = map->count;
+    memcpy(shared_mem, map, sizeof(HashMap));
+    HashMap* map_copy = (HashMap*)shared_mem;
+    shared_mem = (void*)((char*)shared_mem + sizeof(HashMap));
 
-        if (map->buckets) {
-            copy->buckets = malloc(sizeof(Entry*) * map->size);
-            for (size_t i = 0; i < map->size; i++) {
-                copy->buckets[i] = deep_copy_entry(map->buckets[i]);
-            }
-        }
-
-        if (map->campos_capturas) {
-            copy->campos_capturas = malloc(sizeof(char*) * map->count);
-            for (size_t i = 0; i < map->count; i++) {
-                copy->campos_capturas[i] = deep_copy_string(map->campos_capturas[i]);
-            }
-        }
-
-        if (map->campos_horarios) {
-            copy->campos_horarios = malloc(sizeof(char*) * map->count);
-            for (size_t i = 0; i < map->count; i++) {
-                copy->campos_horarios[i] = deep_copy_string(map->campos_horarios[i]);
-            }
+    if (map->buckets) {
+        map_copy->buckets = (Entry**)shared_mem;
+        shared_mem = (void*)((char*)shared_mem + sizeof(Entry*) * map->size);
+        for (size_t i = 0; i < map->size; i++) {
+            map_copy->buckets[i] = (Entry*)shared_mem;
+            shared_mem = deep_copy_entry_to_shared_memory(map->buckets[i], shared_mem);
         }
     }
-    return copy;
+
+    if (map->campos_capturas) {
+        map_copy->campos_capturas = (char**)shared_mem;
+        shared_mem = (void*)((char*)shared_mem + sizeof(char*) * map->count);
+        for (size_t i = 0; i < map->count; i++) {
+            map_copy->campos_capturas[i] = (char*)shared_mem;
+            shared_mem = deep_copy_string_to_shared_memory(map->campos_capturas[i], shared_mem);
+        }
+    }
+
+    if (map->campos_horarios) {
+        map_copy->campos_horarios = (char**)shared_mem;
+        shared_mem = (void*)((char*)shared_mem + sizeof(char*) * map->count);
+        for (size_t i = 0; i < map->count; i++) {
+            map_copy->campos_horarios[i] = (char*)shared_mem;
+            shared_mem = deep_copy_string_to_shared_memory(map->campos_horarios[i], shared_mem);
+        }
+    }
+
+    return shared_mem;
 }

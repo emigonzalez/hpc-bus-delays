@@ -117,8 +117,7 @@ void handle_signal(int signal) {
 #include <semaphore.h>
 
 #define SHM_NAME "/vfd_map_shm"
-#define SEM_NAME "/vfd_map_sem"
-// #define SHM_SIZE sizeof(HashMap)
+#define SHM_SIZE 1024*1024
 
 HashMap *vfd_map = NULL;
 
@@ -251,10 +250,9 @@ size_t calculate_hash_map_size(HashMap *map) {
     return size;
 }
 
+
 void run_python_script(const char *script_name) {
-    size_t SHM_SIZE = calculate_hash_map_size(vfd_map);
-    printf("SHM_SIZE: %zu\n", SHM_SIZE);
-    // Create a shared memory object
+    // Open the shared memory object
     int shm_fd = shm_open(SHM_NAME, O_CREAT | O_RDWR, 0666);
     if (shm_fd == -1) {
         perror("shm_open");
@@ -268,23 +266,25 @@ void run_python_script(const char *script_name) {
     }
 
     // Map the shared memory object
-    HashMap *shm_map = mmap(0, SHM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
-    if (shm_map == MAP_FAILED) {
+    void* shm_base = mmap(0, SHM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    if (shm_base == MAP_FAILED) {
         perror("mmap");
         exit(1);
     }
-    
+
     // Copy vfd_map to the shared memory
-    // memcpy(shm_map, vfd_map, SHM_SIZE);
-    shm_map = deep_copy_hashmap(vfd_map);
+    // memcpy(shm_base, vfd_map, sizeof(HashMap));
+    deep_copy_hashmap_to_shared_memory(vfd_map,shm_base);
+
+    // Assume we have a pointer to the end of the shared memory
+    void *shm_end = shm_base + SHM_SIZE;  // Adjust based on your actual end pointer logic
+
+    // Calculate the size to synchronize
+    size_t sync_size = shm_end - shm_base;
 
     // Synchronize the shared memory
-    msync(shm_map, SHM_SIZE, MS_SYNC);
-
-    // Create a semaphore for synchronization
-    sem_t *sem = sem_open(SEM_NAME, O_CREAT, 0666, 1);
-    if (sem == SEM_FAILED) {
-        perror("sem_open");
+    if (msync(shm_base, sync_size, MS_SYNC) == -1) {
+        perror("msync");
         exit(1);
     }
 
@@ -310,15 +310,15 @@ void run_python_script(const char *script_name) {
         perror("pclose");
     }
 
-    // Clean up
-    munmap(shm_map, SHM_SIZE);
-    free(shm_map);
+    // The shared memory now contains a deep copy of the HashMap
+    // printf("Deep copy to shared memory completed successfully\n");
+
+    // Cleanup
+    munmap(shm_base, SHM_SIZE);
     close(shm_fd);
 
     // Unlink the shared memory object and semaphore only after Python script finishes
     shm_unlink(SHM_NAME);
-    sem_unlink(SEM_NAME);
-
 }
 
 int main() {
@@ -355,7 +355,6 @@ int main() {
     printf("HashMap size: %zu\n", vfd_map->size);
     printf("HashMap count: %zu\n", vfd_map->count);
 
-    
     // Path to the Python script
     const char *script_name = "access_vfd_map.py";
 
