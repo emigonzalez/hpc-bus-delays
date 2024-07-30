@@ -542,7 +542,7 @@ VFD=""
 
 archivo_vfd = os.getcwd() + '/orden_vfd2.csv' #csv de los vfd agrupados opr vfd
 archivo_vft = os.getcwd() + '/horarios_paradas_vft.csv' # csv de las paradas para sacar el vfg
-salida = os.getcwd() + '/retrasos.csv'  #csv de los atrasos
+salida = os.getcwd() + '/data/retrasos.csv'  #csv de los atrasos
 
 capturas_file = os.getcwd() + '/data/capturas.csv' #csv de las capturas ordenas por vfd
 horarios_file = os.getcwd() + '/data/horarios.csv' # csv de las paradas ordenadas por vfd
