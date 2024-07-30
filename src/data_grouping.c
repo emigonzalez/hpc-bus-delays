@@ -251,7 +251,7 @@ HashMap* group_data_by_vft(char** assigned_files) {
             free(line_copy); // Free the copy after processing
         }
 
-        // free(line);
+        free(line);
         fclose(file);
     }
 
@@ -366,7 +366,7 @@ HashMap* group_data_by_vfd(char** assigned_files, HashMap* vft_map) {
             free(line_copy); // Free the copy after processing
         }
 
-        // free(line);
+        free(line);
         fclose(file);
     }
 

@@ -5,7 +5,7 @@
 
 #define INITIAL_SIZE 1000
 #define LOAD_FACTOR 0.75
-#define INITIAL_ROW_CAPACITY 4
+#define INITIAL_ROW_CAPACITY 1000
 
 typedef struct Entry {
     char *key;
@@ -13,7 +13,8 @@ typedef struct Entry {
     size_t vfd_row_count;
     char **vft_rows;
     size_t vft_row_count;
-    size_t row_capacity;
+    size_t vfd_row_capacity;
+    size_t vft_row_capacity;
     struct Entry *next;
 } Entry;
 

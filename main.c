@@ -144,11 +144,11 @@ int main() {
     printf("BEGIN in C \n");
 
     char** capturas = (char**)malloc(2 * sizeof(char*));
-    capturas[0] = "data/stm-buses-2024-06-09_09_min.csv";
+    capturas[0] = "data/stm-buses-2024-06-09_09.csv";
     capturas[1] = NULL; // Terminate the list
 
     char** horarios = (char**)malloc(2 * sizeof(char*));
-    horarios[0] = "data/uptu_pasada_variante_min.csv";
+    horarios[0] = "data/uptu_pasada_variante.csv";
     horarios[1] = NULL; // Terminate the list
 
     printf("GENERATING VFT...\n");
