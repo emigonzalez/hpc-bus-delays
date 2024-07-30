@@ -212,3 +212,48 @@ void print_hash_map(HashMap *map) {
         }
     }
 }
+
+int compare_keys(const void *a, const void *b) {
+    Entry *entry_a = *(Entry **)a;
+    Entry *entry_b = *(Entry **)b;
+    return strcmp(entry_a->key, entry_b->key);
+}
+
+Entry** get_all_keys(HashMap *map, size_t *key_count) {
+    *key_count = 0;
+    
+    // First, count the number of entries
+    for (size_t i = 0; i < map->size; ++i) {
+        Entry *entry = map->buckets[i];
+        while (entry != NULL) {
+            (*key_count)++;
+            entry = entry->next;
+        }
+    }
+    
+    if (*key_count == 0) {
+        return NULL;
+    }
+
+    // Allocate memory for the array of entries
+    Entry **keys = (Entry **)malloc(*key_count * sizeof(Entry *));
+    if (!keys) {
+        fprintf(stderr, "Error: memory allocation for keys array failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Populate the array with entries
+    size_t index = 0;
+    for (size_t i = 0; i < map->size; ++i) {
+        Entry *entry = map->buckets[i];
+        while (entry != NULL) {
+            keys[index++] = entry;
+            entry = entry->next;
+        }
+    }
+
+    // Sort the keys alphabetically by the key field
+    qsort(keys, *key_count, sizeof(Entry *), compare_keys);
+
+    return keys;
+}

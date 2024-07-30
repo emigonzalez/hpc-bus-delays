@@ -5,15 +5,15 @@
 
 #define INITIAL_SIZE 1000
 #define LOAD_FACTOR 0.75
-#define INITIAL_ROW_CAPACITY 1000
+#define INITIAL_ROW_CAPACITY 1000 // TODO CHECK THIS
 
 typedef struct Entry {
     char *key;
     char **vfd_rows;
     size_t vfd_row_count;
+    size_t vfd_row_capacity;
     char **vft_rows;
     size_t vft_row_count;
-    size_t vfd_row_capacity;
     size_t vft_row_capacity;
     struct Entry *next;
 } Entry;
@@ -32,5 +32,6 @@ Entry *hash_map_search(HashMap *map, const char *key);
 void free_hash_map(HashMap *map);
 void print_hash_map(HashMap *map);
 void repoint_vfts_to_vfd_map(Entry* vfd_entry, Entry* vft_entry);
+Entry** get_all_keys(HashMap *map, size_t *key_count);
 
 #endif // HASH_MAP_H
