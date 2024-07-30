@@ -119,7 +119,7 @@ HashMap *vfd_map = NULL;
 void run_python_script(const char *script_name) {
     // Call the Python script
     char command[256];
-    snprintf(command, sizeof(command), "python3 access_vfd_map.py");
+    snprintf(command, sizeof(command), "python3.10 calcular-retrasos_conC.py");
     // snprintf(command, sizeof(command), "python3.10 calcular-retrasos_conC.py");
     FILE *fp = popen(command, "r");
     if (fp == NULL) {
@@ -200,11 +200,11 @@ int main() {
     printf("BEGIN in C \n");
 
     char** capturas = (char**)malloc(2 * sizeof(char*));
-    capturas[0] = "data/stm-buses-2024-06-09_09.csv";
+    capturas[0] = "data/stm-buses-2024-06-10_10.csv";
     capturas[1] = NULL; // Terminate the list
 
     char** horarios = (char**)malloc(2 * sizeof(char*));
-    horarios[0] = "data/uptu_pasada_variante.csv";
+    horarios[0] = "data/horarios_paradas_vft.csv";
     horarios[1] = NULL; // Terminate the list
 
     printf("GENERATING VFT...\n");
@@ -228,12 +228,12 @@ int main() {
     generate_vfd_file(vfd_map, vfd_filename, capturas_filename, horarios_filename);
 
     // Path to the Python script
-    // const char *script_name = "access_vfd_map.py";
+    const char *script_name = "calcular-retrasos_conC.py";
 
-    // printf("CALLING PYTHON SCRIPT %s \n", script_name);
+    printf("CALLING PYTHON SCRIPT %s \n", script_name);
 
     // Call the function to run the Python script with the hash map pointer
-    // run_python_script(script_name);
+    run_python_script(script_name);
 
     // printf("END PYTHON :) \n");    
 
