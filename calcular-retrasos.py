@@ -44,50 +44,6 @@ Processing.initialize()
 QgsApplication.processingRegistry().addProvider(QgsNativeAlgorithms())
 
 
-
-def load_struct_as_layer(list,x_field, y_field, crs,name,campos):
-    def getValores(registro, campos):
-        valores ={}
-        for campo in campos:
-            valores.append(registro[campo])
-        return valores
-    
-    layer = QgsVectorLayer(f"Point?crs={crs}", name , "memory")
-    if not layer.isValid():
-        raise Exception(f"Failed to load layer: {layer.error()}")
-    features = []
-    fields = QgsFields()
-    
-    for campo in campos:
-        # Define fields
-        if (campo == "latitud" or 
-            campo == "longitud" or 
-            campo == "X" or 
-            campo == "Y" ):
-            fields.append(QgsField(campo, QVariant.Double))
-        elif (campo == 'fecha'):
-            fields.append(QgsField(campo, QVariant.DateTime))
-        else:
-            fields.append(QgsField(campo, QVariant.String))
-
-    layer.dataProvider().addAttributes(fields)
-    layer.updateFields()
-
-    for coord in list:
-        coord[x_field] = float(coord[x_field].replace(',', '.'))
-        coord[y_field] = float(coord[y_field].replace(',', '.'))
-        point = QgsPointXY(coord[x_field],coord[y_field])
-
-        feature = QgsFeature()
-        feature.setAttributes(getValores(coord, campos))
-        feature.setGeometry(QgsGeometry.fromPointXY(point))
-        features.append(feature)
-    layer.dataProvider().addFeatures(features)
-    layer.updateExtents()
-    QgsProject.instance().addMapLayer(layer)
-    return layer
-
-
 #BorrarFuncion esta funcion no va a estar mas una vez que el c le pase los diccionarios
 def load_list_as_layer(list,x_field, y_field, crs,name):
     layer = QgsVectorLayer(f"Point?crs={crs}", name , "memory")
