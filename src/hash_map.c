@@ -1,124 +1,31 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "hash_map.h"
+#include <string.h>
+#include <stdio.h>
 
-void hello_world() {
-    printf("HELLO WORLD FROM PYTHON!\n");
-}
-
-char** set_campos_capturas() {
-    char** campos_capturas = (char**)malloc(16 * sizeof(char*));
-    campos_capturas[0] = "id";
-    campos_capturas[1] = "codigoEmpresa";
-    campos_capturas[2] = "frecuencia";
-    campos_capturas[3] = "codigoBus";
-    campos_capturas[4] = "variante";
-    campos_capturas[5] = "linea";
-    campos_capturas[6] = "sublinea";
-    campos_capturas[7] = "tipoLinea";
-    campos_capturas[8] = "destino";
-    campos_capturas[9] = "subsistema";
-    campos_capturas[10] = "version";
-    campos_capturas[11] = "velocidad";
-    campos_capturas[12] = "latitud";
-    campos_capturas[13] = "longitud";
-    campos_capturas[14] = "fecha";
-    campos_capturas[15] = NULL;
-
-    return campos_capturas;
-}
-
-char** set_campos_horarios() {
-    char** campos_horarios = (char**)malloc(16 * sizeof(char*));
-    campos_horarios[0] = "tipo_dia";
-    campos_horarios[1] = "cod_variante";
-    campos_horarios[2] = "frecuencia";
-    campos_horarios[3] = "cod_ubic_parada";
-    campos_horarios[4] = "ordinal";
-    campos_horarios[5] = "hora";
-    campos_horarios[6] = "dia_anterior";
-    campos_horarios[7] = "X";
-    campos_horarios[8] = "Y";
-    campos_horarios[9] = NULL; 
-
-    return campos_horarios;
-}
-
-unsigned long hash(const char *str, size_t size) {
+unsigned long hash(const char *key, size_t size) {
     unsigned long hash = 5381;
     int c;
-    while ((c = *str++)) {
-        hash = ((hash << 5) + hash) + c; // hash * 33 + c
+    while ((c = *key++)) {
+        hash = ((hash << 5) + hash) + c;
     }
     return hash % size;
 }
 
 HashMap *create_hash_map() {
     HashMap *map = (HashMap *)malloc(sizeof(HashMap));
-    map->buckets = (Entry **)calloc(INITIAL_CAPACITY, sizeof(Entry *));
-    map->size = INITIAL_CAPACITY;
+    if (map == NULL) {
+        perror("Failed to create hash map");
+        exit(EXIT_FAILURE);
+    }
+    map->size = INITIAL_SIZE;
     map->count = 0;
-    map->campos_capturas = set_campos_capturas();
-    map->campos_horarios = set_campos_horarios();
-
+    map->buckets = (Entry **)calloc(map->size, sizeof(Entry *));
+    if (map->buckets == NULL) {
+        perror("Failed to create hash map buckets");
+        free(map);
+        exit(EXIT_FAILURE);
+    }
     return map;
-}
-
-void free_vft(VFT *vft) {
-    if (vft) {
-        if (vft->cod_variante) free(vft->cod_variante);
-        if (vft->frecuencia) free(vft->frecuencia);
-        if (vft->cod_ubic_parada) free(vft->cod_ubic_parada);
-        if (vft->ordinal) free(vft->ordinal);
-        if (vft->hora) free(vft->hora);
-        if (vft->dia_anterior) free(vft->dia_anterior);
-        if (vft->X) free(vft->X);
-        if (vft->Y) free(vft->Y);
-        free(vft);
-    }
-}
-
-void free_vfts(VFT **vfts, size_t count) {
-    for (size_t i = 0; i < count; i++) {
-        free_vft(vfts[i]);
-    }
-    free(vfts);
-}
-
-void free_vfd(VFD *vfd) {
-    if (vfd) {
-        if (vfd->id) free(vfd->id);
-        if (vfd->codigoEmpresa) free(vfd->codigoEmpresa);
-        if (vfd->frecuencia) free(vfd->frecuencia);
-        if (vfd->codigoBus) free(vfd->codigoBus);
-        if (vfd->variante) free(vfd->variante);
-        if (vfd->linea) free(vfd->linea);
-        if (vfd->sublinea) free(vfd->sublinea);
-        if (vfd->tipoLinea) free(vfd->tipoLinea);
-        if (vfd->destino) free(vfd->destino);
-        if (vfd->subsistema) free(vfd->subsistema);
-        if (vfd->version) free(vfd->version);
-        if (vfd->velocidad) free(vfd->velocidad);
-        if (vfd->latitud) free(vfd->latitud);
-        if (vfd->longitud) free(vfd->longitud);
-        if (vfd->fecha) free(vfd->fecha);
-        free(vfd);
-    }
-}
-
-void free_vfds(VFD **vfds, size_t count) {
-    for (size_t i = 0; i < count; i++) {
-        free_vfd(vfds[i]);
-    }
-    free(vfds);
-}
-
-void free_entry(Entry *entry) {
-    free(entry->key);
-    free_vfts(entry->vfts, entry->vft_count);
-    free_vfds(entry->vfds, entry->vfd_count);
-    free(entry);
 }
 
 void free_hash_map(HashMap *map) {
@@ -127,155 +34,171 @@ void free_hash_map(HashMap *map) {
         while (entry != NULL) {
             Entry *temp = entry;
             entry = entry->next;
-            free_entry(temp);
+            free(temp->key);
+            for (size_t j = 0; j < temp->vfd_row_count; j++) {
+                free(temp->vfd_rows[j]);
+            }
+            free(temp->vfd_rows);
+            for (size_t j = 0; j < temp->vft_row_count; j++) {
+                free(temp->vft_rows[j]);
+            }
+            free(temp->vft_rows);
+            free(temp);
         }
     }
     free(map->buckets);
-    free(map->campos_capturas);
-    free(map->campos_horarios);
     free(map);
-}
-
-int insert_to_vfts(Entry *entry, VFT *vft) {
-    if (entry->vft_count >= entry->vft_capacity) {
-        entry->vft_capacity *= 2;
-        entry->vfts = (VFT **)realloc(entry->vfts, entry->vft_capacity * sizeof(VFT *));
-        if (entry->vfts == NULL) {
-            return -1; // Allocation failed
-        }
-    }
-    entry->vfts[entry->vft_count] = vft;
-    entry->vft_count++;
-    return (int) entry->vft_count;
-}
-
-Entry * insert_to_vfds(Entry *entry, VFD *vfd) {
-    if (entry->vfd_count >= entry->vfd_capacity) {
-        entry->vfd_capacity *= 2;
-        entry->vfds = (VFD **)realloc(entry->vfds, entry->vfd_capacity * sizeof(VFD *));
-        if (entry->vfds == NULL) {
-            return NULL; // Allocation failed
-        }
-    }
-    entry->vfds[entry->vfd_count] = vfd;
-    entry->vfd_count++;
-    return entry;
 }
 
 void resize_hash_map(HashMap *map) {
     size_t new_size = map->size * 2;
-    Entry **new_buckets = (Entry **)calloc(new_size, sizeof(Entry *));
-    if (new_buckets == NULL) {
-        perror("Failed to allocate memory for resized hash map");
+    Entry **new_buckets = calloc(new_size, sizeof(Entry *));
+    if (!new_buckets) {
+        fprintf(stderr, "Error: memory allocation failed\n");
         exit(EXIT_FAILURE);
     }
 
     for (size_t i = 0; i < map->size; i++) {
         Entry *entry = map->buckets[i];
-        while (entry != NULL) {
+        while (entry) {
             Entry *next = entry->next;
-            unsigned long new_index = hash(entry->key, new_size);
-            entry->next = new_buckets[new_index];
-            new_buckets[new_index] = entry;
+            unsigned long index = hash(entry->key, new_size);
+            entry->next = new_buckets[index];
+            new_buckets[index] = entry;
             entry = next;
         }
     }
-
     free(map->buckets);
     map->buckets = new_buckets;
     map->size = new_size;
 }
 
-Entry *find_or_create_entry(HashMap *map, const char *key) {
+Entry *insert_to_vfts(Entry *entry, const char *row) {
+    if (entry->vft_row_count >= entry->row_capacity) {
+        entry->row_capacity *= 2;
+        entry->vft_rows = (char **)realloc(entry->vft_rows, entry->row_capacity * sizeof(char *));
+        if (entry->vft_rows == NULL) {
+            perror("Failed to reallocate memory for vft_rows");
+            exit(EXIT_FAILURE);
+        }
+    }
+    entry->vft_rows[entry->vft_row_count] = strdup(row);
+    entry->vft_row_count++;
+    return entry;
+}
+
+Entry *insert_to_vfds(Entry *entry, const char *row) {
+    if (entry->vfd_row_count == entry->row_capacity) {
+        entry->row_capacity *= 2;
+        entry->vfd_rows = realloc(entry->vfd_rows, entry->row_capacity * sizeof(char *));
+        if (!entry->vfd_rows) {
+            fprintf(stderr, "Error: memory allocation failed\n");
+            return NULL;
+        }
+    }
+    entry->vfd_rows[entry->vfd_row_count] = strdup(row);
+    entry->vfd_row_count++;
+    return entry;
+}
+
+Entry *hash_map_insert_vfd(HashMap *map, const char *key, const char *row) {
     if ((float)map->count / map->size > LOAD_FACTOR) {
         resize_hash_map(map);
     }
 
     unsigned long index = hash(key, map->size);
     Entry *entry = map->buckets[index];
-    Entry *prev = NULL;
 
-    while (entry != NULL && strcmp(entry->key, key) != 0) {
-        prev = entry;
+    while (entry) {
+        if (strcmp(entry->key, key) == 0) {
+            // Key exists, add the row
+            return insert_to_vfds(entry, row);
+        }
         entry = entry->next;
     }
 
+    // Key does not exist, create a new entry
+    Entry *new_entry = malloc(sizeof(Entry));
+    if (!new_entry) {
+        fprintf(stderr, "Error: memory allocation failed\n");
+        return NULL;
+    }
+    new_entry->key = strdup(key);
+    if (!new_entry->key) {
+        fprintf(stderr, "Error: memory allocation failed\n");
+        free(new_entry);
+        return NULL;
+    }
+    new_entry->row_capacity = INITIAL_ROW_CAPACITY;
+    new_entry->vfd_rows = malloc(new_entry->row_capacity * sizeof(char *));
+    if (!new_entry->vfd_rows) {
+        fprintf(stderr, "Error: memory allocation failed\n");
+        free(new_entry->key);
+        free(new_entry);
+        return NULL;
+    }
+    new_entry->vfd_rows[0] = strdup(row);
+    new_entry->vfd_row_count = 1;
+    new_entry->next = map->buckets[index];
+    map->buckets[index] = new_entry;
+    map->count++;
+    return new_entry;
+}
+
+Entry *hash_map_insert_vft(HashMap *map, const char *key, const char *row) {
+    Entry *entry = hash_map_search(map, key);
     if (entry == NULL) {
+        unsigned long index = hash(key, map->size);
         entry = (Entry *)malloc(sizeof(Entry));
         if (entry == NULL) {
             perror("Failed to allocate memory for Entry");
             exit(EXIT_FAILURE);
         }
         entry->key = strdup(key);
-        if (entry->key == NULL) {
-            perror("Failed to allocate memory for key");
-            exit(EXIT_FAILURE);
-        }
-        entry->vfts = (VFT **)malloc(2 * sizeof(VFT *));
-        entry->vft_count = 0;
-        entry->vft_capacity = 2;
-        entry->vfds = (VFD **)malloc(2 * sizeof(VFD *));
-        entry->vfd_count = 0;
-        entry->vfd_capacity = 2;
-        entry->next = NULL;
-
-        if (prev == NULL) {
-            map->buckets[index] = entry;
-        } else {
-            prev->next = entry;
-        }
+        entry->vfd_rows = NULL;
+        entry->vfd_row_count = 0;
+        entry->vft_rows = (char **)malloc(INITIAL_ROW_CAPACITY * sizeof(char *));
+        entry->row_capacity = INITIAL_ROW_CAPACITY;
+        entry->vft_row_count = 0;
+        entry->next = map->buckets[index];
+        map->buckets[index] = entry;
         map->count++;
     }
+    if (entry->vft_row_count >= entry->row_capacity) {
+        entry->row_capacity *= 2;
+        entry->vft_rows = (char **)realloc(entry->vft_rows, entry->row_capacity * sizeof(char *));
+        if (entry->vft_rows == NULL) {
+            perror("Failed to reallocate memory for vft_rows");
+            exit(EXIT_FAILURE);
+        }
+    }
+    entry->vft_rows[entry->vft_row_count] = strdup(row);
+    entry->vft_row_count++;
     return entry;
-}
-
-int hash_map_insert_vft(HashMap *map, const char *key, VFT *vft) {
-    Entry *entry = find_or_create_entry(map, key);
-    return insert_to_vfts(entry, vft);
-}
-
-Entry* hash_map_insert_vfd(HashMap *map, const char *key, VFD *vfd) {
-    Entry *entry = find_or_create_entry(map, key);
-    return insert_to_vfds(entry, vfd);
 }
 
 Entry *hash_map_search(HashMap *map, const char *key) {
-    if (!map || !key) return NULL;
-
-    // Compute the hash value for the key
     unsigned long index = hash(key, map->size);
-
-    // Traverse the linked list at the corresponding bucket
     Entry *entry = map->buckets[index];
-    while (entry != NULL && strcmp(entry->key, key) != 0) {
+    while (entry != NULL) {
+        if (strcmp(entry->key, key) == 0) {
+            return entry;
+        }
         entry = entry->next;
     }
-
-    return entry;
+    return NULL;
 }
 
-char** get_all_keys(HashMap *map, size_t *key_count) {
-    *key_count = 0;
-    size_t capacity = 10;
-    char **keys = malloc(capacity * sizeof(char*));
+void repoint_vfts_to_vfd_map(Entry* vfd_entry, Entry* vft_entry) {
+    // Repoint the vfd entry's rows to the new entry's rows
+    vfd_entry->vft_rows = vft_entry->vft_rows;
+    vfd_entry->vft_row_count = vft_entry->vft_row_count;
+    vfd_entry->row_capacity = (vfd_entry->row_capacity > vft_entry->row_capacity) ? vfd_entry->row_capacity : vft_entry->row_capacity;
 
-    for (size_t i = 0; i < map->size; i++) {
-        Entry *entry = map->buckets[i];
-        while (entry != NULL) {
-            if (*key_count == capacity) {
-                capacity *= 2;
-                keys = realloc(keys, capacity * sizeof(char*));
-            }
-            keys[*key_count] = strdup(entry->key);
-            (*key_count)++;
-            entry = entry->next;
-        }
-    }
-
-    // Sort the keys alphabetically
-    qsort(keys, *key_count, sizeof(char*), (int (*)(const void*, const void*)) strcmp);
-
-    return keys;
+    // Nullify the vft entry's vft_rows to avoid double free
+    vft_entry->vft_rows = NULL;
+    vft_entry->vft_row_count = 0;
+    vft_entry->row_capacity = vft_entry->row_capacity;
 }
 
 void print_hash_map(HashMap *map) {
@@ -285,238 +208,18 @@ void print_hash_map(HashMap *map) {
             printf("Key: %s\n", entry->key);
 
             printf("VFTs:\n");
-            for (size_t j = 0; j < entry->vft_count; j++) {
-                VFT *vft = entry->vfts[j];
-                printf("  Tipo Dia: %d, Variante: %s, Frecuencia: %s, Cod Ubic Parada: %s, Ordinal: %s, Hora: %s, Dia Anterior: %s, Latitud: %s, Longitud: %s\n",
-                       vft->tipo_dia, vft->cod_variante, vft->frecuencia, vft->cod_ubic_parada, vft->ordinal, vft->hora, vft->dia_anterior, vft->X, vft->Y);
+            printf("  Tipo Dia, Variante, Frecuencia, Cod Ubic Parada, Ordinal, Hora, Dia Anterior, Latitud, Longitud\n");
+            for (size_t j = 0; j < entry->vft_row_count; j++) {
+                printf("  %s", entry->vft_rows[j]);
             }
 
             printf("VFDs:\n");
-            for (size_t j = 0; j < entry->vfd_count; j++) {
-                VFD *vfd = entry->vfds[j];
-                printf("  ID: %s, Codigo Empresa: %s, Frecuencia: %s, Codigo Bus: %s, Variante: %s, Linea: %s, Sublinea: %s, Tipo Linea: %s, Destino: %s, Subsistema: %s, Version: %s, Velocidad: %s, Latitud: %s, Longitud: %s, Fecha: %s\n",
-                       vfd->id, vfd->codigoEmpresa, vfd->frecuencia, vfd->codigoBus, vfd->variante, vfd->linea, vfd->sublinea, vfd->tipoLinea, vfd->destino, vfd->subsistema, vfd->version, vfd->velocidad, vfd->latitud, vfd->longitud, vfd->fecha);
+            printf("  ID, Codigo Empresa, Frecuencia, Codigo Bus, Variante, Linea, Sublinea, Tipo Linea, Destino, Subsistema, Version, Velocidad, Latitud, Longitud, Fecha\n");
+            for (size_t j = 0; j < entry->vfd_row_count; j++) {
+                printf("  %s", entry->vfd_rows[j]);
             }
 
             entry = entry->next;
         }
     }
-}
-
-VFT* create_vft() {
-    VFT *vft = (VFT *)malloc(sizeof(VFT));
-    if (vft) {
-        vft->tipo_dia = 0;
-        vft->cod_variante = NULL;
-        vft->frecuencia = NULL;
-        vft->cod_ubic_parada = NULL;
-        vft->ordinal = NULL;
-        vft->hora = NULL;
-        vft->dia_anterior = NULL;
-        vft->X = NULL;
-        vft->Y = NULL;
-    }
-    return vft;
-}
-
-VFD* create_vfd() {
-    VFD *vfd = (VFD *)malloc(sizeof(VFD));
-    if (vfd) {
-        vfd->id = NULL;
-        vfd->codigoEmpresa = NULL;
-        vfd->frecuencia = NULL;
-        vfd->codigoBus = NULL;
-        vfd->variante = NULL;
-        vfd->linea = NULL;
-        vfd->sublinea = NULL;
-        vfd->tipoLinea = NULL;
-        vfd->destino = NULL;
-        vfd->subsistema = NULL;
-        vfd->version = NULL;
-        vfd->velocidad = NULL;
-        vfd->latitud = NULL;
-        vfd->longitud = NULL;
-        vfd->fecha = NULL;
-    }
-    return vfd;
-}
-
-void repoint_vfts_to_vfd_map(Entry* vfd_entry, Entry *vft_entry) {
-    // Repoint the vfd entry's vfts to the new entry's vfts
-    vfd_entry->vfts = vft_entry->vfts;
-    vfd_entry->vft_count = vft_entry->vft_count;
-    vfd_entry->vft_capacity = vft_entry->vft_capacity;
-
-    // Nullify the vft entry's vfts to avoid double free
-    vft_entry->vfts = NULL;
-    vft_entry->vft_count = 0;
-    vft_entry->vft_capacity = 0;
-}
-
-char** get_campos_capturas(HashMap* map){
-    return map->campos_capturas;
-}
-
-char** get_campos_horarios(HashMap* map){
-    return map->campos_horarios;
-}
-
-VFD** get_capturas(Entry* entry){
-    return entry->vfds;
-}
-
-VFT** get_horarios(Entry* entry){
-    return entry->vfts;
-}
-
-void* deep_copy_string_to_shared_memory(const char* str, void* shared_mem) {
-    if (str == NULL) {
-        return shared_mem;
-    }
-    size_t len = strlen(str) + 1;
-    memcpy(shared_mem, str, len);
-    return (void*)((char*)shared_mem + len);
-}
-
-void* deep_copy_vft_to_shared_memory(VFT* vft, void* shared_mem) {
-    if (vft == NULL) {
-        return shared_mem;
-    }
-    memcpy(shared_mem, vft, sizeof(VFT));
-    VFT* vft_copy = (VFT*)shared_mem;
-    shared_mem = (void*)((char*)shared_mem + sizeof(VFT));
-
-    vft_copy->cod_variante = (char*)shared_mem;
-    shared_mem = deep_copy_string_to_shared_memory(vft->cod_variante, shared_mem);
-    vft_copy->frecuencia = (char*)shared_mem;
-    shared_mem = deep_copy_string_to_shared_memory(vft->frecuencia, shared_mem);
-    vft_copy->cod_ubic_parada = (char*)shared_mem;
-    shared_mem = deep_copy_string_to_shared_memory(vft->cod_ubic_parada, shared_mem);
-    vft_copy->ordinal = (char*)shared_mem;
-    shared_mem = deep_copy_string_to_shared_memory(vft->ordinal, shared_mem);
-    vft_copy->hora = (char*)shared_mem;
-    shared_mem = deep_copy_string_to_shared_memory(vft->hora, shared_mem);
-    vft_copy->dia_anterior = (char*)shared_mem;
-    shared_mem = deep_copy_string_to_shared_memory(vft->dia_anterior, shared_mem);
-    vft_copy->X = (char*)shared_mem;
-    shared_mem = deep_copy_string_to_shared_memory(vft->X, shared_mem);
-    vft_copy->Y = (char*)shared_mem;
-    shared_mem = deep_copy_string_to_shared_memory(vft->Y, shared_mem);
-
-    return shared_mem;
-}
-
-void* deep_copy_vfd_to_shared_memory(VFD* vfd, void* shared_mem) {
-    if (vfd == NULL) {
-        return shared_mem;
-    }
-    memcpy(shared_mem, vfd, sizeof(VFD));
-    VFD* vfd_copy = (VFD*)shared_mem;
-    shared_mem = (void*)((char*)shared_mem + sizeof(VFD));
-
-    vfd_copy->id = (char*)shared_mem;
-    shared_mem = deep_copy_string_to_shared_memory(vfd->id, shared_mem);
-    vfd_copy->codigoEmpresa = (char*)shared_mem;
-    shared_mem = deep_copy_string_to_shared_memory(vfd->codigoEmpresa, shared_mem);
-    vfd_copy->frecuencia = (char*)shared_mem;
-    shared_mem = deep_copy_string_to_shared_memory(vfd->frecuencia, shared_mem);
-    vfd_copy->codigoBus = (char*)shared_mem;
-    shared_mem = deep_copy_string_to_shared_memory(vfd->codigoBus, shared_mem);
-    vfd_copy->variante = (char*)shared_mem;
-    shared_mem = deep_copy_string_to_shared_memory(vfd->variante, shared_mem);
-    vfd_copy->linea = (char*)shared_mem;
-    shared_mem = deep_copy_string_to_shared_memory(vfd->linea, shared_mem);
-    vfd_copy->sublinea = (char*)shared_mem;
-    shared_mem = deep_copy_string_to_shared_memory(vfd->sublinea, shared_mem);
-    vfd_copy->tipoLinea = (char*)shared_mem;
-    shared_mem = deep_copy_string_to_shared_memory(vfd->tipoLinea, shared_mem);
-    vfd_copy->destino = (char*)shared_mem;
-    shared_mem = deep_copy_string_to_shared_memory(vfd->destino, shared_mem);
-    vfd_copy->subsistema = (char*)shared_mem;
-    shared_mem = deep_copy_string_to_shared_memory(vfd->subsistema, shared_mem);
-    vfd_copy->version = (char*)shared_mem;
-    shared_mem = deep_copy_string_to_shared_memory(vfd->version, shared_mem);
-    vfd_copy->velocidad = (char*)shared_mem;
-    shared_mem = deep_copy_string_to_shared_memory(vfd->velocidad, shared_mem);
-    vfd_copy->latitud = (char*)shared_mem;
-    shared_mem = deep_copy_string_to_shared_memory(vfd->latitud, shared_mem);
-    vfd_copy->longitud = (char*)shared_mem;
-    shared_mem = deep_copy_string_to_shared_memory(vfd->longitud, shared_mem);
-    vfd_copy->fecha = (char*)shared_mem;
-    shared_mem = deep_copy_string_to_shared_memory(vfd->fecha, shared_mem);
-
-    return shared_mem;
-}
-
-void* deep_copy_entry_to_shared_memory(Entry* entry, void* shared_mem) {
-    if (entry == NULL) {
-        return shared_mem;
-    }
-    memcpy(shared_mem, entry, sizeof(Entry));
-    Entry* entry_copy = (Entry*)shared_mem;
-    shared_mem = (void*)((char*)shared_mem + sizeof(Entry));
-
-    entry_copy->key = (char*)shared_mem;
-    shared_mem = deep_copy_string_to_shared_memory(entry->key, shared_mem);
-
-    if (entry->vfts) {
-        entry_copy->vfts = (VFT**)shared_mem;
-        shared_mem = (void*)((char*)shared_mem + sizeof(VFT*) * entry->vft_capacity);
-        for (size_t i = 0; i < entry->vft_count; i++) {
-            entry_copy->vfts[i] = (VFT*)shared_mem;
-            shared_mem = deep_copy_vft_to_shared_memory(entry->vfts[i], shared_mem);
-        }
-    }
-
-    if (entry->vfds) {
-        entry_copy->vfds = (VFD**)shared_mem;
-        shared_mem = (void*)((char*)shared_mem + sizeof(VFD*) * entry->vfd_capacity);
-        for (size_t i = 0; i < entry->vfd_count; i++) {
-            entry_copy->vfds[i] = (VFD*)shared_mem;
-            shared_mem = deep_copy_vfd_to_shared_memory(entry->vfds[i], shared_mem);
-        }
-    }
-
-    entry_copy->next = (Entry*)shared_mem;
-    shared_mem = deep_copy_entry_to_shared_memory(entry->next, shared_mem);
-
-    return shared_mem;
-}
-
-void* deep_copy_hashmap_to_shared_memory(HashMap* map, void* shared_mem) {
-    if (map == NULL) {
-        return shared_mem;
-    }
-    memcpy(shared_mem, map, sizeof(HashMap));
-    HashMap* map_copy = (HashMap*)shared_mem;
-    shared_mem = (void*)((char*)shared_mem + sizeof(HashMap));
-
-    if (map->buckets) {
-        map_copy->buckets = (Entry**)shared_mem;
-        shared_mem = (void*)((char*)shared_mem + sizeof(Entry*) * map->size);
-        for (size_t i = 0; i < map->size; i++) {
-            map_copy->buckets[i] = (Entry*)shared_mem;
-            shared_mem = deep_copy_entry_to_shared_memory(map->buckets[i], shared_mem);
-        }
-    }
-
-    if (map->campos_capturas) {
-        map_copy->campos_capturas = (char**)shared_mem;
-        shared_mem = (void*)((char*)shared_mem + sizeof(char*) * map->count);
-        for (size_t i = 0; i < map->count; i++) {
-            map_copy->campos_capturas[i] = (char*)shared_mem;
-            shared_mem = deep_copy_string_to_shared_memory(map->campos_capturas[i], shared_mem);
-        }
-    }
-
-    if (map->campos_horarios) {
-        map_copy->campos_horarios = (char**)shared_mem;
-        shared_mem = (void*)((char*)shared_mem + sizeof(char*) * map->count);
-        for (size_t i = 0; i < map->count; i++) {
-            map_copy->campos_horarios[i] = (char*)shared_mem;
-            shared_mem = deep_copy_string_to_shared_memory(map->campos_horarios[i], shared_mem);
-        }
-    }
-
-    return shared_mem;
 }

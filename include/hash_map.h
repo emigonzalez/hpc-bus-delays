@@ -3,79 +3,33 @@
 
 #include <stdlib.h>
 
-#define INITIAL_CAPACITY 1000
+#define INITIAL_SIZE 1000
 #define LOAD_FACTOR 0.75
-
-typedef struct {
-    int tipo_dia;
-    char *cod_variante;
-    char *frecuencia;
-    char *cod_ubic_parada;
-    char *ordinal;
-    char *hora;
-    char *dia_anterior;
-    char *X;
-    char *Y;
-} VFT;
-
-typedef struct {
-    char *id;
-    char *codigoEmpresa;
-    char *frecuencia;
-    char *codigoBus;
-    char *variante;
-    char *linea;
-    char *sublinea;
-    char *tipoLinea;
-    char *destino;
-    char *subsistema;
-    char *version;
-    char *velocidad;
-    char *latitud;
-    char *longitud;
-    char *fecha;
-} VFD;
+#define INITIAL_ROW_CAPACITY 4
 
 typedef struct Entry {
     char *key;
-    VFT **vfts;
-    VFD **vfds;
-    size_t vft_count;
-    size_t vft_capacity;
-    size_t vfd_count;
-    size_t vfd_capacity;
+    char **vfd_rows;
+    size_t vfd_row_count;
+    char **vft_rows;
+    size_t vft_row_count;
+    size_t row_capacity;
     struct Entry *next;
 } Entry;
 
 typedef struct {
     Entry **buckets;
-    size_t size; // Number of buckets
-    size_t count; // Number of key-value pairs
-    char** campos_capturas;
-    char** campos_horarios;
+    size_t size;    // Number of buckets
+    size_t count;   // Number of key-value pairs
 } HashMap;
 
-char** get_campos_capturas(HashMap* map);
-char** get_campos_horarios(HashMap* map);
-
-VFD** get_capturas(Entry* entry);
-VFT** get_horarios(Entry* entry);
-
 HashMap *create_hash_map();
-void free_hash_map(HashMap *map);
-int hash_map_insert_vft(HashMap *map, const char *key, VFT *vft);
-Entry *hash_map_insert_vfd(HashMap *map, const char *key, VFD *vfd);
+Entry *hash_map_insert_vft(HashMap *map, const char *key, const char *row);
+Entry *hash_map_insert_vfd(HashMap *map, const char *key, const char *row);
+Entry *insert_to_vfds(Entry *entry, const char *row);
 Entry *hash_map_search(HashMap *map, const char *key);
-void resize_hash_map(HashMap *map);
-char **get_all_keys(HashMap *map, size_t *key_count);
+void free_hash_map(HashMap *map);
 void print_hash_map(HashMap *map);
-void free_vft(VFT *vft);
-void free_vfd(VFD *vfd);
-VFT* create_vft();
-VFD* create_vfd();
-void repoint_vfts_to_vfd_map(Entry* vfd_entry, Entry *vft_entry);
-Entry * insert_to_vfds(Entry *entry, VFD *vfd);
-void hello_world();
-void* deep_copy_hashmap_to_shared_memory(HashMap* map, void* shared_mem);
+void repoint_vfts_to_vfd_map(Entry* vfd_entry, Entry* vft_entry);
 
 #endif // HASH_MAP_H
