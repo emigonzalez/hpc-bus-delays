@@ -10,15 +10,20 @@
 #include "date_to_day_type.h"
 
 int is_valid_departure_time(const char* frecuencia) {
-    int len = strlen(frecuencia);
-    if (len < 1 || len > 6) return 0; // Must be up to 6 characters long to include the trailing zero
+    // int len = strlen(frecuencia);
+    // if (len < 1 || len > 6) return 0; // Must be up to 6 characters long to include the trailing zero
 
-    int minutes = (atoi(frecuencia + len - 3) / 10) % 60; // Last three digits divided by 10 for minutes
-    char* hours_str = strndup(frecuencia, len - 3);
-    int hours = atoi(hours_str); // Remaining digits for hours
+    // int minutes = (atoi(frecuencia + len - 3) / 10) % 60; // Last three digits divided by 10 for minutes
+    // char* hours_str = strndup(frecuencia, len - 3);
+    // int hours = atoi(hours_str); // Remaining digits for hours
+    // printf("!!!!!!!!!!!TIME: %d %d !!!!!!!!!!!!!!!!!", hours, minutes);
 
-    free(hours_str);
-    return (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59);
+    // free(hours_str);
+    // return (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59);
+    int frecuencia_int = atoi(frecuencia);
+    int is_zero = (frecuencia_int == 0 && strcmp(frecuencia, "0") == 0);
+
+    return is_zero || (frecuencia_int > 0 && frecuencia_int <= 23590);
 }
 
 // Function to convert frecuencia to minutes
@@ -322,7 +327,7 @@ HashMap* group_data_by_vfd(char* filename, HashMap* vft_map) {
 
         char* vfd_key = NULL;
         vfd_key = create_vfd_key(line_copy);
-        printf("VFD KEY: %s\n", vfd_key);
+        printf("\nVFD KEY: %s\n", vfd_key);
         printf("ROW: %s\n", line);
 
         if (vfd_key != NULL) {
