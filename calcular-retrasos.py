@@ -305,7 +305,8 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
                 vfd_string = VFD
                 fecha_vfd = datetime.strptime(vfd_string.split('_')[-1], '%Y-%m-%d').date()
 
-                if parada_valida['dia_anterior'] == 'S':
+                # if parada_valida['dia_anterior'] == 'S':
+                if parada_valida['dia_anterior'] in [ 'S', '*']:
                     fecha_vfd += timedelta(days=1)
 
                 hora_vft = str(parada_valida['hora']).zfill(4)
@@ -338,8 +339,8 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
                 
                 vfd_string = VFD
                 fecha_vfd = datetime.strptime(vfd_string.split('_')[-1], '%Y-%m-%d').date()
-
-                if parada_valida['dia_anterior'] == 'S':
+                # if field.lower() in ['latitud', 'longitud', 'x', 'y']:
+                if parada_valida['dia_anterior'] in [ 'S', '*']:
                     fecha_vfd += timedelta(days=1)
 
                 hora_vft = str(parada_valida['hora']).zfill(4)
@@ -370,7 +371,8 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
                     vfd_string = VFD
                     fecha_vfd = datetime.strptime(vfd_string.split('_')[-1], '%Y-%m-%d').date()
 
-                    if parada_valida['dia_anterior'] == 'S':
+                    # if parada_valida['dia_anterior'] == 'S':
+                    if parada_valida['dia_anterior'] in [ 'S', '*']:
                         fecha_vfd += timedelta(days=1)
 
                     hora_vft = str(parada_valida['hora']).zfill(4)
@@ -383,7 +385,8 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
                     
                     fecha_hora_estimada = transformar_fechas(reg_a['fecha'])
                     
-                    if parada_valida['dia_anterior'] == 'S':
+                    # if parada_valida['dia_anterior'] == 'S':
+                    if parada_valida['dia_anterior'] in [ 'S', '*']:
                         fecha_vfd += timedelta(days=1)
                     retraso = 100
                 
@@ -432,8 +435,8 @@ def procesar_archivos_retornar_atrasos(archivo_vfd, archivo_capturas,archivo_hor
     with open(vfd_file, newline='') as vfdfile:
         vfd_reader = csv.reader(vfdfile)
         next(vfd_reader)  # Saltar la cabecera
-        captura_index = -1
-        horario_index = -1
+        captura_index = 0
+        horario_index = 0
         for row in vfd_reader:
             VFD = row[0]
             cant_capturas = int(row[1])
@@ -445,7 +448,7 @@ def procesar_archivos_retornar_atrasos(archivo_vfd, archivo_capturas,archivo_hor
 
             # Asignar las capturas
             if captura_index + cant_capturas <= len(capturas_data):
-                capturas_dict.append(capturas_header)
+                # capturas_dict.append(capturas_header)
                 # capturas_dict[0] = capturas_header
                 capturas_dict.extend(capturas_data[captura_index:captura_index + cant_capturas]) 
                 captura_index += cant_capturas 
@@ -456,11 +459,11 @@ def procesar_archivos_retornar_atrasos(archivo_vfd, archivo_capturas,archivo_hor
 
             # Asignar los horarios
             if horario_index + cant_horarios <= len(horarios_data):
-                horarios_dict.append(horarios_header)
+                # horarios_dict.append(horarios_header)
                 horarios_dict.extend(horarios_data[horario_index:horario_index + cant_horarios]) 
                 horario_index += cant_horarios
             else:
-                horarios_dict.append = horarios_header
+                # horarios_dict.append = horarios_header
                 horarios_dict.extend = horarios_data[horario_index:]
                 horario_index = len(horarios_data)  # Finaliza
 
@@ -472,7 +475,7 @@ def procesar_archivos_retornar_atrasos(archivo_vfd, archivo_capturas,archivo_hor
    
 
 #  Función para leer el archivo CSV y devolver la primera fila (cabecera) y los datos
-def read_csv(file_path, delimiter=',', skip_header=True):
+def read_csv(file_path, delimiter=',', skip_header=False):
     with open(file_path, newline='') as csvfile:
         reader = csv.DictReader(csvfile, delimiter=delimiter)
         if skip_header:
