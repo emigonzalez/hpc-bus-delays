@@ -10,20 +10,16 @@
 #include "date_to_day_type.h"
 
 int is_valid_departure_time(const char* frecuencia) {
-    // int len = strlen(frecuencia);
-    // if (len < 1 || len > 6) return 0; // Must be up to 6 characters long to include the trailing zero
+    int frecuencia_int = atoi(frecuencia) / 10;
 
-    // int minutes = (atoi(frecuencia + len - 3) / 10) % 60; // Last three digits divided by 10 for minutes
-    // char* hours_str = strndup(frecuencia, len - 3);
-    // int hours = atoi(hours_str); // Remaining digits for hours
-    // printf("!!!!!!!!!!!TIME: %d %d !!!!!!!!!!!!!!!!!", hours, minutes);
+    if (frecuencia_int == 0 && strcmp(frecuencia, "0") != 0)
+        return -1;
 
-    // free(hours_str);
-    // return (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59);
-    int frecuencia_int = atoi(frecuencia);
-    int is_zero = (frecuencia_int == 0 && strcmp(frecuencia, "0") == 0);
+    int minutes = frecuencia_int % 100; // Last three digits divided by 10 for minutes
+    int hours = frecuencia_int / 100; // Remaining digits for hours
+    printf("!!!!!!!!!!!TIME: %d %d !!!!!!!!!!!!!!!!!", hours, minutes);
 
-    return is_zero || (frecuencia_int > 0 && frecuencia_int <= 23590);
+    return (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) ? 1 : -1;
 }
 
 // Function to convert frecuencia to minutes
@@ -144,7 +140,7 @@ char* create_vfd_key(char* line) {
     if (
         strcmp(latitud, "0") == 0 ||
         strcmp(longitud, "0") == 0 ||
-        !is_valid_departure_time(frecuencia)
+        is_valid_departure_time(frecuencia) < 0
     ) {
         return NULL; // Skip this row
     }
