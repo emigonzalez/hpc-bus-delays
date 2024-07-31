@@ -11,7 +11,7 @@
 
 int is_valid_departure_time(const char* frecuencia) {
     int len = strlen(frecuencia);
-    if (len < 4 || len > 6) return 0; // Must be 4 to 6 characters long to include the trailing zero
+    if (len < 1 || len > 6) return 0; // Must be up to 6 characters long to include the trailing zero
 
     int minutes = (atoi(frecuencia + len - 3) / 10) % 60; // Last three digits divided by 10 for minutes
     char* hours_str = strndup(frecuencia, len - 3);
@@ -195,65 +195,63 @@ char* create_vft_key(char* line) {
     return key;
 }
 
-HashMap* group_data_by_vft(char** assigned_files) {
-    if (assigned_files == NULL) {
-        fprintf(stderr, "Error: assigned_files pointer is NULL\n");
+HashMap* group_data_by_vft(char* filename) {
+    if (filename == NULL) {
+        fprintf(stderr, "Error: filename pointer is NULL\n");
         exit(EXIT_FAILURE);
     }
 
     // Create a hash map for map
     HashMap *map = create_hash_map();
 
-    for (int i = 0; assigned_files[i] != NULL; i++) {
-        FILE* file = fopen(assigned_files[i], "r");
-        if (file == NULL) {
-            fprintf(stderr, "Error opening file: %s\n", assigned_files[i]);
+    FILE* file = fopen(filename, "r");
+    if (file == NULL) {
+        fprintf(stderr, "Error opening file: %s\n", filename);
+        exit(EXIT_FAILURE);
+    }
+
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t read;
+
+    // Read and skip the header line
+    if ((read = getline(&line, &len, file)) != -1) {
+        // Optionally, print or process the header line
+        printf("Header: %s", line);
+        // add_vft_to_map(map, "0", line);
+    }
+
+    // Ensure line is freed before the next read
+    free(line);
+    line = NULL;
+
+    while ((read = getline(&line, &len, file)) != -1) {
+        if (read <= 1) continue; // Skip empty lines
+
+        // Split the line into columns
+        char* line_copy = strdup(line);
+        if (line_copy == NULL) {
+            perror("Failed to duplicate line");
             continue;
         }
 
-        char *line = NULL;
-        size_t len = 0;
-        ssize_t read;
+        char* key = NULL;
+        key = create_vft_key(line_copy);
 
-        // Read and skip the header line
-        if ((read = getline(&line, &len, file)) != -1) {
-            // Optionally, print or process the header line
-            printf("Header: %s", line);
-            // add_vft_to_map(map, "0", line);
+        // Add the row to the corresponding group
+        if (key != NULL) {
+            add_vft_to_map(map, key, line);
+            free(key);
+        } else {
+            perror("Invalid Data");
+            continue;
         }
 
-        // Ensure line is freed before the next read
-        free(line);
-        line = NULL;
-
-        while ((read = getline(&line, &len, file)) != -1) {
-            if (read <= 1) continue; // Skip empty lines
-
-            // Split the line into columns
-            char* line_copy = strdup(line);
-            if (line_copy == NULL) {
-                perror("Failed to duplicate line");
-                continue;
-            }
-
-            char* key = NULL;
-            key = create_vft_key(line_copy);
-
-            // Add the row to the corresponding group
-            if (key != NULL) {
-                add_vft_to_map(map, key, line);
-                free(key);
-            } else {
-                perror("Invalid Data");
-                continue;
-            }
-
-            free(line_copy); // Free the copy after processing
-        }
-
-        free(line);
-        fclose(file);
+        free(line_copy); // Free the copy after processing
     }
+
+    free(line);
+    fclose(file);
 
     return map;
 }
@@ -280,95 +278,89 @@ char* create_vft_from_vfd(char* vfd) {
     return key;
 }
 
-HashMap* group_data_by_vfd(char** assigned_files, HashMap* vft_map) {
-    if (assigned_files == NULL) {
-        fprintf(stderr, "Error: assigned_files pointer is NULL\n");
+HashMap* group_data_by_vfd(char* filename, HashMap* vft_map) {
+    if (filename == NULL) {
+        fprintf(stderr, "Error: filename pointer is NULL\n");
         exit(EXIT_FAILURE);
     }
 
     // Create a hash map for vfd_map
     HashMap *vfd_map = create_hash_map();
 
-    // Insert header line from VFT map to VFD map.
-    // Entry* vft_h = hash_map_search(vft_map, "0");
-    // if (vft_h != NULL && vft_h->vft_row_count > 0) add_vfd_to_map(vfd_map, "0", vft_h->vft_rows[0]);
-
     HashMap *discarded_vfds = create_hash_map();
 
-    for (int i = 0; assigned_files[i] != NULL; i++) {
-        printf("####### RUNNING WITH FILE: %s ########\n", assigned_files[i]);
-        FILE* file = fopen(assigned_files[i], "r");
-        if (file == NULL) {
-            fprintf(stderr, "Error opening file: %s\n", assigned_files[i]);
+    FILE* file = fopen(filename, "r");
+    if (file == NULL) {
+        fprintf(stderr, "Error opening file: %s\n", filename);
+        exit(EXIT_FAILURE);
+    }
+
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t read;
+
+    // Read and skip the header line
+    if ((read = getline(&line, &len, file)) != -1) {
+        // Optionally, print or process the header line
+        printf("Header: %s", line);
+        // add_vfd_to_map(vfd_map, "0", line);
+    }
+
+    // Ensure line is freed before the next read
+    free(line);
+    line = NULL;
+
+    while ((read = getline(&line, &len, file)) != -1) {
+        if (read <= 1) continue; // Skip empty lines
+
+        // Split the line into columns
+        char* line_copy = strdup(line);
+        if (line_copy == NULL) {
+            perror("Failed to duplicate line");
             continue;
         }
 
-        char *line = NULL;
-        size_t len = 0;
-        ssize_t read;
+        char* vfd_key = NULL;
+        vfd_key = create_vfd_key(line_copy);
+        printf("VFD KEY: %s\n", vfd_key);
+        printf("ROW: %s\n", line);
 
-        // Read and skip the header line
-        if ((read = getline(&line, &len, file)) != -1) {
-            // Optionally, print or process the header line
-            printf("Header: %s", line);
-            // add_vfd_to_map(vfd_map, "0", line);
-        }
+        if (vfd_key != NULL) {
+            Entry* vfd_entry = hash_map_search(vfd_map, vfd_key);
 
-        // Ensure line is freed before the next read
-        free(line);
-        line = NULL;
+            if (vfd_entry != NULL) {
+                printf("ENCONTRO VFD EN MAP!\n");
+                // Add the row to the vfd_map
+                insert_to_vfds(vfd_entry, line);
+            } else if (!hash_map_search(discarded_vfds, vfd_key)) {
+                // Generate VFT and look for data in the vft_map
+                char* vft_key = create_vft_from_vfd(vfd_key);
+                printf("VFT KEY: %s\n", vft_key);
+                Entry* vft_entry = hash_map_search(vft_map, vft_key);
 
-        while ((read = getline(&line, &len, file)) != -1) {
-            if (read <= 1) continue; // Skip empty lines
-
-            // Split the line into columns
-            char* line_copy = strdup(line);
-            if (line_copy == NULL) {
-                perror("Failed to duplicate line");
-                continue;
-            }
-
-            char* vfd_key = NULL;
-            printf("ROW: %s\n", line_copy);
-            vfd_key = create_vfd_key(line_copy);
-            printf("VFD KEY: %s\n", vfd_key);
-
-            if (vfd_key != NULL) {
-                Entry* vfd_entry = hash_map_search(vfd_map, vfd_key);
-
-                if (vfd_entry != NULL) {
-                    printf("ENCONTRO VFD EN MAP!\n");
-                    // Add the row to the vfd_map
-                    insert_to_vfds(vfd_entry, line);
-                } else if (!hash_map_search(discarded_vfds, vfd_key)) {
-                    // Generate VFT and look for data in the vft_map
-                    char* vft_key = create_vft_from_vfd(vfd_key);
-                    printf("VFT KEY: %s\n", vft_key);
-                    Entry* vft_entry = hash_map_search(vft_map, vft_key);
-
-                    if (vft_entry != NULL) {
-                        printf("ENCONTRO VFT EN MAP!\n");
-                        Entry* vfd_entry = add_vfd_to_map(vfd_map, vfd_key, line);
-                        repoint_vfts_to_vfd_map(vfd_entry, vft_entry);
-                    } else {
-                        printf("VFT %s does not exist.\n", vft_key);
-                        add_vfd_to_map(discarded_vfds, vfd_key, NULL);
-                    }
-
-                    free(vft_key);
+                if (vft_entry != NULL) {
+                    printf("ENCONTRO VFT EN MAP!\n");
+                    Entry* vfd_entry = add_vfd_to_map(vfd_map, vfd_key, line);
+                    repoint_vfts_to_vfd_map(vfd_entry, vft_entry);
+                } else {
+                    printf("VFT %s does not exist.\n", vft_key);
+                    add_vfd_to_map(discarded_vfds, vfd_key, NULL);
                 }
 
-                free(vfd_key);
-            } else {
-                perror("COULD NOT CREATE VFT KEY");
+                free(vft_key);
             }
 
-            free(line_copy); // Free the copy after processing
+            free(vfd_key);
+        } else {
+            perror("COULD NOT CREATE VFD KEY");
         }
 
+        free(line_copy); // Free the copy after processing
         free(line);
-        fclose(file);
+        line = NULL;
     }
+
+    fclose(file);
 
     free_hash_map(discarded_vfds);
     return vfd_map;
