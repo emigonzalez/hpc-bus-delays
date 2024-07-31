@@ -236,7 +236,7 @@ int main() {
         const char *script_name = "calcular-retrasos.py";
 
         printf("\nCALLING PYTHON SCRIPT %s \n", script_name);
-
+        printf("FILE: %s \n", capturas[i]);
         // Call the function to run the Python script with the hash map pointer
         // run_python_script(script_name);
 
