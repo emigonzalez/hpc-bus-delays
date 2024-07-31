@@ -306,7 +306,7 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
                 fecha_vfd = datetime.strptime(vfd_string.split('_')[-1], '%Y-%m-%d').date()
 
                 if parada_valida['dia_anterior'] == 'S':
-                    fecha_vfd += timedelta(days=0)
+                    fecha_vfd += timedelta(days=1)
 
                 hora_vft = str(parada_valida['hora']).zfill(4)
                 fecha_hora_prevista = datetime.combine(fecha_vfd, datetime.strptime(hora_vft, '%H%M').time())
@@ -340,7 +340,7 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
                 fecha_vfd = datetime.strptime(vfd_string.split('_')[-1], '%Y-%m-%d').date()
 
                 if parada_valida['dia_anterior'] == 'S':
-                    fecha_vfd += timedelta(days=0)
+                    fecha_vfd += timedelta(days=1)
 
                 hora_vft = str(parada_valida['hora']).zfill(4)
                 fecha_hora_prevista = datetime.combine(fecha_vfd, datetime.strptime(hora_vft, '%H%M').time())
@@ -371,7 +371,7 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
                     fecha_vfd = datetime.strptime(vfd_string.split('_')[-1], '%Y-%m-%d').date()
 
                     if parada_valida['dia_anterior'] == 'S':
-                        fecha_vfd += timedelta(days=0)
+                        fecha_vfd += timedelta(days=1)
 
                     hora_vft = str(parada_valida['hora']).zfill(4)
                     fecha_hora_prevista = datetime.combine(fecha_vfd, datetime.strptime(hora_vft, '%H%M').time())
@@ -384,7 +384,7 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
                     fecha_hora_estimada = transformar_fechas(reg_a['fecha'])
                     
                     if parada_valida['dia_anterior'] == 'S':
-                        fecha_vfd += timedelta(days=0)
+                        fecha_vfd += timedelta(days=1)
                     retraso = 100
                 
 
