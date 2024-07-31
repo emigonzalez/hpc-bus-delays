@@ -296,6 +296,7 @@ HashMap* group_data_by_vfd(char** assigned_files, HashMap* vft_map) {
     HashMap *discarded_vfds = create_hash_map();
 
     for (int i = 0; assigned_files[i] != NULL; i++) {
+        printf("####### RUNNING WITH FILE: %s ########\n", assigned_files[i]);
         FILE* file = fopen(assigned_files[i], "r");
         if (file == NULL) {
             fprintf(stderr, "Error opening file: %s\n", assigned_files[i]);
@@ -358,7 +359,6 @@ HashMap* group_data_by_vfd(char** assigned_files, HashMap* vft_map) {
                 }
 
                 free(vfd_key);
-                printf("FIN FOR i!\n");
             } else {
                 perror("COULD NOT CREATE VFT KEY");
             }

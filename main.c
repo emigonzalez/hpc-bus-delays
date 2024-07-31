@@ -199,9 +199,13 @@ void generate_vfd_file(HashMap* map, const char *vfd_filename, const char *captu
 int main() {
     printf("BEGIN in C \n");
 
-    char** capturas = (char**)malloc(2 * sizeof(char*));
-    capturas[0] = "data/stm-buses-2024-06-10_10.csv";
-    capturas[1] = NULL; // Terminate the list
+    char** capturas = (char**)malloc(24 * sizeof(char*));
+    for (size_t i = 0; i < 24; i++) {
+        capturas[i] = (char*)malloc(34 * sizeof(char));
+        sprintf(capturas[i], "data/stm-buses-2024-06-10_%02ld.csv", i);
+        printf("FILE %ld : %s\n", i, capturas[i]);
+    }
+    capturas[24] = NULL; // Terminate the list
 
     char** horarios = (char**)malloc(2 * sizeof(char*));
     horarios[0] = "data/horarios_paradas_vft.csv";
