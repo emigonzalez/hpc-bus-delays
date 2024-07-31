@@ -17,7 +17,6 @@ int is_valid_departure_time(const char* frecuencia) {
 
     int minutes = frecuencia_int % 100; // Last three digits divided by 10 for minutes
     int hours = frecuencia_int / 100; // Remaining digits for hours
-    printf("!!!!!!!!!!!TIME: %d %d !!!!!!!!!!!!!!!!!", hours, minutes);
 
     return (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) ? 1 : -1;
 }
@@ -182,6 +181,13 @@ char* create_vft_key(char* line) {
     }
 
     // Check if bus is from day before
+    int frecuencia_int = atoi(frecuencia) / 10;
+    int hora_int = atoi(hora) / 10;
+    if (strcmp(dia_anterior, "N") == 0 && hora_int - frecuencia_int < 0) {
+        fprintf(stderr, "CAMPO DIA_ANTERIOR INVALIDO EN ROW: %s\n", line);
+        return NULL;
+    }
+
     int tipo_dia_int = atoi(tipo_dia);
     if (strcmp(dia_anterior, "S") == 0) {
         tipo_dia_int = (tipo_dia_int == 1) ? 3 : tipo_dia_int - 1;
@@ -323,24 +329,23 @@ HashMap* group_data_by_vfd(char* filename, HashMap* vft_map) {
 
         char* vfd_key = NULL;
         vfd_key = create_vfd_key(line_copy);
-        printf("\nVFD KEY: %s\n", vfd_key);
-        printf("ROW: %s\n", line);
+        printf("\n#################################\n");
+        printf("VFD KEY: %s\n", vfd_key);
+        printf("ROW: %s", line);
 
         if (vfd_key != NULL) {
             Entry* vfd_entry = hash_map_search(vfd_map, vfd_key);
 
             if (vfd_entry != NULL) {
-                printf("ENCONTRO VFD EN MAP!\n");
                 // Add the row to the vfd_map
                 insert_to_vfds(vfd_entry, line);
             } else if (!hash_map_search(discarded_vfds, vfd_key)) {
                 // Generate VFT and look for data in the vft_map
                 char* vft_key = create_vft_from_vfd(vfd_key);
-                printf("VFT KEY: %s\n", vft_key);
+                printf("VFT KEY: %s    ", vft_key);
                 Entry* vft_entry = hash_map_search(vft_map, vft_key);
 
                 if (vft_entry != NULL) {
-                    printf("ENCONTRO VFT EN MAP!\n");
                     Entry* vfd_entry = add_vfd_to_map(vfd_map, vfd_key, line);
                     repoint_vfts_to_vfd_map(vfd_entry, vft_entry);
                 } else {
@@ -353,12 +358,13 @@ HashMap* group_data_by_vfd(char* filename, HashMap* vft_map) {
 
             free(vfd_key);
         } else {
-            perror("COULD NOT CREATE VFD KEY");
+            perror("INVALID VFD KEY");
         }
 
         free(line_copy); // Free the copy after processing
         free(line);
         line = NULL;
+        printf("#################################\n");
     }
 
     fclose(file);
