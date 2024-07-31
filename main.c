@@ -119,7 +119,7 @@ HashMap *vfd_map = NULL;
 void run_python_script(const char *script_name) {
     // Call the Python script
     char command[256];
-    snprintf(command, sizeof(command), "python3.10 calcular-retrasos_conC.py");
+    snprintf(command, sizeof(command), "python3.10 calcular-retrasos.py");
     // snprintf(command, sizeof(command), "python3.10 calcular-retrasos_conC.py");
     FILE *fp = popen(command, "r");
     if (fp == NULL) {
@@ -228,7 +228,7 @@ int main() {
     generate_vfd_file(vfd_map, vfd_filename, capturas_filename, horarios_filename);
 
     // Path to the Python script
-    const char *script_name = "calcular-retrasos_conC.py";
+    const char *script_name = "calcular-retrasos.py";
 
     printf("CALLING PYTHON SCRIPT %s \n", script_name);
 
