@@ -76,16 +76,21 @@ void resize_hash_map(HashMap *map) {
 Entry* create_entry(const char *key) {
     Entry *entry = (Entry *)malloc(sizeof(Entry));
     if (!entry) {
-        fprintf(stderr, "Error: memory allocation failed\n");
+        fprintf(stderr, "Error creating entry for key %s: memory allocation failed\n", key);
         exit(EXIT_FAILURE);
     }
+
     entry->key = strdup(key);
-    entry->vfd_rows = (char **)malloc(INITIAL_ROW_CAPACITY * sizeof(char *));
+    if (!entry->key) {
+        fprintf(stderr, "Error adding key %s to entry: memory allocation failed for key\n", key);
+        free(entry);
+        exit(EXIT_FAILURE);
+    }
+
+    entry->vfd_rows = NULL;
     entry->vfd_row_count = 0;
-    entry->vfd_row_capacity = INITIAL_ROW_CAPACITY;
-    entry->vft_rows = (char **)malloc(INITIAL_ROW_CAPACITY * sizeof(char *));
+    entry->vft_rows = NULL;
     entry->vft_row_count = 0;
-    entry->vft_row_capacity = INITIAL_ROW_CAPACITY;
     entry->next = NULL;
     return entry;
 }
@@ -117,16 +122,15 @@ Entry *find_or_create_entry(HashMap *map, const char *key) {
 }
 
 Entry *insert_to_vfts(Entry *entry, const char *row) {
-    if (entry->vft_row_count >= entry->vft_row_capacity) {
-        printf("Reallocating vft_rows: current capacity %zu, new capacity %zu\n", entry->vft_row_capacity, entry->vft_row_capacity * 2);
-        entry->vft_row_capacity *= 2;
-        char **temp = (char **)realloc(entry->vft_rows, entry->vft_row_capacity * sizeof(char *));
-        if (!temp) {
-            fprintf(stderr, "Error: insert_to_vfts memory reallocation failed for vft_rows \n");
-            return NULL;
-        }
-        entry->vft_rows = temp;
+    // Allocate memory for a new row
+    char **temp = (char **)realloc(entry->vft_rows, (entry->vft_row_count + 1) * sizeof(char *));
+    if (!temp) {
+        fprintf(stderr, "Error: insert_to_vfts memory reallocation failed for vft_rows \n");
+        return NULL;
     }
+    entry->vft_rows = temp;
+    
+    // Add the new row
     entry->vft_rows[entry->vft_row_count] = strdup(row);
     if (!entry->vft_rows[entry->vft_row_count]) {
         fprintf(stderr, "Error: insert_to_vfts when adding row to entry\n");
@@ -136,20 +140,19 @@ Entry *insert_to_vfts(Entry *entry, const char *row) {
     return entry;
 }
 
-Entry* insert_to_vfds(Entry *entry, const char *row) {
-    if (entry->vfd_row_count >= entry->vfd_row_capacity) {
-        printf("Reallocating vfd_rows: current capacity %zu, new capacity %zu\n", entry->vfd_row_capacity, entry->vfd_row_capacity * 2);
-        entry->vfd_row_capacity *= 2;
-        char **temp = (char **)realloc(entry->vfd_rows, entry->vfd_row_capacity * sizeof(char *));
-        if (!temp) {
-            fprintf(stderr, "Error: insert_to_vfds memory reallocation failed for vfd_rows\n");
-            return NULL;
-        }
-        entry->vfd_rows = temp;
+Entry *insert_to_vfds(Entry *entry, const char *row) {
+    // Allocate memory for a new row
+    char **temp = (char **)realloc(entry->vfd_rows, (entry->vfd_row_count + 1) * sizeof(char *));
+    if (!temp) {
+        fprintf(stderr, "Error: insert_to_vfds memory reallocation failed for vfd_rows\n");
+        return NULL;
     }
+    entry->vfd_rows = temp;
+
+    // Add the new row
     entry->vfd_rows[entry->vfd_row_count] = strdup(row);
     if (!entry->vfd_rows[entry->vfd_row_count]) {
-        fprintf(stderr, "Error: insert_to_vfds  when adding row to entry\n");
+        fprintf(stderr, "Error: insert_to_vfds when adding row to entry\n");
         return NULL;
     }
     entry->vfd_row_count++;
@@ -182,12 +185,10 @@ void repoint_vfts_to_vfd_map(Entry* vfd_entry, Entry* vft_entry) {
     // Repoint the vfd entry's rows to the new entry's rows
     vfd_entry->vft_rows = vft_entry->vft_rows;
     vfd_entry->vft_row_count = vft_entry->vft_row_count;
-    vfd_entry->vfd_row_capacity = vft_entry->vft_row_capacity;
 
     // Nullify the vft entry's vft_rows to avoid double free
     vft_entry->vft_rows = NULL;
     vft_entry->vft_row_count = 0;
-    vft_entry->vft_row_capacity = 0;
 }
 
 void print_hash_map(HashMap *map) {
