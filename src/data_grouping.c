@@ -176,15 +176,15 @@ char* create_vft_key(char* line) {
     UNUSED(longitud);
 
     if (tipo_dia == NULL || variante == NULL || frecuencia == NULL || dia_anterior == NULL) {
-        fprintf(stderr, "Error: Missing data from row to VFT in line: %s", line);
+        fprintf(stderr, "Error: Missing data from row to VFT");
         return NULL;
     }
 
     // Check if bus is from day before
     int frecuencia_int = atoi(frecuencia) / 10;
-    int hora_int = atoi(hora) / 10;
-    if (strcmp(dia_anterior, "N") == 0 && hora_int - frecuencia_int < 0) {
-        fprintf(stderr, "CAMPO DIA_ANTERIOR INVALIDO EN ROW: %s\n", line);
+    int hora_int = atoi(hora);
+    if (strcmp(dia_anterior, "N") == 0 && (hora_int - frecuencia_int) < 0) {
+        fprintf(stderr, "CAMPO DIA_ANTERIOR INVALIDO EN ROW: %s_%s_%d_%d_%s\n", tipo_dia, variante, frecuencia_int, hora_int, dia_anterior);
         return NULL;
     }
 
@@ -250,7 +250,6 @@ HashMap* group_data_by_vft(char* filename) {
             add_vft_to_map(map, key, line);
             free(key);
         } else {
-            perror("Invalid Data");
             continue;
         }
 
@@ -342,14 +341,14 @@ HashMap* group_data_by_vfd(char* filename, HashMap* vft_map) {
             } else if (!hash_map_search(discarded_vfds, vfd_key)) {
                 // Generate VFT and look for data in the vft_map
                 char* vft_key = create_vft_from_vfd(vfd_key);
-                printf("VFT KEY: %s    ", vft_key);
+                printf("VFT KEY: %s", vft_key);
                 Entry* vft_entry = hash_map_search(vft_map, vft_key);
 
                 if (vft_entry != NULL) {
                     Entry* vfd_entry = add_vfd_to_map(vfd_map, vfd_key, line);
                     repoint_vfts_to_vfd_map(vfd_entry, vft_entry);
                 } else {
-                    printf("VFT %s does not exist.\n", vft_key);
+                    printf(" does not exist.\n");
                     add_vfd_to_map(discarded_vfds, vfd_key, NULL);
                 }
 
@@ -358,7 +357,7 @@ HashMap* group_data_by_vfd(char* filename, HashMap* vft_map) {
 
             free(vfd_key);
         } else {
-            perror("INVALID VFD KEY");
+            printf("INVALID VFD KEY\n");
         }
 
         free(line_copy); // Free the copy after processing

@@ -222,7 +222,7 @@ int main() {
         printf("VFD GENERATED.\n");
         printf("\nPRINTING MAP...\n");
         // Example: Print grouped data
-        print_hash_map(vfd_map);
+        // print_hash_map(vfd_map);
 
         printf("HashMap size: %zu\n", vfd_map->size);
         printf("HashMap count: %zu\n", vfd_map->count);
