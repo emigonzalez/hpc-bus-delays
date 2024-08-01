@@ -184,7 +184,7 @@ char* create_vft_key(char* line) {
     int frecuencia_int = atoi(frecuencia) / 10;
     int hora_int = atoi(hora);
     if (strcmp(dia_anterior, "N") == 0 && (hora_int - frecuencia_int) < 0) {
-        fprintf(stderr, "CAMPO DIA_ANTERIOR INVALIDO EN ROW: %s_%s_%d_%d_%s\n", tipo_dia, variante, frecuencia_int, hora_int, dia_anterior);
+        // fprintf(stderr, "CAMPO DIA_ANTERIOR INVALIDO EN ROW: %s_%s_%d_%d_%s\n", tipo_dia, variante, frecuencia_int, hora_int, dia_anterior);
         return NULL;
     }
 
@@ -205,7 +205,7 @@ char* create_vft_key(char* line) {
 HashMap* group_data_by_vft(char* filename) {
     if (filename == NULL) {
         fprintf(stderr, "Error: filename pointer is NULL\n");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
     // Create a hash map for map
@@ -214,7 +214,7 @@ HashMap* group_data_by_vft(char* filename) {
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
         fprintf(stderr, "Error opening file: %s\n", filename);
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
     char *line = NULL;
@@ -287,7 +287,12 @@ char* create_vft_from_vfd(char* vfd) {
 HashMap* group_data_by_vfd(char* filename, HashMap* vft_map) {
     if (filename == NULL) {
         fprintf(stderr, "Error: filename pointer is NULL\n");
-        exit(EXIT_FAILURE);
+        return NULL;
+    }
+
+    if (vft_map == NULL) {
+        fprintf(stderr, "NO VFT MAP PROVIDED\n");
+        return NULL;
     }
 
     // Create a hash map for vfd_map
@@ -298,7 +303,7 @@ HashMap* group_data_by_vfd(char* filename, HashMap* vft_map) {
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
         fprintf(stderr, "Error opening file: %s\n", filename);
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
     char *line = NULL;

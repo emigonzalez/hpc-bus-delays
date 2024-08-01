@@ -1,7 +1,8 @@
-// #include <mpi.h>
-// #include <stdio.h>
-// #include <stdlib.h>
-// #include <signal.h>
+#include <mpi.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <signal.h>
+#include <string.h>
 
 #include "file_distribute.h"
 #include "schedule_distribute.h"
@@ -10,15 +11,22 @@
 #include "delay_calculation.h"
 #include "result_gathering.h"
 
-/*
 #define NUM_DAYS 30
 #define NUM_HOURS_PER_DAY 24
 
-char** file_names = NULL;
-char** assigned_files = NULL;
+// Path to the Python script
+const char *script_name = "calcular-retrasos.py";
+char* horarios = "data/horarios_paradas_vft.csv";
+char** capturas = NULL;
+char** directorios = NULL;
+char** assigned_days = NULL;
+HashMap *vfd_map = NULL;
+HashMap* vft_map = NULL;
 
 void handle_signal(int signal);
 void free_memory();
+void run_python_script(const char *script_name);
+void generate_vfd_file(HashMap* map, const char *vfd_filename, const char *capturas_filename, const char *horarios_filename);
 
 int main(int argc, char** argv) {
     MPI_Init(&argc, &argv);
@@ -34,41 +42,66 @@ int main(int argc, char** argv) {
     signal(SIGINT, handle_signal);  // Handle Ctrl+C (interrupt signal)
     signal(SIGTERM, handle_signal); // Handle termination signal
 
-    // File names and schedule file
-    char* schedule_file = "data/bus_schedules.csv";
-
     // Generate the list of file names (example for June, 24 files per day)
-    file_names = generate_file_names(NUM_DAYS, NUM_HOURS_PER_DAY);
-
-    // Calculate total number of files
-    int num_files = NUM_DAYS * NUM_HOURS_PER_DAY;
+    directorios = generate_directories(NUM_DAYS);
 
     // Distribute file names among processes
-    assigned_files = distribute_file_names(file_names, num_files, rank, size);
+    assigned_days = distribute_file_names(directorios, NUM_DAYS, rank, size);
 
-    printf("BUS LOCATIONS \n");
-    // Each process reads its assigned location files
-    for (int i = 0; assigned_files[i] != NULL; i++) {
-        printf("Process %d reading file %s\n", rank, assigned_files[i]);
-        // read_file_and_process_data(assigned_files[i]);
+    // Each process reads its assigned directories
+    for (int i = 0; assigned_days[i] != NULL; i++) {
+        char * day_str = get_day_from_dir_name(assigned_days[i]);
+        printf("Process %d reading file %s from day %s\n", rank, assigned_days[i], day_str);
+        capturas = generate_file_names(assigned_days[i], atoi(day_str), NUM_HOURS_PER_DAY);
+
+        for (int j = 0; j < NUM_HOURS_PER_DAY; j++) {
+            printf("####### RUNNING WITH FILE: %s ########\n", capturas[j]);
+
+            printf("\nGENERATING VFT...\n");
+            vft_map = group_data_by_vft(horarios);
+
+            if (vft_map == NULL) {
+                fprintf(stderr, "INVALID VFT MAPS FOR %s.\n", capturas[j]);
+                continue;
+            }
+
+            printf("VFT GENERATED.\n\n");
+
+            printf("GENERATING VFD...\n");
+            vfd_map = group_data_by_vfd(capturas[j], vft_map);
+
+            if (vfd_map == NULL) {
+                fprintf(stderr, "INVALID VFD MAPS FOR %s.\n", capturas[j]);
+                continue;
+            }
+
+            printf("VFD GENERATED.\n");
+            // Example: Print grouped data
+            // printf("\nPRINTING MAP...\n");
+            // print_hash_map(vfd_map);
+
+            printf("HashMap size: %zu\n", vfd_map->size);
+            printf("HashMap count: %zu\n", vfd_map->count);
+
+            const char *vfd_filename = "data/vfd.csv";
+            const char *capturas_filename = "data/capturas.csv";
+            const char *horarios_filename = "data/horarios.csv";
+            generate_vfd_file(vfd_map, vfd_filename, capturas_filename, horarios_filename);
+
+            printf("\nCALLING PYTHON SCRIPT %s \n", script_name);
+            printf("FILE: %s \n", capturas[j]);
+            // Call the function to run the Python script with the hash map pointer
+            run_python_script(script_name);
+
+            printf("END PYTHON :) \n");    
+
+            // Free the hash map
+            free_hash_map(vft_map);
+            free_hash_map(vfd_map);
+            vft_map = NULL;
+            vfd_map = NULL;
+        }
     }
-
-    printf("BUS SCHEDULES \n");
-    // Each process reads the entire schedule file
-    printf("Process %d reading schedule file %s\n", rank, schedule_file);
-    read_schedule_data(schedule_file, rank);
-
-    // Group data by bus variant, time, and day of month/type of day
-    group_data_by_bus_and_time(assigned_files);
-
-    // Map grouped locations to grouped schedules
-    map_locations_to_schedules();
-
-    // Calculate delays using the Python black box
-    calculate_delays();
-
-    // Gather results from all processes
-    gather_results();
 
     // Free allocated memory
     free_memory();
@@ -79,19 +112,22 @@ int main(int argc, char** argv) {
 
 void free_memory() {
     // Perform any necessary cleanup here
-    if (file_names != NULL) {
+    if (capturas != NULL) {
         for (int i = 0; i < NUM_DAYS * NUM_HOURS_PER_DAY; i++) {
-            free(file_names[i]);
+            free(capturas[i]);
         }
-        free(file_names);
+        free(capturas);
     }
 
-    if (assigned_files != NULL) {
-        for (int i = 0; assigned_files[i] != NULL; i++) {
-            free(assigned_files[i]);
+    if (assigned_days != NULL) {
+        for (int i = 0; assigned_days[i] != NULL; i++) {
+            free(assigned_days[i]);
         }
-        free(assigned_files);
+        free(assigned_days);
     }
+
+    if (vft_map != NULL) free_hash_map(vft_map);
+    if (vfd_map != NULL) free_hash_map(vfd_map);
 }
 
 void handle_signal(int signal) {
@@ -105,17 +141,6 @@ void handle_signal(int signal) {
     printf("Cleanup done, exiting...\n");
     exit(EXIT_SUCCESS);
 }
-*/
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-
-HashMap *vfd_map = NULL;
-HashMap* vft_map = NULL;
 
 void run_python_script(const char *script_name) {
     // Call the Python script
@@ -144,20 +169,20 @@ void run_python_script(const char *script_name) {
 void generate_vfd_file(HashMap* map, const char *vfd_filename, const char *capturas_filename, const char *horarios_filename) {
     FILE *vfd_file = fopen(vfd_filename, "w");
     if (!vfd_file) {
-        perror("Failed to open vfd_file");
+        perror("Failed to create vfd_file");
         return;
     }
 
     FILE *capturas_file = fopen(capturas_filename, "w");
     if (!capturas_file) {
-        perror("Failed to open VFD rows file");
+        perror("Failed create capturas file");
         fclose(vfd_file);
         return;
     }
 
     FILE *horarios_file = fopen(horarios_filename, "w");
     if (!horarios_file) {
-        perror("Failed to open VFD rows file");
+        perror("Failed to create horarios file");
         fclose(vfd_file);
         fclose(capturas_file);
         return;
@@ -195,62 +220,4 @@ void generate_vfd_file(HashMap* map, const char *vfd_filename, const char *captu
     fclose(vfd_file);
     fclose(capturas_file);
     fclose(horarios_file);
-}
-
-int main() {
-    printf("BEGIN in C \n");
-
-    char** capturas = (char**)malloc(24 * sizeof(char*));
-    for (size_t i = 0; i < 24; i++) {
-        capturas[i] = (char*)malloc(34 * sizeof(char));
-        sprintf(capturas[i], "data/stm-buses-2024-06-10_%02ld.csv", i);
-        printf("FILE %ld : %s\n", i, capturas[i]);
-    }
-    capturas[24] = NULL; // Terminate the list
-
-    char* horarios = "data/horarios_paradas_vft.csv";
-
-    for (int i = 0; capturas[i] != NULL; i++) {
-        printf("####### RUNNING WITH FILE: %s ########\n", capturas[i]);
-        printf("\nGENERATING VFT...\n");
-        vft_map = group_data_by_vft(horarios);
-
-        printf("VFT GENERATED.\n");
-        printf("\nGENERATING VFD...\n");
-        vfd_map = group_data_by_vfd(capturas[i], vft_map);
-
-        printf("VFD GENERATED.\n");
-        printf("\nPRINTING MAP...\n");
-        // Example: Print grouped data
-        // print_hash_map(vfd_map);
-
-        printf("HashMap size: %zu\n", vfd_map->size);
-        printf("HashMap count: %zu\n", vfd_map->count);
-
-        const char *vfd_filename = "data/vfd.csv";
-        const char *capturas_filename = "data/capturas.csv";
-        const char *horarios_filename = "data/horarios.csv";
-        generate_vfd_file(vfd_map, vfd_filename, capturas_filename, horarios_filename);
-
-        // Path to the Python script
-        const char *script_name = "calcular-retrasos.py";
-
-        printf("\nCALLING PYTHON SCRIPT %s \n", script_name);
-        printf("FILE: %s \n", capturas[i]);
-        // Call the function to run the Python script with the hash map pointer
-        run_python_script(script_name);
-
-        printf("END PYTHON :) \n");    
-
-        // Free the hash map
-        free_hash_map(vft_map);
-        free_hash_map(vfd_map);
-        vft_map = NULL;
-        vfd_map = NULL;
-    }
-
-    free(capturas);
-    // free(horarios);
-    printf("END in C\n");
-    return EXIT_SUCCESS;
 }

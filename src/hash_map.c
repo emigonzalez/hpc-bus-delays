@@ -122,14 +122,14 @@ Entry *insert_to_vfts(Entry *entry, const char *row) {
         entry->vft_row_capacity *= 2;
         char **temp = (char **)realloc(entry->vft_rows, entry->vft_row_capacity * sizeof(char *));
         if (!temp) {
-            fprintf(stderr, "Error: memory reallocation failed\n");
+            fprintf(stderr, "Error: insert_to_vfts memory reallocation failed for vft_rows \n");
             return NULL;
         }
         entry->vft_rows = temp;
     }
     entry->vft_rows[entry->vft_row_count] = strdup(row);
     if (!entry->vft_rows[entry->vft_row_count]) {
-        fprintf(stderr, "Error: memory allocation for row failed\n");
+        fprintf(stderr, "Error: insert_to_vfts when adding row to entry\n");
         return NULL;
     }
     entry->vft_row_count++;
@@ -142,14 +142,14 @@ Entry* insert_to_vfds(Entry *entry, const char *row) {
         entry->vfd_row_capacity *= 2;
         char **temp = (char **)realloc(entry->vfd_rows, entry->vfd_row_capacity * sizeof(char *));
         if (!temp) {
-            fprintf(stderr, "Error: memory reallocation failed\n");
+            fprintf(stderr, "Error: insert_to_vfds memory reallocation failed for vfd_rows\n");
             return NULL;
         }
         entry->vfd_rows = temp;
     }
     entry->vfd_rows[entry->vfd_row_count] = strdup(row);
     if (!entry->vfd_rows[entry->vfd_row_count]) {
-        fprintf(stderr, "Error: memory allocation for row failed\n");
+        fprintf(stderr, "Error: insert_to_vfds  when adding row to entry\n");
         return NULL;
     }
     entry->vfd_row_count++;

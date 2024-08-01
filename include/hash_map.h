@@ -3,9 +3,9 @@
 
 #include <stdlib.h>
 
-#define INITIAL_SIZE 1000
+#define INITIAL_SIZE 10000
 #define LOAD_FACTOR 0.75
-#define INITIAL_ROW_CAPACITY 1000 // TODO CHECK THIS
+#define INITIAL_ROW_CAPACITY 100000 // TODO CHECK THIS
 
 typedef struct Entry {
     char *key;
