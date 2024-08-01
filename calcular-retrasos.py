@@ -403,6 +403,7 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
             row.append(parada_valida['ordinal'])
             row.append(fecha_hora_estimada.strftime("%Y-%m-%d %H:%M:%S"))
             row.append(retraso)
+            row.append(cantidad_iguales)
 
             escribir_csv(row)
 
