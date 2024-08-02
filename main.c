@@ -87,6 +87,7 @@ int main(int argc, char** argv) {
 
         capturas = generate_file_names(assigned_days[i], atoi(day_str), NUM_HOURS_PER_DAY);
 
+        // Iterate over each location file
         for (int j = 0; j < NUM_HOURS_PER_DAY; j++) {
             printf("####### RUNNING WITH FILE: %s ########\n", capturas[j]);
 
