@@ -91,8 +91,10 @@ int main(int argc, char** argv) {
         for (int j = 0; j < NUM_HOURS_PER_DAY; j++) {
             printf("####### RUNNING WITH FILE: %s ########\n", capturas[j]);
 
+            // Generate VFD map and all fields to be picked by Python script
             map_locations_to_schedules(capturas[j], vft_map);
 
+            // Run Python script
             calculate_delays();
         }
     }
