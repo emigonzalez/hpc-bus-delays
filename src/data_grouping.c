@@ -208,9 +208,6 @@ HashMap* group_data_by_vft(char* filename) {
         return NULL;
     }
 
-    // Create a hash map for map
-    HashMap *map = create_hash_map();
-
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
         fprintf(stderr, "Error opening file: %s\n", filename);
@@ -220,6 +217,9 @@ HashMap* group_data_by_vft(char* filename) {
     char *line = NULL;
     size_t len = 0;
     ssize_t read;
+
+    // Create a hash map for map
+    HashMap *map = create_hash_map();
 
     // Read and skip the header line
     if ((read = getline(&line, &len, file)) != -1) {
@@ -295,11 +295,6 @@ HashMap* group_data_by_vfd(char* filename, HashMap* vft_map) {
         return NULL;
     }
 
-    // Create a hash map for vfd_map
-    HashMap *vfd_map = create_hash_map();
-
-    HashMap *discarded_vfds = create_hash_map();
-
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
         fprintf(stderr, "Error opening file: %s\n", filename);
@@ -309,6 +304,11 @@ HashMap* group_data_by_vfd(char* filename, HashMap* vft_map) {
     char *line = NULL;
     size_t len = 0;
     ssize_t read;
+
+    // Create a hash map for vfd_map
+    HashMap *vfd_map = create_hash_map();
+
+    HashMap *discarded_vfds = create_hash_map();
 
     // Read and skip the header line
     if ((read = getline(&line, &len, file)) != -1) {

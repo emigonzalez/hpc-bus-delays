@@ -11,7 +11,8 @@
 #include "delay_calculation.h"
 #include "result_gathering.h"
 
-#define NUM_DAYS 30
+#define FROM_DAY 1
+#define NUM_DAYS 10
 #define NUM_HOURS_PER_DAY 24
 
 // Path to the Python script
@@ -29,6 +30,11 @@ void run_python_script(const char *script_name);
 void generate_vfd_file(HashMap* map, const char *vfd_filename, const char *capturas_filename, const char *horarios_filename);
 
 int main(int argc, char** argv) {
+    if (FROM_DAY + NUM_DAYS > 31) {
+        printf("INVALID VALUES. FROM_DAY = %d, NUM_DAYS = %d\n", FROM_DAY, NUM_DAYS);
+        exit(1);
+    }
+
     MPI_Init(&argc, &argv);
 
     int rank, size;
@@ -43,7 +49,7 @@ int main(int argc, char** argv) {
     signal(SIGTERM, handle_signal); // Handle termination signal
 
     // Generate the list of file names (example for June, 24 files per day)
-    directorios = generate_directories(NUM_DAYS);
+    directorios = generate_directories(FROM_DAY, NUM_DAYS);
 
     // Distribute file names among processes
     assigned_days = distribute_file_names(directorios, NUM_DAYS, rank, size);
@@ -61,8 +67,8 @@ int main(int argc, char** argv) {
     for (int i = 0; assigned_days[i] != NULL; i++) {
         char * day_str = get_day_from_dir_name(assigned_days[i]);
         printf("Process %d reading file %s from day %s\n", rank, assigned_days[i], day_str);
-        capturas = generate_file_names(assigned_days[i], atoi(day_str), NUM_HOURS_PER_DAY);
 
+        capturas = generate_file_names(assigned_days[i], atoi(day_str), NUM_HOURS_PER_DAY);
         for (int j = 0; j < NUM_HOURS_PER_DAY; j++) {
             printf("####### RUNNING WITH FILE: %s ########\n", capturas[j]);
 

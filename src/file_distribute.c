@@ -4,11 +4,11 @@
 #include <string.h>
 #include "file_distribute.h"
 
-char** generate_directories(int num_days) {
+char** generate_directories(int from_day, int num_days) {
     char** directories = (char**)malloc(num_days * sizeof(char*));
     for (int day = 1; day <= num_days; day++) {
         directories[(day-1)] = (char*)malloc(17 * sizeof(char));
-        sprintf(directories[(day-1)], "data/2024-06-%02d", day);
+        sprintf(directories[(day-1)], "data/2024-06-%02d", from_day + day-1);
     }
     return directories;
 }
