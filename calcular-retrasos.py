@@ -469,8 +469,10 @@ def procesar_archivos_retornar_atrasos(archivo_vfd, archivo_capturas,archivo_hor
                 horario_index = len(horarios_data)  # Finaliza
 
             print(VFD)
-            cargarCapas_y_Calculo(capturas_dict, horarios_dict, salida)
-
+            # if VFD =='8100_23290_2024-06-10':
+            #     cargarCapas_y_Calculo(capturas_dict, horarios_dict, salida) 
+            #     break
+            cargarCapas_y_Calculo(capturas_dict, horarios_dict, salida) 
             # para procesar solo el primer vfd uno descomentar la siguiente linea
             # return
    
