@@ -5,7 +5,6 @@
 #include <string.h>
 
 #include "file_distribute.h"
-#include "schedule_distribute.h"
 #include "data_grouping.h"
 #include "location_mapping.h"
 #include "delay_calculation.h"
@@ -51,8 +50,8 @@ int main(int argc, char** argv) {
     // Generate the list of file names (example for June, 24 files per day)
     directorios = generate_directories(FROM_DAY, NUM_DAYS);
 
-    // Distribute file names among processes
-    assigned_days = distribute_file_names(directorios, NUM_DAYS, rank, size);
+    // Distribute dirs among processes
+    assigned_days = distribute(directorios, NUM_DAYS, rank, size);
 
     printf("\nGENERATING VFT...\n");
     vft_map = group_data_by_vft(horarios);

@@ -22,7 +22,7 @@ char** generate_file_names(char* path, int day, int num_hours_per_day) {
     return file_names;
 }
 
-char** distribute_file_names(char** file_names, int num_files, int rank, int size) {
+char** distribute(char** file_names, int num_files, int rank, int size) {
     int files_per_process = num_files / size;
     int extra_files = num_files % size;
 
