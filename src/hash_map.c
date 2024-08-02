@@ -28,6 +28,24 @@ HashMap *create_hash_map() {
     return map;
 }
 
+void free_entry_vfts(Entry *entry) {
+    for (size_t j = 0; j < entry->vft_row_count; j++) {
+        free(entry->vft_rows[j]);
+    }
+    free(entry->vft_rows);
+    entry->vft_row_count = 0;
+    entry->vft_rows = NULL;
+};
+
+void free_entry_vfds(Entry* entry) {
+    for (size_t j = 0; j < entry->vfd_row_count; j++) {
+        free(entry->vfd_rows[j]);
+    }
+    free(entry->vfd_rows);
+    entry->vfd_row_count = 0;
+    entry->vfd_rows = NULL;
+}
+
 void free_hash_map(HashMap *map) {
     for (size_t i = 0; i < map->size; i++) {
         Entry *entry = map->buckets[i];
@@ -35,14 +53,25 @@ void free_hash_map(HashMap *map) {
             Entry *temp = entry;
             entry = entry->next;
             free(temp->key);
-            for (size_t j = 0; j < temp->vfd_row_count; j++) {
-                free(temp->vfd_rows[j]);
-            }
-            free(temp->vfd_rows);
-            for (size_t j = 0; j < temp->vft_row_count; j++) {
-                free(temp->vft_rows[j]);
-            }
-            free(temp->vft_rows);
+            free_entry_vfts(temp);
+            free_entry_vfds(temp);
+            free(temp);
+        }
+    }
+    free(map->buckets);
+    free(map);
+}
+
+void free_vfd_hash_map(HashMap *map) {
+    for (size_t i = 0; i < map->size; i++) {
+        Entry *entry = map->buckets[i];
+        while (entry != NULL) {
+            Entry *temp = entry;
+            entry = entry->next;
+            free(temp->key);
+            free_entry_vfds(temp);
+            temp->vft_row_count = 0;
+            temp->vft_rows = NULL;
             free(temp);
         }
     }
@@ -185,10 +214,6 @@ void repoint_vfts_to_vfd_map(Entry* vfd_entry, Entry* vft_entry) {
     // Repoint the vfd entry's rows to the new entry's rows
     vfd_entry->vft_rows = vft_entry->vft_rows;
     vfd_entry->vft_row_count = vft_entry->vft_row_count;
-
-    // Nullify the vft entry's vft_rows to avoid double free
-    vft_entry->vft_rows = NULL;
-    vft_entry->vft_row_count = 0;
 }
 
 void print_hash_map(HashMap *map) {

@@ -48,6 +48,15 @@ int main(int argc, char** argv) {
     // Distribute file names among processes
     assigned_days = distribute_file_names(directorios, NUM_DAYS, rank, size);
 
+    printf("\nGENERATING VFT...\n");
+    vft_map = group_data_by_vft(horarios);
+
+    if (vft_map == NULL) {
+        fprintf(stderr, "COULD NOT GENERATE VFT.\n");
+        exit(1);
+    } else
+        printf("VFT GENERATED.\n\n");
+
     // Each process reads its assigned directories
     for (int i = 0; assigned_days[i] != NULL; i++) {
         char * day_str = get_day_from_dir_name(assigned_days[i]);
@@ -56,16 +65,6 @@ int main(int argc, char** argv) {
 
         for (int j = 0; j < NUM_HOURS_PER_DAY; j++) {
             printf("####### RUNNING WITH FILE: %s ########\n", capturas[j]);
-
-            printf("\nGENERATING VFT...\n");
-            vft_map = group_data_by_vft(horarios);
-
-            if (vft_map == NULL) {
-                fprintf(stderr, "INVALID VFT MAPS FOR %s.\n", capturas[j]);
-                continue;
-            }
-
-            printf("VFT GENERATED.\n\n");
 
             printf("GENERATING VFD...\n");
             vfd_map = group_data_by_vfd(capturas[j], vft_map);
@@ -96,9 +95,7 @@ int main(int argc, char** argv) {
             printf("END PYTHON :) \n");    
 
             // Free the hash map
-            free_hash_map(vft_map);
-            free_hash_map(vfd_map);
-            vft_map = NULL;
+            free_vfd_hash_map(vfd_map);
             vfd_map = NULL;
         }
     }

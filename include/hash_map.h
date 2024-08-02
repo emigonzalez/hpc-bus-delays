@@ -30,5 +30,6 @@ void free_hash_map(HashMap *map);
 void print_hash_map(HashMap *map);
 void repoint_vfts_to_vfd_map(Entry* vfd_entry, Entry* vft_entry);
 Entry** get_all_keys(HashMap *map, size_t *key_count);
+void free_vfd_hash_map(HashMap *map);
 
 #endif // HASH_MAP_H
