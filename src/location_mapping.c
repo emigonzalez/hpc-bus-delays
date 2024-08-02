@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include "location_mapping.h"
 
+const char *vfd_filename = "data/vfd.csv";
+const char *capturas_filename = "data/capturas.csv";
+const char *horarios_filename = "data/horarios.csv";
+
 HashMap* group_schedules(char* horarios) {
     printf("\nGENERATING VFT...\n");
     HashMap* vft_map = group_data_by_vft(horarios);
@@ -16,7 +20,7 @@ HashMap* group_schedules(char* horarios) {
     }
 }
 
-void generate_vfd_file(HashMap* map, const char *vfd_filename, const char *capturas_filename, const char *horarios_filename) {
+void generate_vfd_file(HashMap* map) {
     FILE *vfd_file = fopen(vfd_filename, "w");
     if (!vfd_file) {
         perror("Failed to create vfd_file");
@@ -89,7 +93,7 @@ void map_locations_to_schedules(char* fileName, HashMap* vft_map) {
     printf("HashMap size: %zu\n", vfd_map->size);
     printf("HashMap count: %zu\n", vfd_map->count);
 
-    generate_vfd_file(vfd_map, vfd_filename, capturas_filename, horarios_filename);
+    generate_vfd_file(vfd_map);
 
     // Free the hash map
     free_vfd_hash_map(vfd_map);
