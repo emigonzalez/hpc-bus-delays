@@ -47,6 +47,40 @@ void time_to_frecuencia(const char* time, char* resultado) {
     strcpy(resultado, time_without_colon);
 }
 
+int extreme_delay(const char* fecha, const char* frecuencia) {
+    // Split fecha into date and time
+    char date_part[11];
+    char time_part[6]; // HH:MM without seconds
+    sscanf(fecha, "%10s %5s", date_part, time_part);
+
+    char time_frecuencia[6];
+    time_to_frecuencia(time_part, time_frecuencia);
+
+    int time_number = convertir_a_minutos(time_frecuencia);
+    int frecuencia_number = convertir_a_minutos(frecuencia);
+    int time_difference = abs(frecuencia_number - time_number);
+
+    if (time_difference > (3 * 60) && time_difference < (21 * 60)) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+void add_seconds_to_date(const char* date, int seconds, char* resultado) {
+    struct tm tm_date;
+    memset(&tm_date, 0, sizeof(struct tm));
+    strptime(date, "%Y-%m-%d", &tm_date);
+
+    // Add or substract n seconds
+    time_t t = mktime(&tm_date);
+    t += seconds; //
+    struct tm* new_tm_date = localtime(&t);
+
+    // Format new date back to string
+    strftime(resultado, 11, "%Y-%m-%d", new_tm_date);
+}
+
 // Function to adjust the date based on time and frequency
 void ajustar_fecha(const char* fecha, const char* frecuencia, char* resultado) {
     // Split fecha into date and time
@@ -63,19 +97,12 @@ void ajustar_fecha(const char* fecha, const char* frecuencia, char* resultado) {
     // printf("FECHA: %s, FRECUENCIA: %s, TIMEN: %d, FN: %d \n", fecha, frecuencia, time_number, frecuencia_number);
 
     // If difference more than 21 hour difference, it means that bus departues the day before snapshot.
-    // Subtract a day from the date
     if (frecuencia_number > time_number && frecuencia_number - time_number > (21 * 60)) {
-        struct tm tm_date;
-        memset(&tm_date, 0, sizeof(struct tm));
-        strptime(date_part, "%Y-%m-%d", &tm_date);
-
-        // Subtract one day
-        time_t t = mktime(&tm_date);
-        t -= 86400; // Subtract one day in seconds
-        struct tm* new_tm_date = localtime(&t);
-
-        // Format new date back to string
-        strftime(resultado, 11, "%Y-%m-%d", new_tm_date);
+        // Subtract a day from the date
+        add_seconds_to_date(date_part, -86400, resultado);
+    } else if (frecuencia_number < 60 && abs(frecuencia_number - time_number) > (21 * 60)) {
+        // Add a day from the date
+        add_seconds_to_date(date_part, 86400, resultado);
     } else {
         // If no adjustment needed, return the original date
         strcpy(resultado, date_part);
@@ -139,7 +166,8 @@ char* create_vfd_key(char* line) {
     if (
         strcmp(latitud, "0") == 0 ||
         strcmp(longitud, "0") == 0 ||
-        is_valid_departure_time(frecuencia) < 0
+        is_valid_departure_time(frecuencia) < 0 ||
+        extreme_delay(fecha, frecuencia) > 0
     ) {
         return NULL; // Skip this row
     }
@@ -332,8 +360,8 @@ HashMap* group_data_by_vfd(char* filename, HashMap* vft_map) {
         }
 
         char* vfd_key = NULL;
-        vfd_key = create_vfd_key(line_copy);
         printf("\n#################################\n");
+        vfd_key = create_vfd_key(line_copy);
         printf("VFD KEY: %s\n", vfd_key);
         printf("ROW: %s", line);
 
