@@ -10,8 +10,8 @@
 #include "delay_calculation.h"
 #include "result_gathering.h"
 
-#define FROM_DAY 1
-#define NUM_DAYS 10
+#define FROM_DAY 10
+#define NUM_DAYS 1
 #define NUM_HOURS_PER_DAY 24
 
 char* horarios = "data/horarios_paradas_vft.csv";
@@ -35,6 +35,13 @@ void free_memory() {
             free(assigned_days[i]);
         }
         free(assigned_days);
+    }
+
+    if (directorios != NULL) {
+         for (int i = 0; i < NUM_DAYS; i++) {
+            free(directorios[i]);
+        }
+        free(directorios);
     }
 
     if (vft_map != NULL) free_hash_map(vft_map);

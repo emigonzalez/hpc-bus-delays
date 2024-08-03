@@ -278,10 +278,15 @@ HashMap* group_data_by_vft(char* filename) {
             add_vft_to_map(map, key, line);
             free(key);
         } else {
+            free(line_copy);
+            free(line);
+            line = NULL;
             continue;
         }
 
         free(line_copy); // Free the copy after processing
+        free(line);
+        line = NULL;
     }
 
     free(line);
@@ -356,6 +361,7 @@ HashMap* group_data_by_vfd(char* filename, HashMap* vft_map) {
         char* line_copy = strdup(line);
         if (line_copy == NULL) {
             perror("Failed to duplicate line");
+            free(line);
             continue;
         }
 

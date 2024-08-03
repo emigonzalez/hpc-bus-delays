@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 
-#define INITIAL_SIZE 1500
+#define INITIAL_SIZE 1000
 #define LOAD_FACTOR 0.75
 
 typedef struct Entry {
