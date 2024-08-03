@@ -7,19 +7,26 @@
 char** generate_directories(int from_day, int num_days) {
     char** directories = (char**)malloc(num_days * sizeof(char*));
     for (int day = 1; day <= num_days; day++) {
-        directories[(day-1)] = (char*)malloc(17 * sizeof(char));
-        sprintf(directories[(day-1)], "data/2024-06-%02d", from_day + day-1);
+        directories[(day-1)] = (char*)malloc(26 * sizeof(char));
+        sprintf(directories[(day-1)], "data/capturas/2024-06-%02d", from_day + day-1);
     }
     return directories;
 }
 
-char** generate_file_names(char* path, int day, int num_hours_per_day) {
+char** generate_location_file_names(char* path, int day, int num_hours_per_day) {
     char** file_names = (char**)malloc(num_hours_per_day * sizeof(char*));
     for (int hour = 0; hour < num_hours_per_day; hour++) {
-        file_names[hour] = (char*)malloc(45 * sizeof(char));
+        file_names[hour] = (char*)malloc(53 * sizeof(char));
         sprintf(file_names[hour], "%s/stm-buses-2024-06-%02d_%02d.csv", path, day, hour);
     }
     return file_names;
+}
+
+char* generate_schedule_file_name(char* path, int day) {
+    char* file_name = (char*)malloc(50 * sizeof(char));
+    sprintf(file_name, "%s/uptu_pasada_variante_2024-06-%02d.csv", path, day);
+
+    return file_name;
 }
 
 char** distribute(char** file_names, int num_files, int rank, int size) {

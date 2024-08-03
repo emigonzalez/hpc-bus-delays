@@ -14,7 +14,7 @@
 #define NUM_DAYS 1
 #define NUM_HOURS_PER_DAY 24
 
-char* horarios = "data/horarios_paradas_vft.csv";
+char* horarios = NULL;
 char** capturas = NULL;
 char** directorios = NULL;
 char** assigned_days = NULL;
@@ -85,25 +85,32 @@ int main(int argc, char** argv) {
     // Distribute dirs among processes
     assigned_days = distribute(directorios, NUM_DAYS, rank, size);
 
-    vft_map = group_schedules(horarios);
+    // vft_map = group_schedules(horarios);
 
     // Each process reads its assigned directories
     for (int i = 0; assigned_days[i] != NULL; i++) {
         char * day_str = get_day_from_dir_name(assigned_days[i]);
         printf("Process %d reading file %s from day %s\n", rank, assigned_days[i], day_str);
 
-        capturas = generate_file_names(assigned_days[i], atoi(day_str), NUM_HOURS_PER_DAY);
+        capturas = generate_location_file_names(assigned_days[i], atoi(day_str), NUM_HOURS_PER_DAY);
+        horarios = generate_schedule_file_name("data/horarios", atoi(day_str));
+
+        printf("HORARIOS: %s\n", horarios);
+        vft_map = group_schedules(horarios);
 
         // Iterate over each location file
         for (int j = 0; j < NUM_HOURS_PER_DAY; j++) {
-            printf("####### RUNNING WITH FILE: %s ########\n", capturas[j]);
-
             // Generate VFD map and all fields to be picked by Python script
             map_locations_to_schedules(capturas[j], vft_map);
+
+            printf("####### RUNNING WITH FILE: %s ########\n", capturas[j]);
 
             // Run Python script
             calculate_delays();
         }
+
+        free(horarios);
+        free_hash_map(vft_map);
     }
 
     // Free allocated memory
