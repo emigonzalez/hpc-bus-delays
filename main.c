@@ -198,7 +198,7 @@ void generate_vfd_file(HashMap* map, const char *vfd_filename, const char *captu
 }
 
 int main() {
-    printf("BEGIN in C \n");
+    fprintf(stderr, "BEGIN in C \n");
 
     char** capturas = (char**)malloc(24 * sizeof(char*));
     for (size_t i = 0; i < 24; i++) {
@@ -209,19 +209,19 @@ int main() {
     capturas[24] = NULL; // Terminate the list
 
     char* horarios = "data/horarios_paradas_vft.csv";
+    fprintf(stderr, "\nGENERATING VFT...\n");
+    vft_map = group_data_by_vft(horarios);
+    fprintf(stderr, "VFT GENERATED.\n");
 
     for (int i = 0; capturas[i] != NULL; i++) {
-        printf("####### RUNNING WITH FILE: %s ########\n", capturas[i]);
-        printf("\nGENERATING VFT...\n");
-        vft_map = group_data_by_vft(horarios);
+        fprintf(stderr, "\n ####### RUNNING WITH FILE: %s ########\n", capturas[i]);
 
-        printf("VFT GENERATED.\n");
-        printf("\nGENERATING VFD...\n");
+        fprintf(stderr, "\nGENERATING VFD...\n");
         vfd_map = group_data_by_vfd(capturas[i], vft_map);
-
-        printf("VFD GENERATED.\n");
-        printf("\nPRINTING MAP...\n");
+        fprintf(stderr, "VFD GENERATED.\n");
+    
         // Example: Print grouped data
+        // printf("\nPRINTING MAP...\n");
         // print_hash_map(vfd_map);
 
         printf("HashMap size: %zu\n", vfd_map->size);
@@ -235,22 +235,20 @@ int main() {
         // Path to the Python script
         const char *script_name = "calcular-retrasos.py";
 
-        printf("\nCALLING PYTHON SCRIPT %s \n", script_name);
-        printf("FILE: %s \n", capturas[i]);
+        fprintf(stderr, "\nCALLING PYTHON SCRIPT %s \n\n", script_name);
+        printf("\nFILE: %s \n", capturas[i]);
         // Call the function to run the Python script with the hash map pointer
         run_python_script(script_name);
 
-        printf("END PYTHON :) \n");    
+        fprintf(stderr, "\nEND PYTHON :) \n");    
 
         // Free the hash map
-        free_hash_map(vft_map);
-        free_hash_map(vfd_map);
-        vft_map = NULL;
+        free_vfd_hash_map(vfd_map);
         vfd_map = NULL;
     }
 
     free(capturas);
-    // free(horarios);
-    printf("END in C\n");
+    free_hash_map(vft_map);
+    fprintf(stderr, "END in C\n");
     return EXIT_SUCCESS;
 }

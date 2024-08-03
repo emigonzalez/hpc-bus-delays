@@ -206,7 +206,7 @@ char* create_vft_key(char* line) {
     UNUSED(longitud);
 
     if (tipo_dia == NULL || variante == NULL || frecuencia == NULL || dia_anterior == NULL) {
-        fprintf(stderr, "Error: Missing data from row to VFT");
+        // fprintf(stderr, "Error: Missing data from row to VFT");
         return NULL;
     }
 
@@ -214,7 +214,7 @@ char* create_vft_key(char* line) {
     int frecuencia_int = atoi(frecuencia) / 10;
     int hora_int = atoi(hora);
     if (strcmp(dia_anterior, "N") == 0 && (hora_int - frecuencia_int) < 0) {
-        fprintf(stderr, "CAMPO DIA_ANTERIOR INVALIDO EN ROW: %s_%s_%d_%d_%s\n", tipo_dia, variante, frecuencia_int, hora_int, dia_anterior);
+        // fprintf(stderr, "CAMPO DIA_ANTERIOR INVALIDO EN ROW: %s_%s_%d_%d_%s\n", tipo_dia, variante, frecuencia_int, hora_int, dia_anterior);
         return NULL;
     }
 
