@@ -18,7 +18,6 @@ char* horarios = NULL;
 char** capturas = NULL;
 char** directorios = NULL;
 char** assigned_days = NULL;
-HashMap *vfd_map = NULL;
 HashMap* vft_map = NULL;
 
 void free_memory() {
@@ -45,7 +44,6 @@ void free_memory() {
     }
 
     if (vft_map != NULL) free_hash_map(vft_map);
-    if (vfd_map != NULL) free_hash_map(vfd_map);
 }
 
 void handle_signal(int signal) {
@@ -85,8 +83,6 @@ int main(int argc, char** argv) {
     // Distribute dirs among processes
     assigned_days = distribute(directorios, NUM_DAYS, rank, size);
 
-    // vft_map = group_schedules(horarios);
-
     // Each process reads its assigned directories
     for (int i = 0; assigned_days[i] != NULL; i++) {
         char * day_str = get_day_from_dir_name(assigned_days[i]);
@@ -106,11 +102,13 @@ int main(int argc, char** argv) {
             printf("####### RUNNING WITH FILE: %s ########\n", capturas[j]);
 
             // Run Python script
-            // calculate_delays();
+            calculate_delays();
         }
 
         free(horarios);
+        horarios = NULL;
         free_hash_map(vft_map);
+        vft_map = NULL;
     }
 
     // Free allocated memory

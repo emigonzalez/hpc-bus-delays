@@ -35,10 +35,6 @@ void generate_vfd_file(char* date, HashMap* map) {
     const char *capturas_filename = generate_file_name(temp, "capturas", date);
     const char *horarios_filename = generate_file_name(temp, "horarios", date);
 
-    printf("$$$$$$$$$$$$$$ ARCHIVO: %s $$$$$$$$$$$$$$$\n", vfd_filename);
-    printf("$$$$$$$$$$$$$$ ARCHIVO: %s $$$$$$$$$$$$$$$\n", capturas_filename);
-    printf("$$$$$$$$$$$$$$ ARCHIVO: %s $$$$$$$$$$$$$$$\n", horarios_filename);
-
     FILE *vfd_file = fopen(vfd_filename, "w");
     if (!vfd_file) {
         perror("Failed to create vfd_file");
@@ -111,7 +107,7 @@ void map_locations_to_schedules(char* fileName, char* date, HashMap* vft_map) {
     printf("HashMap size: %zu\n", vfd_map->size);
     printf("HashMap count: %zu\n", vfd_map->count);
 
-    generate_vfd_file(date, vft_map);
+    generate_vfd_file(date, vfd_map);
 
     // Free the hash map
     free_vfd_hash_map(vfd_map);
