@@ -1,11 +1,10 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "location_mapping.h"
 
-const char *vfd_filename = "data/vfd.csv";
-const char *capturas_filename = "data/capturas.csv";
-const char *horarios_filename = "data/horarios.csv";
+const char* temp = "data/temp";
 
 HashMap* group_schedules(char* horarios) {
     printf("\nGENERATING VFT...\n");
@@ -20,7 +19,26 @@ HashMap* group_schedules(char* horarios) {
     }
 }
 
-void generate_vfd_file(HashMap* map) {
+char* generate_file_name(const char* path, const char* file_name_prefix, char* fileName) {
+    size_t len = strlen(fileName);
+    char* date_from_filename = (char*)fileName + len - 10;
+
+    size_t result_len = strlen(path) + strlen(file_name_prefix) + 17;
+    char* result = (char*)malloc(result_len * sizeof(char));
+    sprintf(result, "%s/%s_%s.csv", path, file_name_prefix, date_from_filename);
+
+    return result;
+}
+
+void generate_vfd_file(char* date, HashMap* map) {
+    const char *vfd_filename = generate_file_name(temp, "vfd", date);
+    const char *capturas_filename = generate_file_name(temp, "capturas", date);
+    const char *horarios_filename = generate_file_name(temp, "horarios", date);
+
+    printf("$$$$$$$$$$$$$$ ARCHIVO: %s $$$$$$$$$$$$$$$\n", vfd_filename);
+    printf("$$$$$$$$$$$$$$ ARCHIVO: %s $$$$$$$$$$$$$$$\n", capturas_filename);
+    printf("$$$$$$$$$$$$$$ ARCHIVO: %s $$$$$$$$$$$$$$$\n", horarios_filename);
+
     FILE *vfd_file = fopen(vfd_filename, "w");
     if (!vfd_file) {
         perror("Failed to create vfd_file");
@@ -76,7 +94,7 @@ void generate_vfd_file(HashMap* map) {
     fclose(horarios_file);
 }
 
-void map_locations_to_schedules(char* fileName, HashMap* vft_map) {
+void map_locations_to_schedules(char* fileName, char* date, HashMap* vft_map) {
     printf("GENERATING VFD...\n");
     HashMap* vfd_map = group_data_by_vfd(fileName, vft_map);
 
@@ -93,7 +111,7 @@ void map_locations_to_schedules(char* fileName, HashMap* vft_map) {
     printf("HashMap size: %zu\n", vfd_map->size);
     printf("HashMap count: %zu\n", vfd_map->count);
 
-    generate_vfd_file(vfd_map);
+    generate_vfd_file(date, vft_map);
 
     // Free the hash map
     free_vfd_hash_map(vfd_map);

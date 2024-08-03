@@ -101,12 +101,12 @@ int main(int argc, char** argv) {
         // Iterate over each location file
         for (int j = 0; j < NUM_HOURS_PER_DAY; j++) {
             // Generate VFD map and all fields to be picked by Python script
-            map_locations_to_schedules(capturas[j], vft_map);
+            map_locations_to_schedules(capturas[j], assigned_days[i], vft_map);
 
             printf("####### RUNNING WITH FILE: %s ########\n", capturas[j]);
 
             // Run Python script
-            calculate_delays();
+            // calculate_delays();
         }
 
         free(horarios);
