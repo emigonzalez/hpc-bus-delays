@@ -2,6 +2,7 @@
 #define HASH_MAP_H
 
 #include <stdlib.h>
+#include <string.h>
 
 #define INITIAL_SIZE 1000
 #define LOAD_FACTOR 0.75
@@ -12,6 +13,8 @@ typedef struct Entry {
     size_t vfd_row_count;
     char **vft_rows;
     size_t vft_row_count;
+    int bus_stop;
+    double delay;
     struct Entry *next;
 } Entry;
 
@@ -24,6 +27,7 @@ typedef struct {
 HashMap *create_hash_map();
 Entry *hash_map_insert_vft(HashMap *map, const char *key, const char *row);
 Entry *hash_map_insert_vfd(HashMap *map, const char *key, const char *row);
+Entry *hash_map_insert_vfd_delays(HashMap *map, const char *key, const char *row, int bus_stop, double delay);
 Entry *insert_to_vfds(Entry *entry, const char *row);
 Entry *hash_map_search(HashMap *map, const char *key);
 void free_hash_map(HashMap *map);

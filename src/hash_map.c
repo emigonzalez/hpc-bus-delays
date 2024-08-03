@@ -120,6 +120,8 @@ Entry* create_entry(const char *key) {
     entry->vfd_row_count = 0;
     entry->vft_rows = NULL;
     entry->vft_row_count = 0;
+    entry->bus_stop = 0;
+    entry->delay = 0.0;
     entry->next = NULL;
     return entry;
 }
@@ -193,6 +195,17 @@ Entry *hash_map_insert_vfd(HashMap *map, const char *key, const char *row) {
     return insert_to_vfds(entry, row);
 }
 
+Entry *hash_map_insert_vfd_delays(HashMap *map, const char *key, const char *row, int bus_stop, double delay) {
+    Entry *entry = find_or_create_entry(map, key);
+    if (entry->bus_stop == bus_stop) {
+
+    } else {
+        entry->bus_stop = bus_stop;
+        entry->delay = delay;
+    }
+    return insert_to_vfds(entry, row);
+}
+
 Entry *hash_map_insert_vft(HashMap *map, const char *key, const char *row) {
     Entry *entry = find_or_create_entry(map, key);
     return insert_to_vfts(entry, row);
@@ -229,7 +242,12 @@ void print_hash_map(HashMap *map) {
             }
 
             printf("VFDs:\n");
-            printf("  ID, Codigo Empresa, Frecuencia, Codigo Bus, Variante, Linea, Sublinea, Tipo Linea, Destino, Subsistema, Version, Velocidad, Latitud, Longitud, Fecha\n");
+            if (entry->bus_stop > 0) {
+                printf("  VFD, Variante, Codigo_bus, Linea, Hora, Ordinal, Fecha_hora_paso, Retraso\n");
+            } else {
+                printf("  ID, Codigo Empresa, Frecuencia, Codigo Bus, Variante, Linea, Sublinea, Tipo Linea, Destino, Subsistema, Version, Velocidad, Latitud, Longitud, Fecha\n");
+            }
+
             for (size_t j = 0; j < entry->vfd_row_count; j++) {
                 printf("  %s", entry->vfd_rows[j]);
             }

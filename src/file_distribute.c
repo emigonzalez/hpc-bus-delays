@@ -29,6 +29,13 @@ char* generate_schedule_file_name(char* path, int day) {
     return file_name;
 }
 
+char* generate_delay_file_name(char* path, int day) {
+    char* file_name = (char*)malloc(38 * sizeof(char));
+    sprintf(file_name, "%s/retrasos_2024-06-%02d.csv", path, day);
+
+    return file_name;
+}
+
 char** distribute(char** file_names, int num_files, int rank, int size) {
     int files_per_process = num_files / size;
     int extra_files = num_files % size;

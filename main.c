@@ -12,13 +12,14 @@
 
 #define FROM_DAY 10
 #define NUM_DAYS 1
-#define NUM_HOURS_PER_DAY 24
+#define NUM_HOURS_PER_DAY 1
 
 char* horarios = NULL;
 char** capturas = NULL;
 char** directorios = NULL;
 char** assigned_days = NULL;
 HashMap* vft_map = NULL;
+HashMap* delay_map = NULL;
 
 void free_memory() {
     // Perform any necessary cleanup here
@@ -86,6 +87,15 @@ int main(int argc, char** argv) {
     // Each process reads its assigned directories
     for (int i = 0; assigned_days[i] != NULL; i++) {
         char * day_str = get_day_from_dir_name(assigned_days[i]);
+        char* delay_file = generate_delay_file_name("data/retrasos", atoi(day_str));
+        HashMap *delay_map = create_hash_map();
+        map_delays(delay_map, delay_file);
+        printf("\nPRINTING MAP...\n");
+        print_hash_map(delay_map);
+        free_hash_map(delay_map);
+        free(delay_file);
+        continue;
+
         printf("Process %d reading file %s from day %s\n", rank, assigned_days[i], day_str);
 
         capturas = generate_location_file_names(assigned_days[i], atoi(day_str), NUM_HOURS_PER_DAY);
@@ -102,7 +112,7 @@ int main(int argc, char** argv) {
             printf("####### RUNNING WITH FILE: %s ########\n", capturas[j]);
 
             // Run Python script
-            calculate_delays();
+            // python_calculate_delays();
         }
 
         free(horarios);
