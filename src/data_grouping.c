@@ -166,6 +166,8 @@ char* create_vfd_key(char* line) {
     if (
         strcmp(latitud, "0") == 0 ||
         strcmp(longitud, "0") == 0 ||
+        strcmp(latitud, "-0.0") == 0 ||
+        strcmp(longitud, "-0.0") == 0 ||
         is_valid_departure_time(frecuencia) < 0 ||
         extreme_delay(fecha, frecuencia) > 0
     ) {
