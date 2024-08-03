@@ -67,7 +67,7 @@ def load_list_as_layer(list,x_field, y_field, crs,name):
     layer.dataProvider().addAttributes(fields)
     layer.updateFields()
 
-    for coord in list[1:]:
+    for coord in list:
         # print(" **********************")
         # print (coord.values())
         coord[x_field] = float(coord[x_field].replace(',', '.'))
@@ -454,7 +454,7 @@ def procesar_archivos_retornar_atrasos(archivo_vfd, archivo_capturas,archivo_hor
                 capturas_dict.extend(capturas_data[captura_index:captura_index + cant_capturas]) 
                 captura_index += cant_capturas 
             else:
-                capturas_dict.append = capturas_header
+                # capturas_dict.append = capturas_header
                 capturas_dict.extend = capturas_data[captura_index:]
                 captura_index = len(capturas_data)  # Finaliza el índice si no hay más datos
 
@@ -469,7 +469,7 @@ def procesar_archivos_retornar_atrasos(archivo_vfd, archivo_capturas,archivo_hor
                 horario_index = len(horarios_data)  # Finaliza
 
             print(VFD)
-            # if VFD =='8100_23290_2024-06-10':
+            # if VFD =='7884_14100_2024-06-10':
             #     cargarCapas_y_Calculo(capturas_dict, horarios_dict, salida) 
             #     break
             cargarCapas_y_Calculo(capturas_dict, horarios_dict, salida) 
