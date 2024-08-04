@@ -50,12 +50,12 @@ void insert_sorted(DelayEntry *entry, Delay *new_delay) {
     for (size_t i = 0; i < entry->row_count; i++) {
         if (entry->rows[i]->bus_stop == new_delay->bus_stop) {
             // Update delay and row if a duplicate is found
-            printf("REPLACE ROW! i = %ld. ROW: %s", i, entry->rows[i]->row);
+            // printf("REPLACE ROW! i = %ld. ROW: %s", i, entry->rows[i]->row);
             double delay_n = fabs(entry->rows[i]->delay);
             double new_delay_n = fabs(new_delay->delay);
             double prev_delay_n = i > 0 ? fabs(entry->rows[i-1]->delay) : 0;
 
-            printf("DELAYS! prev: %f, actual: %f, new: %f, prev-actual: %f, prev-new: %f", prev_delay_n, delay_n, new_delay_n, fabs(prev_delay_n - delay_n), fabs(prev_delay_n - new_delay_n));
+            // printf("DELAYS! prev: %f, actual: %f, new: %f, prev-actual: %f, prev-new: %f", prev_delay_n, delay_n, new_delay_n, fabs(prev_delay_n - delay_n), fabs(prev_delay_n - new_delay_n));
 
             if (fabs(prev_delay_n - delay_n) > fabs(prev_delay_n - new_delay_n)) {
                 entry->rows[i]->delay = new_delay->delay;

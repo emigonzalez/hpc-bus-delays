@@ -66,7 +66,7 @@ void perform_task(int rank, char** assigned_days, DelayMap *delay_map) {
 }
 
 // Function for workers to receive tasks
-void receive_tasks(int rank, int size, DelayMap *delay_map) {
+void receive_tasks(int rank, DelayMap *delay_map) {
     // Worker processes
     char **received_strings;
     int num_strings;
@@ -103,6 +103,147 @@ void distribute_tasks(int num_tasks, int size) {
     free_string_array(directorios);
 }
 
+void get_bus_stop_delay_from_row(const char* row, size_t* bus_stop, double* delay) {
+    char buffer[256];
+    strncpy(buffer, row, sizeof(buffer));
+    buffer[sizeof(buffer) - 1] = '\0';
+
+    char *token;
+    int index = 0;
+
+    // Tokenize the row based on commas
+    token = strtok(buffer, ",");
+    while (token != NULL) {
+        index++;
+        if (index == 6) {
+            *bus_stop = atoi(token);
+        } else if (index == 8) {
+            *delay = atof(token);
+        }
+        token = strtok(NULL, ",");
+    }
+}
+
+void master_code(int size) {
+    // Master process
+    distribute_tasks(size - 1, size);
+
+    // Create the master delay map
+    DelayMap *master_map = create_delay_map();
+
+    for (int i = 1; i < size; i++) {
+        // Receive the number of key-value pairs 
+        int key_count;
+        MPI_Recv(&key_count, 1, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+        for (int j = 0; j < key_count; j++) {
+            // Receive the length of the key
+            int key_length;
+            MPI_Recv(&key_length, 1, MPI_INT, i, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+            // Receive the key
+            char *key = (char *)malloc(key_length);
+            MPI_Recv(key, key_length, MPI_CHAR, i, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+            // Receive the number of rows
+            size_t row_count;
+            MPI_Recv(&row_count, 1, MPI_UINT64_T, i, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+            // Receive the rows
+            char **rows = (char **)malloc(row_count * sizeof(char *));
+            for (size_t j = 0; j < row_count; j++) {
+                int row_length;
+                MPI_Recv(&row_length, 1, MPI_INT, i, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                rows[j] = (char *)malloc(row_length);
+                MPI_Recv(rows[j], row_length, MPI_CHAR, i, 5, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            }
+
+            for (size_t j = 0; j < row_count; j++) {
+                // Insert the key and rows into the master map
+                size_t bus_stop;
+                double delay;
+                get_bus_stop_delay_from_row(rows[j], &bus_stop, &delay);
+                delay_map_insert(master_map, key, bus_stop, delay, rows[j]);
+            }
+
+            free(rows);
+            free(key);
+        }
+        printf("\n FIN PID: %d \n", i);
+    }
+
+    printf("\n FIN FIN FIN!!!! \n");
+
+    // Wait for all worker processes to complete
+    for (int i = 1; i < size; i++) {
+        MPI_Recv(NULL, 0, MPI_BYTE, i, 6, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    }
+
+    // Now master_map contains all delays from all workers
+    // printf("\n MASTER PRINTING MAP \n");
+    // print_delay_map(master_map);
+    // printf("\n FINISHED PRINTING MAP \n");
+
+    // Clean up master map
+    free_delay_map(master_map);
+
+    // Collect results and finalize the delay map
+    fprintf(stderr,"Master: All tasks completed.\n");
+}
+
+void worker_code(int rank) {
+    // Create and populate the local delay map
+    DelayMap *worker_map = create_delay_map();
+
+    // Receive tasks from the master
+    receive_tasks(rank, worker_map);
+
+    int key_count = worker_map->count;
+    // printf("Before MPI_Send %d, %d \n", 0, key_count);
+    MPI_Send(&key_count, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+    // printf("After MPI_Send %d \n", 0);
+
+    // Iterate over the map and send each key and its rows to the master
+    for (size_t i = 0; i < worker_map->size; i++) {
+        DelayEntry *entry = worker_map->buckets[i];
+        while (entry) {
+            // Send the key length
+            int key_length = strlen(entry->key) + 1;
+            // printf("Before MPI_Send %d, %d \n", 1, key_length);
+            MPI_Send(&key_length, 1, MPI_INT, 0, 1, MPI_COMM_WORLD);
+            // printf("After MPI_Send %d \n", 1);
+            // printf("Before MPI_Send %d, %s \n", 2, entry->key);
+            MPI_Send(entry->key, key_length, MPI_CHAR, 0, 2, MPI_COMM_WORLD);
+            // printf("After MPI_Send %d \n", 2);
+            // Send the number of rows
+            // printf("Before MPI_Send %d, %ld \n", 3, entry->row_count);
+            MPI_Send(&entry->row_count, 1, MPI_UINT64_T, 0, 3, MPI_COMM_WORLD);
+            // printf("After MPI_Send %d \n", 3);
+
+            // Send each row
+            for (size_t j = 0; j < entry->row_count; j++) {
+                int row_length = strlen(entry->rows[j]->row) + 4;
+                // printf("Before MPI_Send %d, %d \n", 4, row_length);
+                MPI_Send(&row_length, 1, MPI_INT, 0, 4, MPI_COMM_WORLD);
+                // printf("After MPI_Send %d \n", 4);
+                // printf("Before MPI_Send %d, %s \n", 5, entry->rows[j]->row);
+                MPI_Send(entry->rows[j]->row, row_length, MPI_CHAR, 0, 5, MPI_COMM_WORLD);
+                // printf("After MPI_Send %d \n", 5);
+            }
+
+            entry = entry->next;
+        }
+    }
+
+    // Notify the master that all data has been sent
+    // printf("Before MPI_Send %d \n", 6);
+    MPI_Send(NULL, 0, MPI_CHAR, 0, 6, MPI_COMM_WORLD);
+    // printf("After MPI_Send %d \n", 6);
+
+    // Clean up worker map
+    free_delay_map(worker_map);
+}
+
 int main(int argc, char** argv) {
     if (FROM_DAY + NUM_DAYS > 31) {
         printf("INVALID VALUES. FROM_DAY = %d, NUM_DAYS = %d\n", FROM_DAY, NUM_DAYS);
@@ -122,43 +263,18 @@ int main(int argc, char** argv) {
     signal(SIGINT, handle_signal);  // Handle Ctrl+C (interrupt signal)
     signal(SIGTERM, handle_signal); // Handle termination signal
 
-    DelayMap *delay_map = create_delay_map();
-    // MPI_Win win;
-
-    // Create or access the memory window for the delay map
-    // create_delay_map_window(&delay_map, &win, rank, size);
-
-    // Synchronize processes
-    MPI_Barrier(MPI_COMM_WORLD);
-
     if (rank == 0) {
-        // Master process
-        distribute_tasks(size - 1, size);
-
-        // Wait for all worker processes to complete
-        for (int i = 1; i < size; i++) {
-            MPI_Recv(NULL, 0, MPI_BYTE, i, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        }
-
-        // Collect results and finalize the delay map
-        fprintf(stderr,"Master: All tasks completed.\n");
+        // Master code
+        master_code(size);
     } else {
-        // Worker processes access the delay map through the memory window
-        // access_delay_map_window(&delay_map, win, rank);
-
-        // Receive tasks from the master
-        receive_tasks(rank, size, delay_map);
-
-        // Notify the master that the task is complete
-        MPI_Send(NULL, 0, MPI_BYTE, 0, 1, MPI_COMM_WORLD);
+        // Worker code
+        worker_code(rank);
     }
 
     // Free allocated memory
     // free_memory();
-    free_delay_map(delay_map);
 
     // Finalize the MPI environment
-    // MPI_Win_free(&win);
     MPI_Finalize();
     return 0;
 }
