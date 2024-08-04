@@ -256,7 +256,7 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
             
                 fecha_hora_estimada = calcular_hora_estimada(reg_a, reg_b, parada_valida)
                   
-                vfd_string = VFD
+                # vfd_string = VFD
                 fecha_vfd = datetime.strptime(vfd_string.split('_')[-1], '%Y-%m-%d').date()
                 if parada_valida['dia_anterior'] in [ 'S', '*']:
                     fecha_vfd += timedelta(days=1)
