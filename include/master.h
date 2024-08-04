@@ -1,0 +1,19 @@
+#ifndef MASTER_H
+#define MASTER_H
+
+#include <mpi.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <signal.h>
+#include <string.h>
+
+#include "file_distribute.h"
+#include "data_grouping.h"
+#include "location_mapping.h"
+#include "delay_calculation.h"
+#include "result_gathering.h"
+#include "string_array.h"
+
+void master_code(int size, int from_day, int num_days);
+
+#endif // MASTER_H
