@@ -252,11 +252,7 @@ HashMap* group_data_by_vft(char* filename) {
     HashMap *map = create_hash_map();
 
     // Read and skip the header line
-    if ((read = getline(&line, &len, file)) != -1) {
-        // Optionally, print or process the header line
-        printf("Header: %s", line);
-        // add_vft_to_map(map, "0", line);
-    }
+    if ((read = getline(&line, &len, file)) != -1);
 
     // Ensure line is freed before the next read
     free(line);
@@ -346,11 +342,7 @@ HashMap* group_data_by_vfd(char* filename, HashMap* vft_map) {
     HashMap *discarded_vfds = create_hash_map();
 
     // Read and skip the header line
-    if ((read = getline(&line, &len, file)) != -1) {
-        // Optionally, print or process the header line
-        printf("Header: %s", line);
-        // add_vfd_to_map(vfd_map, "0", line);
-    }
+    if ((read = getline(&line, &len, file)) != -1);
 
     // Ensure line is freed before the next read
     free(line);

@@ -17,7 +17,9 @@ void perform_task(int rank, char** assigned_days, int num_hours_per_day, DelayMa
             // Generate VFD map and all fields to be picked by Python script
             map_locations_to_schedules(capturas[j], assigned_days[i], vft_map);
 
-            printf("####### RUNNING WITH FILE: %s ########\n", capturas[j]);
+            // printf("####### RUNNING WITH FILE: %s ########\n", capturas[j]);
+            int len = strlen(capturas[j]);
+            printf(" %s \n", capturas[j] + len - 28);
 
             // Run Python script
             python_calculate_delays(atoi(day_str));
