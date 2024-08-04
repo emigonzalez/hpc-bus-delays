@@ -33,11 +33,11 @@ void run_python_script(const char *script_name, int day) {
 }
 
 void python_calculate_delays(int day) {
-    printf("\nCALLING PYTHON SCRIPT %s \n", script_name);
+    fprintf(stderr,"\nCALLING PYTHON SCRIPT %s \n", script_name);
     // Call the function to run the Python script with the hash map pointer
     run_python_script(script_name, day);
 
-    printf("END PYTHON :) \n");
+    fprintf(stderr,"END PYTHON :) \n");
 
     return;
 }
