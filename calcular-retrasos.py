@@ -259,7 +259,7 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
     
     ultimo_registro = horarios[-1]  # Obtener el último valor del diccionario horarios
     ordinal_terminal = ultimo_registro['ordinal']  # Obtener el valor del campo 'ordinal' del último registro
-    print(f"Ordinal de el destino en vft: {ordinal_terminal}")
+    # print(f"Ordinal de el destino en vft: {ordinal_terminal}")
     
 
     # Iterar sobre las paradas validas en el buffer
@@ -279,7 +279,7 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
             registroCumputable = True
             
             if parada_valida['ordinal'] == ordinal_terminal:  # Lógica para la parada final del VFT
-                print('***************   parada final   **********************')
+                # print('***************   parada final   **********************')
                 registros_misma_geometria = [reg_a, reg_b]
                 cantidad_iguales = 2
                 while True:
@@ -314,7 +314,7 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
                 retraso = (fecha_hora_estimada - fecha_hora_prevista).total_seconds() / 60.0
                 
             elif parada_valida['ordinal'] == "1": # Lógica para la parada de salida del VFT
-                print('##############   parada inicial    #############')
+                # print('##############   parada inicial    #############')
                 registros_misma_geometria = [reg_a, reg_b]
                 cantidad_iguales = 2
                 while True:
@@ -415,7 +415,7 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
                 'retraso': retraso
             })
         
-        print('parada procesada: ', parada_valida['ordinal'],' #vecinos: ', cantidad_iguales) 
+        # print('parada procesada: ', parada_valida['ordinal'],' #vecinos: ', cantidad_iguales) 
         # print('vecinos:', nearest_ids, cantidad_iguales)
 
     # remueve las layers agregados arriba
@@ -468,7 +468,7 @@ def procesar_archivos_retornar_atrasos(archivo_vfd, archivo_capturas,archivo_hor
                 horarios_dict.extend = horarios_data[horario_index:]
                 horario_index = len(horarios_data)  # Finaliza
 
-            print(VFD)
+            # print(VFD)
             # if VFD =='7884_14100_2024-06-10':
             #     cargarCapas_y_Calculo(capturas_dict, horarios_dict, salida) 
             #     break
