@@ -44,7 +44,7 @@ Processing.initialize()
 QgsApplication.processingRegistry().addProvider(QgsNativeAlgorithms())
 
 
-#BorrarFuncion esta funcion no va a estar mas una vez que el c le pase los diccionarios
+
 def load_list_as_layer(list,x_field, y_field, crs,name):
     layer = QgsVectorLayer(f"Point?crs={crs}", name , "memory")
     if not layer.isValid():
@@ -54,12 +54,9 @@ def load_list_as_layer(list,x_field, y_field, crs,name):
     
     for field in list[0].keys():
         # Define fields
-        if (field == "latitud" or 
-            field == "longitud" or 
-            field == "X" or 
-            field == "Y" ):
+        if field.lower() in ["latitud", "longitud", "x", "y"]:
             fields.append(QgsField(field, QVariant.Double))
-        elif (field == 'fecha'):
+        elif field.lower() == 'fecha':
             fields.append(QgsField(field, QVariant.DateTime))
         else:
             fields.append(QgsField(field, QVariant.String))
@@ -67,60 +64,20 @@ def load_list_as_layer(list,x_field, y_field, crs,name):
     layer.dataProvider().addAttributes(fields)
     layer.updateFields()
 
-    for coord in list[1:]:
-        # print(" **********************")
-        # print (coord.values())
-        coord[x_field] = float(coord[x_field].replace(',', '.'))
-        coord[y_field] = float(coord[y_field].replace(',', '.'))
-        point = QgsPointXY(coord[x_field],coord[y_field])
+    for coord in list:
+        x = float(coord[x_field].replace(',', '.'))
+        y = float(coord[y_field].replace(',', '.'))
+        point = QgsPointXY(x, y)
 
         feature = QgsFeature()
         feature.setAttributes([*coord.values()])
         feature.setGeometry(QgsGeometry.fromPointXY(point))
         features.append(feature)
+
     layer.dataProvider().addFeatures(features)
     layer.updateExtents()
     QgsProject.instance().addMapLayer(layer)
     return layer
-
-# posible mejor
-# def load_dict_as_layer(data_dict, x_field, y_field, crs, name):
-#     layer = QgsVectorLayer(f"Point?crs={crs}", name, "memory")
-#     if not layer.isValid():
-#         raise Exception(f"Failed to load layer: {layer.error()}")
-    
-#     features = []
-#     fields = QgsFields()
-    
-#     # Define fields based on the keys of the dictionary
-#     for field in data_dict.keys():
-#         if field.lower() in ['latitud', 'longitud', 'x', 'y']:
-#             fields.append(QgsField(field, QVariant.Double))
-#         elif field.lower() == 'fecha':
-#             fields.append(QgsField(field, QVariant.DateTime))
-#         else:
-#             fields.append(QgsField(field, QVariant.String))
-    
-#     layer.dataProvider().addAttributes(fields)
-#     layer.updateFields()
-
-#     # Create features from the dictionary
-#     for key, values in data_dict.items():
-#         x_value = float(values[x_field].replace(',', '.')) if isinstance(values[x_field], str) else values[x_field]
-#         y_value = float(values[y_field].replace(',', '.')) if isinstance(values[y_field], str) else values[y_field]
-        
-#         point = QgsPointXY(x_value, y_value)
-        
-#         feature = QgsFeature()
-#         feature.setAttributes([*values.values()])
-#         feature.setGeometry(QgsGeometry.fromPointXY(point))
-#         features.append(feature)
-    
-#     layer.dataProvider().addFeatures(features)
-#     layer.updateExtents()
-#     QgsProject.instance().addMapLayer(layer)
-    
-#     return layer
 
 
 # Function to save a layer as a shapefile
@@ -178,11 +135,11 @@ def calcular_hora_estimada(reg_a, reg_b, parada):
 
     if velocidad_estimada > 0:
         if proyeccion_ap < 0:
-            distancia_a_parada = mag_ap
+            distancia_a_parada = proyeccion_ap
             tiempo_hasta_parada = distancia_a_parada / velocidad_estimada
             hora_estimada = fecha_a - timedelta(seconds=tiempo_hasta_parada)
         elif proyeccion_ap > longitud_vector_ab:
-            distancia_b_parada = mag_bp
+            distancia_b_parada = proyeccion_ap
             tiempo_hasta_parada = distancia_b_parada / velocidad_estimada
             hora_estimada = fecha_b + timedelta(seconds=tiempo_hasta_parada)
         else:
@@ -194,28 +151,22 @@ def calcular_hora_estimada(reg_a, reg_b, parada):
 
     return hora_estimada
 
-
-#este proceedimento recibe dos diccionario y devuelve en el csv salida los atrasos para cada vfd
-def cargarCapas_y_Calculo(capturas,horarios,salida):
-    global VFD
-    # funcion para guardar en la salida.csv una fila
-    #BorrarFuncion esta funcion no va a estar mas una vez que el c le pase los diccionarios
-    def escribir_csv(row):
+def escribir_csv(row):
         with open(salida, 'a', newline='') as file:
             writer = csv.writer(file)
             # Escribir la row
             writer.writerow(row)
 
-    #escribe en la cabecera de la salida
-    escribir_csv(['VFD', 'variante', 'codigo_bus', 'linea', 'hora', 'ordinal','fecha_hora_paso', 'retraso'])
-
+#este proceedimento recibe dos diccionario y devuelve en el csv salida los atrasos para cada vfd
+def cargarCapas_y_Calculo(capturas,horarios,salida):
+    global VFD
+    
     # Definir el sistema de coordenadas de origen (latitud-longitud, WGS84)
     wgs84 = 'EPSG:4326'  # WGS84
     # Definir el sistema de coordenadas de destino (proyectadas, EPSG específico)
     utm21s = 'EPSG:32721'
     
     # Load list como layer no diccionario
-    # BorrarFuncion esto no se va a llamar asi
     capa_vfd = load_list_as_layer(capturas, 'latitud', 'longitud', wgs84,"vfd")
     capa_vft = load_list_as_layer(horarios, 'X', 'Y', utm21s,"vft")
     
@@ -235,7 +186,7 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
     buffer_output_path = 'memory:'
     buffer_params = {
         'INPUT': capa_vfd,
-        'DISTANCE': 250,
+        'DISTANCE': 100,
         'SEGMENTS': 5,
         'END_CAP_STYLE': 0,
         'JOIN_STYLE': 0,
@@ -259,164 +210,262 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
     
     ultimo_registro = horarios[-1]  # Obtener el último valor del diccionario horarios
     ordinal_terminal = ultimo_registro['ordinal']  # Obtener el valor del campo 'ordinal' del último registro
-    print(f"Ordinal de el destino en vft: {ordinal_terminal}")
+    # print(f"Ordinal de el destino en vft: {ordinal_terminal}")
     
 
     # Iterar sobre las paradas validas en el buffer
     resultados = []
     cont = 0
+
     for parada_valida in paradas_validas:
         cont+=1
         # Obtener los dos registros más cercanos en capa_vfd
         nearest_ids = spatial_index.nearestNeighbor(parada_valida.geometry(), 2)
         if  len(nearest_ids) < 2:
-            print('***************   parada sin vecinos  **********************')
+            # print('***************   parada sin vecinos  **********************')
             continue
         else:
             # Verificar que los IDs obtenidos sean diferentes y la distancia entre ellos sea mayor que cero
             reg_a = capa_vfd.getFeature(nearest_ids[0])
-            reg_b = capa_vfd.getFeature(nearest_ids[1])
+            reg_b = capa_vfd.getFeature(nearest_ids[-1])
             registroCumputable = True
             
-            if parada_valida['ordinal'] == ordinal_terminal:  # Lógica para la parada final del VFT
-                print('***************   parada final   **********************')
-                registros_misma_geometria = [reg_a, reg_b]
-                cantidad_iguales = 2
-                while True:
-                    nearest_ids = spatial_index.nearestNeighbor(parada_valida.geometry().asPoint(), cantidad_iguales)
-                    for nearest_id in nearest_ids:
-                        reg_c = capa_vfd.getFeature(nearest_id)
-                        if reg_c.geometry().equals(reg_a.geometry()):
-                            registros_misma_geometria.append(reg_c)
-                        else:
-                            break
-                    if reg_c.geometry().equals(reg_a.geometry()):
-                        cantidad_iguales += 1
-                        if cantidad_iguales > 40:
-                            registroCumputable = False
-                            break
-                    else:
-                        break
+            registros_misma_geometria = [reg_a, reg_b]
+            cantidad_iguales = len(nearest_ids)  
+            
+            while reg_a.geometry().asPoint() == reg_b.geometry().asPoint():
+            # while True:
+                cantidad_iguales+=1
+                # Si los dos registros están en el mismo lugar, obtener el siguiente más cercano
+                nearest_ids = spatial_index.nearestNeighbor(parada_valida.geometry().asPoint(), cantidad_iguales)
+                reg_a = capa_vfd.getFeature(nearest_ids[0])  # Usar nearest_ids[1] en lugar de nearest_ids[0]
+                reg_b = capa_vfd.getFeature(nearest_ids[len(nearest_ids)-1])  # Usar nearest_ids[2] en lugar de nearest_ids[1]
 
-                # Seleccionar el registro más temprano en tiempo
-                registro_mas_temprano = min(registros_misma_geometria, key=lambda reg: reg['fecha'])
-                fecha_hora_estimada = transformar_fechas(registro_mas_temprano['fecha'])  # Calcular la hora estimada de llegada
-                
-                vfd_string = VFD
-                fecha_vfd = datetime.strptime(vfd_string.split('_')[-1], '%Y-%m-%d').date()
-
-                # if parada_valida['dia_anterior'] == 'S':
-                if parada_valida['dia_anterior'] in [ 'S', '*']:
-                    fecha_vfd += timedelta(days=1)
-
-                hora_vft = str(parada_valida['hora']).zfill(4)
-                fecha_hora_prevista = datetime.combine(fecha_vfd, datetime.strptime(hora_vft, '%H%M').time())
-                retraso = (fecha_hora_estimada - fecha_hora_prevista).total_seconds() / 60.0
-                
-            elif parada_valida['ordinal'] == "1": # Lógica para la parada de salida del VFT
-                print('##############   parada inicial    #############')
-                registros_misma_geometria = [reg_a, reg_b]
-                cantidad_iguales = 2
-                while True:
-                    nearest_ids = spatial_index.nearestNeighbor(parada_valida.geometry().asPoint(), cantidad_iguales)
-                    for nearest_id in nearest_ids:
-                        reg_c = capa_vfd.getFeature(nearest_id)
-                        if reg_c.geometry().equals(reg_a.geometry()):
-                            registros_misma_geometria.append(reg_c)
-                        else:
-                            break
-                    if reg_c.geometry().equals(reg_a.geometry()):
-                        cantidad_iguales += 1
-                        if cantidad_iguales > 40:
-                            registroCumputable = False
-                            break
-                    else:
-                        break
-
-                # Seleccionar el registro más tarde en tiempo
-                registro_mas_tarde = max(registros_misma_geometria, key=lambda reg: reg['fecha'])
-                fecha_hora_estimada = transformar_fechas(registro_mas_tarde['fecha'])  # Calcular la hora estimada de llegada
-                
-                vfd_string = VFD
-                fecha_vfd = datetime.strptime(vfd_string.split('_')[-1], '%Y-%m-%d').date()
-                # if field.lower() in ['latitud', 'longitud', 'x', 'y']:
-                if parada_valida['dia_anterior'] in [ 'S', '*']:
-                    fecha_vfd += timedelta(days=1)
-
-                hora_vft = str(parada_valida['hora']).zfill(4)
-                fecha_hora_prevista = datetime.combine(fecha_vfd, datetime.strptime(hora_vft, '%H%M').time())
-                retraso = (fecha_hora_estimada - fecha_hora_prevista).total_seconds() / 60.0
-
-            else :  # Lógica para las paradas intermedias de VFT
-
-                cantidad_iguales = 2
-                while reg_a.geometry().asPoint() == reg_b.geometry().asPoint():
-                    cantidad_iguales+=1
-                    # Si los dos registros están en el mismo lugar, obtener el siguiente más cercano
-                    nearest_ids = spatial_index.nearestNeighbor(parada_valida.geometry().asPoint(), cantidad_iguales)
-                    reg_a = capa_vfd.getFeature(nearest_ids[0])  # Usar nearest_ids[1] en lugar de nearest_ids[0]
-                    reg_b = capa_vfd.getFeature(nearest_ids[len(nearest_ids)-1])  # Usar nearest_ids[2] en lugar de nearest_ids[1]
-                    # print('vecinos:', nearest_ids, cantidad_iguales)
-                    if cantidad_iguales > 40: 
-                        print ("me fui porque no encontre y no es destino")
+                # for nearest_id in nearest_ids:
+                #     reg_c = capa_vfd.getFeature(nearest_id)
+                #     if reg_c.geometry().equals(reg_a.geometry()):
+                #         registros_misma_geometria.append(reg_c)
+                #     else:
+                #         break
+                # if reg_c.geometry().equals(reg_a.geometry()):
+                #     cantidad_iguales += 1
+                if cantidad_iguales > 10:
                         registroCumputable = False
                         break
+                # else:
+                #         break
+                # nearest_ids = spatial_index.nearestNeighbor(parada_valida.geometry().asPoint(), cantidad_iguales)
                 
+            # print('vecinos:', nearest_ids, cantidad_iguales)
+            if registroCumputable:
+                # registro_mas_temprano = min(registros_misma_geometria, key=lambda reg: reg['fecha'])
+                # registro_mas_tarde = max(registros_misma_geometria, key=lambda reg: reg['fecha'])
+                # if parada_valida['ordinal'] == ordinal_terminal:  # Lógica para la parada final del VFT
+                #     print('***************   parada final   **********************')
+                #     # Seleccionar el registro más temprano en tiempo
+                #     # print('vecinos:', nearest_ids, cantidad_iguales)
+                #     reg_a = registro_mas_temprano
+                # elif parada_valida['ordinal'] == "1": # Lógica para la parada de salida del VFT
+                #     reg_a = registro_mas_tarde
+                #     # print('##############   parada inicial    #############')
+                # else :  # Lógica para las paradas intermedias de VFT
+                #     reg_a = reg_a
+            
+                fecha_hora_estimada = calcular_hora_estimada(reg_a, reg_b, parada_valida)
+                  
+                vfd_string = VFD
+                fecha_vfd = datetime.strptime(vfd_string.split('_')[-1], '%Y-%m-%d').date()
+                if parada_valida['dia_anterior'] in [ 'S', '*']:
+                    fecha_vfd += timedelta(days=1)
 
-                # Access attributes of the feature
-                attributesA = reg_a.attributes()
-                attributesB = reg_b.attributes()
-                if registroCumputable:
-                    fecha_hora_estimada = calcular_hora_estimada(reg_a, reg_b, parada_valida)
-                    vfd_string = VFD
-                    fecha_vfd = datetime.strptime(vfd_string.split('_')[-1], '%Y-%m-%d').date()
+                hora_vft = str(parada_valida['hora']).zfill(4)
+                fecha_hora_prevista = datetime.combine(fecha_vfd, datetime.strptime(hora_vft, '%H%M').time())
+                retraso = (fecha_hora_estimada - fecha_hora_prevista).total_seconds() / 60.0
 
-                    # if parada_valida['dia_anterior'] == 'S':
-                    if parada_valida['dia_anterior'] in [ 'S', '*']:
-                        fecha_vfd += timedelta(days=1)
+                row = [
+                    VFD, 
+                    reg_a['variante'],
+                    reg_a['codigoBus'],
+                    reg_a['linea'],
+                    hora_vft,
+                    parada_valida['ordinal'],
+                    fecha_hora_estimada.strftime("%Y-%m-%d %H:%M:%S"),
+                    retraso,
+                    cantidad_iguales,
+                    parada_valida['cod_ubic_parada'],
+                    parada_valida['X'],
+                    parada_valida['Y'],
+                    transformar_fechas(reg_a['fecha']),
+                    transformar_fechas(reg_b['fecha'])
+                ]
+                escribir_csv(row)
+            else:
+                continue
 
-                    hora_vft = str(parada_valida['hora']).zfill(4)
-                    fecha_hora_prevista = datetime.combine(fecha_vfd, datetime.strptime(hora_vft, '%H%M').time())
-                    retraso = (fecha_hora_estimada - fecha_hora_prevista).total_seconds() / 60.0
-                else:
-                    vfd_string = VFD
-                    fecha_vfd = datetime.strptime(vfd_string.split('_')[-1], '%Y-%m-%d').date()
-                    hora_vft = str(parada_valida['hora']).zfill(4)
-                    
-                    fecha_hora_estimada = transformar_fechas(reg_a['fecha'])
-                    
-                    # if parada_valida['dia_anterior'] == 'S':
-                    if parada_valida['dia_anterior'] in [ 'S', '*']:
-                        fecha_vfd += timedelta(days=1)
-                    retraso = 100
-                
 
-            # retraso = (fecha_hora_estimada - fecha_hora_prevista).total_seconds() / 60.0
-
-            row = []
-            # row.append(fecha_vfd.strftime("%Y-%m-%d"))
-            row.append(VFD)
-            row.append(reg_a['variante'])
-            row.append(reg_a['codigoBus'])
-            row.append(reg_a['linea'])
-            row.append(hora_vft)
-            row.append(parada_valida['ordinal'])
-            row.append(fecha_hora_estimada.strftime("%Y-%m-%d %H:%M:%S"))
-            row.append(retraso)
-            row.append(cantidad_iguales)
-
-            escribir_csv(row)
-
-            resultados.append({
-                'VFD': fecha_vfd.strftime("%Y-%m-%d"),
-                'codigo_bus': reg_a['codigoBus'],
-                'linea': reg_a['linea'],
-                'fecha_hora_paso': fecha_hora_estimada.strftime("%Y-%m-%d %H:%M:%S"),
-                'retraso': retraso
-            })
+            # resultados.append({
+            #     'VFD': fecha_vfd.strftime("%Y-%m-%d"),
+            #     'codigo_bus': reg_a['codigoBus'],
+            #     'linea': reg_a['linea'],
+            #     'fecha_hora_paso': fecha_hora_estimada.strftime("%Y-%m-%d %H:%M:%S"),
+            #     'retraso': retraso
+            # })
         
-        print('parada procesada: ', parada_valida['ordinal'],' #vecinos: ', cantidad_iguales) 
+        # print('parada procesada: ', parada_valida['ordinal'],' #vecinos: ', cantidad_iguales) 
         # print('vecinos:', nearest_ids, cantidad_iguales)
+
+    
+    # for parada_valida in paradas_validas:
+    #     cont+=1
+    #     # Obtener los dos registros más cercanos en capa_vfd
+    #     nearest_ids = spatial_index.nearestNeighbor(parada_valida.geometry(), 2)
+    #     if  len(nearest_ids) < 2:
+    #         print('***************   parada sin vecinos  **********************')
+    #         continue
+    #     else:
+    #         # Verificar que los IDs obtenidos sean diferentes y la distancia entre ellos sea mayor que cero
+    #         reg_a = capa_vfd.getFeature(nearest_ids[0])
+    #         reg_b = capa_vfd.getFeature(nearest_ids[1])
+    #         registroCumputable = True
+            
+    #         if parada_valida['ordinal'] == ordinal_terminal:  # Lógica para la parada final del VFT
+    #             # print('***************   parada final   **********************')
+    #             registros_misma_geometria = [reg_a, reg_b]
+    #             cantidad_iguales = len(nearest_ids)  
+    #             while True:
+    #                 print('vecinos:', nearest_ids, cantidad_iguales)
+    #                 for nearest_id in nearest_ids:
+    #                     reg_c = capa_vfd.getFeature(nearest_id)
+    #                     if reg_c.geometry().equals(reg_a.geometry()):
+    #                         registros_misma_geometria.append(reg_c)
+    #                     else:
+    #                         break
+    #                 if reg_c.geometry().equals(reg_a.geometry()):
+    #                     cantidad_iguales += 1
+    #                     if cantidad_iguales > 40:
+    #                         registroCumputable = False
+    #                         break
+    #                 else:
+    #                     break
+    #                 nearest_ids = spatial_index.nearestNeighbor(parada_valida.geometry().asPoint(), cantidad_iguales)
+
+    #             # Seleccionar el registro más temprano en tiempo
+    #             registro_mas_temprano = min(registros_misma_geometria, key=lambda reg: reg['fecha'])
+    #             fecha_hora_estimada = transformar_fechas(registro_mas_temprano['fecha'])  # Calcular la hora estimada de llegada
+                
+    #             vfd_string = VFD
+    #             fecha_vfd = datetime.strptime(vfd_string.split('_')[-1], '%Y-%m-%d').date()
+
+    #             if parada_valida['dia_anterior'] in [ 'S', '*']:
+    #                 fecha_vfd += timedelta(days=1)
+
+    #             hora_vft = str(parada_valida['hora']).zfill(4)
+    #             fecha_hora_prevista = datetime.combine(fecha_vfd, datetime.strptime(hora_vft, '%H%M').time())
+    #             retraso = (fecha_hora_estimada - fecha_hora_prevista).total_seconds() / 60.0
+                
+    #         elif parada_valida['ordinal'] == "1": # Lógica para la parada de salida del VFT
+    #             # print('##############   parada inicial    #############')
+    #             registros_misma_geometria = [reg_a, reg_b]
+    #             cantidad_iguales = 2
+    #             while True:
+    #                 nearest_ids = spatial_index.nearestNeighbor(parada_valida.geometry().asPoint(), cantidad_iguales)
+    #                 for nearest_id in nearest_ids:
+    #                     reg_c = capa_vfd.getFeature(nearest_id)
+    #                     if reg_c.geometry().equals(reg_a.geometry()):
+    #                         registros_misma_geometria.append(reg_c)
+    #                     else:
+    #                         break
+    #                 if reg_c.geometry().equals(reg_a.geometry()):
+    #                     cantidad_iguales += 1
+    #                     if cantidad_iguales > 40:
+    #                         registroCumputable = False
+    #                         break
+    #                 else:
+    #                     break
+
+    #             # Seleccionar el registro más tarde en tiempo
+    #             registro_mas_tarde = max(registros_misma_geometria, key=lambda reg: reg['fecha'])
+    #             fecha_hora_estimada = transformar_fechas(registro_mas_tarde['fecha'])  # Calcular la hora estimada de llegada
+                
+    #             vfd_string = VFD
+    #             fecha_vfd = datetime.strptime(vfd_string.split('_')[-1], '%Y-%m-%d').date()
+    #             if parada_valida['dia_anterior'] in [ 'S', '*']:
+    #                 fecha_vfd += timedelta(days=1)
+
+    #             hora_vft = str(parada_valida['hora']).zfill(4)
+    #             fecha_hora_prevista = datetime.combine(fecha_vfd, datetime.strptime(hora_vft, '%H%M').time())
+    #             retraso = (fecha_hora_estimada - fecha_hora_prevista).total_seconds() / 60.0
+
+    #         else :  # Lógica para las paradas intermedias de VFT
+
+    #             cantidad_iguales = 2
+    #             while reg_a.geometry().asPoint() == reg_b.geometry().asPoint():
+    #                 cantidad_iguales+=1
+    #                 # Si los dos registros están en el mismo lugar, obtener el siguiente más cercano
+    #                 nearest_ids = spatial_index.nearestNeighbor(parada_valida.geometry().asPoint(), cantidad_iguales)
+    #                 reg_a = capa_vfd.getFeature(nearest_ids[0])  # Usar nearest_ids[1] en lugar de nearest_ids[0]
+    #                 reg_b = capa_vfd.getFeature(nearest_ids[len(nearest_ids)-1])  # Usar nearest_ids[2] en lugar de nearest_ids[1]
+    #                 # print('vecinos:', nearest_ids, cantidad_iguales)
+    #                 if cantidad_iguales > 40: 
+    #                     print ("me fui porque no encontre y no es destino")
+    #                     registroCumputable = False
+    #                     break
+
+    #             # Access attributes of the feature
+    #             attributesA = reg_a.attributes()
+    #             attributesB = reg_b.attributes()
+    #             if registroCumputable:
+    #                 fecha_hora_estimada = calcular_hora_estimada(reg_a, reg_b, parada_valida)
+    #                 vfd_string = VFD
+    #                 fecha_vfd = datetime.strptime(vfd_string.split('_')[-1], '%Y-%m-%d').date()
+
+    #                 if parada_valida['dia_anterior'] in [ 'S', '*']:
+    #                     fecha_vfd += timedelta(days=1)
+
+    #                 hora_vft = str(parada_valida['hora']).zfill(4)
+    #                 fecha_hora_prevista = datetime.combine(fecha_vfd, datetime.strptime(hora_vft, '%H%M').time())
+    #                 retraso = (fecha_hora_estimada - fecha_hora_prevista).total_seconds() / 60.0
+    #             else:
+    #                 vfd_string = VFD
+    #                 fecha_vfd = datetime.strptime(vfd_string.split('_')[-1], '%Y-%m-%d').date()
+    #                 hora_vft = str(parada_valida['hora']).zfill(4)
+                    
+    #                 fecha_hora_estimada = transformar_fechas(reg_a['fecha'])
+                    
+    #                 if parada_valida['dia_anterior'] in [ 'S', '*']:
+    #                     fecha_vfd += timedelta(days=1)
+    #                 retraso = 100
+                
+
+    #         # retraso = (fecha_hora_estimada - fecha_hora_prevista).total_seconds() / 60.0
+
+    #         row = []
+    #         # row.append(fecha_vfd.strftime("%Y-%m-%d"))
+    #         row.append(VFD)
+    #         row.append(reg_a['variante'])
+    #         row.append(reg_a['codigoBus'])
+    #         row.append(reg_a['linea'])
+    #         row.append(hora_vft)
+    #         row.append(parada_valida['ordinal'])
+    #         row.append(fecha_hora_estimada.strftime("%Y-%m-%d %H:%M:%S"))
+    #         row.append(retraso)
+    #         row.append(cantidad_iguales)
+    #         row.append(parada_valida['cod_ubic_parada'])
+    #         row.append(parada_valida['X'])
+    #         row.append(parada_valida['Y'])
+
+    #         escribir_csv(row)
+
+    #         # resultados.append({
+    #         #     'VFD': fecha_vfd.strftime("%Y-%m-%d"),
+    #         #     'codigo_bus': reg_a['codigoBus'],
+    #         #     'linea': reg_a['linea'],
+    #         #     'fecha_hora_paso': fecha_hora_estimada.strftime("%Y-%m-%d %H:%M:%S"),
+    #         #     'retraso': retraso
+    #         # })
+        
+    #     # print('parada procesada: ', parada_valida['ordinal'],' #vecinos: ', cantidad_iguales) 
+    #     # print('vecinos:', nearest_ids, cantidad_iguales)
 
     # remueve las layers agregados arriba
     QgsProject.instance().removeMapLayer(QgsProject.instance().mapLayersByName('vft')[0].id())
@@ -433,6 +482,7 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
 def procesar_archivos_retornar_atrasos(archivo_vfd, archivo_capturas,archivo_horarios):
     # Índices iniciales para las filas de capturas y horarios
     global VFD
+    escribir_csv(['VFD', 'variante', 'codigo_bus', 'linea', 'hora', 'ordinal','fecha_hora_paso', 'retraso', 'vecinos','cod_parada', 'X', 'Y' ])    
     with open(vfd_file, newline='') as vfdfile:
         vfd_reader = csv.reader(vfdfile)
         next(vfd_reader)  # Saltar la cabecera
@@ -442,34 +492,28 @@ def procesar_archivos_retornar_atrasos(archivo_vfd, archivo_capturas,archivo_hor
             VFD = row[0]
             cant_capturas = int(row[1])
             cant_horarios = int(row[2])
-
             # Extraer las líneas correspondientes de capturas y horarios
             capturas_dict = []
             horarios_dict = []
 
             # Asignar las capturas
             if captura_index + cant_capturas <= len(capturas_data):
-                # capturas_dict.append(capturas_header)
-                # capturas_dict[0] = capturas_header
                 capturas_dict.extend(capturas_data[captura_index:captura_index + cant_capturas]) 
                 captura_index += cant_capturas 
             else:
-                capturas_dict.append = capturas_header
                 capturas_dict.extend = capturas_data[captura_index:]
                 captura_index = len(capturas_data)  # Finaliza el índice si no hay más datos
 
             # Asignar los horarios
             if horario_index + cant_horarios <= len(horarios_data):
-                # horarios_dict.append(horarios_header)
                 horarios_dict.extend(horarios_data[horario_index:horario_index + cant_horarios]) 
                 horario_index += cant_horarios
             else:
-                # horarios_dict.append = horarios_header
                 horarios_dict.extend = horarios_data[horario_index:]
                 horario_index = len(horarios_data)  # Finaliza
 
-            print(VFD)
-            # if VFD =='8100_23290_2024-06-10':
+            # print(VFD)
+            # if VFD =='7884_14100_2024-06-10':
             #     cargarCapas_y_Calculo(capturas_dict, horarios_dict, salida) 
             #     break
             cargarCapas_y_Calculo(capturas_dict, horarios_dict, salida) 
@@ -478,15 +522,11 @@ def procesar_archivos_retornar_atrasos(archivo_vfd, archivo_capturas,archivo_hor
    
 
 #  Función para leer el archivo CSV y devolver la primera fila (cabecera) y los datos
-def read_csv(file_path, delimiter=',', skip_header=False):
+def read_csv(file_path, delimiter=','):
     with open(file_path, newline='') as csvfile:
         reader = csv.DictReader(csvfile, delimiter=delimiter)
-        if skip_header:
-            header = next(reader)  # Lee la cabecera
-        else:
-            header = None
         data = list(reader)
-    return header, data
+    return data
 
 #funcion que carga de un csv de los horarios solo carga filas
 #BorrarFuncion esta funcion no va a estar mas una vez que el c le pase los diccionarios
@@ -498,22 +538,26 @@ def leer_archivo_vft(archivo_vft):
         for row in reader_vft:
             yield row  # Generador para obtener cada fila del archivo VFT
 
-
-
 VFD=""
 
-archivo_vfd = os.getcwd() + '/orden_vfd2.csv' #csv de los vfd agrupados opr vfd
-archivo_vft = os.getcwd() + '/horarios_paradas_vft.csv' # csv de las paradas para sacar el vfg
-salida = os.getcwd() + '/data/retrasos.csv'  #csv de los atrasos
+fechaProcesar = sys.argv[2]
+dondeCorrer = sys.argv[1]
 
-capturas_file = os.getcwd() + '/data/capturas.csv' #csv de las capturas ordenas por vfd
-horarios_file = os.getcwd() + '/data/horarios.csv' # csv de las paradas ordenadas por vfd
-vfd_file      = os.getcwd() + '/data/vfd.csv' # csv de los vfd ,cant_capturas, cant_horarios
+if dondeCorrer == 'v':
+    salida = os.getcwd() + '/data/retrasos.csv'  #csv de los atrasos
+    capturas_file = os.getcwd() + '/data/capturas.csv' #csv de las capturas ordenas por vfd
+    horarios_file = os.getcwd() + '/data/horarios.csv' # csv de las paradas ordenadas por vfd
+    vfd_file      = os.getcwd() + '/data/vfd.csv' # csv de los vfd ,cant_capturas, cant_horarios
+else:
+    salida = os.getcwd() + f'/data/retrasos/retrasos_{fechaProcesar}.csv'  #csv de los atrasos
+    capturas_file = os.getcwd() + f'/data/temp/capturas_{fechaProcesar}.csv' #csv de las capturas ordenas por vfd
+    horarios_file = os.getcwd() + f'/data/temp/horarios_{fechaProcesar}.csv' # csv de las paradas ordenadas por vfd
+    vfd_file      = os.getcwd() + f'/data/temp/vfd_{fechaProcesar}.csv' # csv de los vfd ,cant_capturas, cant_horarios
 
 # Leer archivo con coma como delimitador
-capturas_header, capturas_data = read_csv(capturas_file, delimiter=',')
+capturas_data = read_csv(capturas_file, delimiter=',')
 # Leer archivo con punto y coma como delimitador
-horarios_header, horarios_data = read_csv(horarios_file, delimiter=';')
+horarios_data = read_csv(horarios_file, delimiter=';')
 
 procesar_archivos_retornar_atrasos(vfd_file,capturas_file,horarios_file)
 
