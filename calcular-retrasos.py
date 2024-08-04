@@ -194,20 +194,25 @@ def calcular_hora_estimada(reg_a, reg_b, parada):
 
     return hora_estimada
 
+def escribir_csv(row):
+        with open(salida, 'a', newline='') as file:
+            writer = csv.writer(file)
+            # Escribir la row
+            writer.writerow(row)
 
 #este proceedimento recibe dos diccionario y devuelve en el csv salida los atrasos para cada vfd
 def cargarCapas_y_Calculo(capturas,horarios,salida):
     global VFD
     # funcion para guardar en la salida.csv una fila
     #BorrarFuncion esta funcion no va a estar mas una vez que el c le pase los diccionarios
-    def escribir_csv(row):
-        with open(salida, 'a', newline='') as file:
-            writer = csv.writer(file)
-            # Escribir la row
-            writer.writerow(row)
+    # def escribir_csv(row):
+    #     with open(salida, 'a', newline='') as file:
+    #         writer = csv.writer(file)
+    #         # Escribir la row
+    #         writer.writerow(row)
 
     #escribe en la cabecera de la salida
-    escribir_csv(['VFD', 'variante', 'codigo_bus', 'linea', 'hora', 'ordinal','fecha_hora_paso', 'retraso'])
+    # escribir_csv(['VFD', 'variante', 'codigo_bus', 'linea', 'hora', 'ordinal','fecha_hora_paso', 'retraso'])
 
     # Definir el sistema de coordenadas de origen (latitud-longitud, WGS84)
     wgs84 = 'EPSG:4326'  # WGS84
@@ -281,9 +286,9 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
             if parada_valida['ordinal'] == ordinal_terminal:  # Lógica para la parada final del VFT
                 # print('***************   parada final   **********************')
                 registros_misma_geometria = [reg_a, reg_b]
-                cantidad_iguales = 2
+                cantidad_iguales = len(nearest_ids)  
                 while True:
-                    nearest_ids = spatial_index.nearestNeighbor(parada_valida.geometry().asPoint(), cantidad_iguales)
+                    print('vecinos:', nearest_ids, cantidad_iguales)
                     for nearest_id in nearest_ids:
                         reg_c = capa_vfd.getFeature(nearest_id)
                         if reg_c.geometry().equals(reg_a.geometry()):
@@ -297,6 +302,7 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
                             break
                     else:
                         break
+                    nearest_ids = spatial_index.nearestNeighbor(parada_valida.geometry().asPoint(), cantidad_iguales)
 
                 # Seleccionar el registro más temprano en tiempo
                 registro_mas_temprano = min(registros_misma_geometria, key=lambda reg: reg['fecha'])
@@ -305,7 +311,6 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
                 vfd_string = VFD
                 fecha_vfd = datetime.strptime(vfd_string.split('_')[-1], '%Y-%m-%d').date()
 
-                # if parada_valida['dia_anterior'] == 'S':
                 if parada_valida['dia_anterior'] in [ 'S', '*']:
                     fecha_vfd += timedelta(days=1)
 
@@ -339,7 +344,6 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
                 
                 vfd_string = VFD
                 fecha_vfd = datetime.strptime(vfd_string.split('_')[-1], '%Y-%m-%d').date()
-                # if field.lower() in ['latitud', 'longitud', 'x', 'y']:
                 if parada_valida['dia_anterior'] in [ 'S', '*']:
                     fecha_vfd += timedelta(days=1)
 
@@ -361,7 +365,6 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
                         print ("me fui porque no encontre y no es destino")
                         registroCumputable = False
                         break
-                
 
                 # Access attributes of the feature
                 attributesA = reg_a.attributes()
@@ -371,7 +374,6 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
                     vfd_string = VFD
                     fecha_vfd = datetime.strptime(vfd_string.split('_')[-1], '%Y-%m-%d').date()
 
-                    # if parada_valida['dia_anterior'] == 'S':
                     if parada_valida['dia_anterior'] in [ 'S', '*']:
                         fecha_vfd += timedelta(days=1)
 
@@ -385,7 +387,6 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
                     
                     fecha_hora_estimada = transformar_fechas(reg_a['fecha'])
                     
-                    # if parada_valida['dia_anterior'] == 'S':
                     if parada_valida['dia_anterior'] in [ 'S', '*']:
                         fecha_vfd += timedelta(days=1)
                     retraso = 100
@@ -404,16 +405,19 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
             row.append(fecha_hora_estimada.strftime("%Y-%m-%d %H:%M:%S"))
             row.append(retraso)
             row.append(cantidad_iguales)
+            row.append(parada_valida['cod_ubic_parada'])
+            row.append(parada_valida['X'])
+            row.append(parada_valida['Y'])
 
             escribir_csv(row)
 
-            resultados.append({
-                'VFD': fecha_vfd.strftime("%Y-%m-%d"),
-                'codigo_bus': reg_a['codigoBus'],
-                'linea': reg_a['linea'],
-                'fecha_hora_paso': fecha_hora_estimada.strftime("%Y-%m-%d %H:%M:%S"),
-                'retraso': retraso
-            })
+            # resultados.append({
+            #     'VFD': fecha_vfd.strftime("%Y-%m-%d"),
+            #     'codigo_bus': reg_a['codigoBus'],
+            #     'linea': reg_a['linea'],
+            #     'fecha_hora_paso': fecha_hora_estimada.strftime("%Y-%m-%d %H:%M:%S"),
+            #     'retraso': retraso
+            # })
         
         # print('parada procesada: ', parada_valida['ordinal'],' #vecinos: ', cantidad_iguales) 
         # print('vecinos:', nearest_ids, cantidad_iguales)
@@ -433,6 +437,7 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
 def procesar_archivos_retornar_atrasos(archivo_vfd, archivo_capturas,archivo_horarios):
     # Índices iniciales para las filas de capturas y horarios
     global VFD
+    escribir_csv(['VFD', 'variante', 'codigo_bus', 'linea', 'hora', 'ordinal','fecha_hora_paso', 'retraso', 'vecinos','cod_parada', 'X', 'Y' ])    
     with open(vfd_file, newline='') as vfdfile:
         vfd_reader = csv.reader(vfdfile)
         next(vfd_reader)  # Saltar la cabecera
@@ -442,29 +447,23 @@ def procesar_archivos_retornar_atrasos(archivo_vfd, archivo_capturas,archivo_hor
             VFD = row[0]
             cant_capturas = int(row[1])
             cant_horarios = int(row[2])
-
             # Extraer las líneas correspondientes de capturas y horarios
             capturas_dict = []
             horarios_dict = []
 
             # Asignar las capturas
             if captura_index + cant_capturas <= len(capturas_data):
-                # capturas_dict.append(capturas_header)
-                # capturas_dict[0] = capturas_header
                 capturas_dict.extend(capturas_data[captura_index:captura_index + cant_capturas]) 
                 captura_index += cant_capturas 
             else:
-                # capturas_dict.append = capturas_header
                 capturas_dict.extend = capturas_data[captura_index:]
                 captura_index = len(capturas_data)  # Finaliza el índice si no hay más datos
 
             # Asignar los horarios
             if horario_index + cant_horarios <= len(horarios_data):
-                # horarios_dict.append(horarios_header)
                 horarios_dict.extend(horarios_data[horario_index:horario_index + cant_horarios]) 
                 horario_index += cant_horarios
             else:
-                # horarios_dict.append = horarios_header
                 horarios_dict.extend = horarios_data[horario_index:]
                 horario_index = len(horarios_data)  # Finaliza
 
@@ -478,15 +477,11 @@ def procesar_archivos_retornar_atrasos(archivo_vfd, archivo_capturas,archivo_hor
    
 
 #  Función para leer el archivo CSV y devolver la primera fila (cabecera) y los datos
-def read_csv(file_path, delimiter=',', skip_header=False):
+def read_csv(file_path, delimiter=','):
     with open(file_path, newline='') as csvfile:
         reader = csv.DictReader(csvfile, delimiter=delimiter)
-        if skip_header:
-            header = next(reader)  # Lee la cabecera
-        else:
-            header = None
         data = list(reader)
-    return header, data
+    return data
 
 #funcion que carga de un csv de los horarios solo carga filas
 #BorrarFuncion esta funcion no va a estar mas una vez que el c le pase los diccionarios
@@ -497,8 +492,6 @@ def leer_archivo_vft(archivo_vft):
         # next(reader_vft)
         for row in reader_vft:
             yield row  # Generador para obtener cada fila del archivo VFT
-
-
 
 VFD=""
 
@@ -511,9 +504,9 @@ horarios_file = os.getcwd() + '/data/horarios.csv' # csv de las paradas ordenada
 vfd_file      = os.getcwd() + '/data/vfd.csv' # csv de los vfd ,cant_capturas, cant_horarios
 
 # Leer archivo con coma como delimitador
-capturas_header, capturas_data = read_csv(capturas_file, delimiter=',')
+capturas_data = read_csv(capturas_file, delimiter=',')
 # Leer archivo con punto y coma como delimitador
-horarios_header, horarios_data = read_csv(horarios_file, delimiter=';')
+horarios_data = read_csv(horarios_file, delimiter=';')
 
 procesar_archivos_retornar_atrasos(vfd_file,capturas_file,horarios_file)
 
