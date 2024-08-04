@@ -42,7 +42,7 @@ void python_calculate_delays() {
     return;
 }
 
-void process_row(HashMap* delay_map, char* line) {
+void process_row(DelayMap* delay_map, char* line) {
     char* line_copy = strdup(line);
     if (line_copy == NULL) {
         perror("Failed to duplicate line");
@@ -56,8 +56,8 @@ void process_row(HashMap* delay_map, char* line) {
         return;
     }
 
-    printf("\n#################################\n");
-    printf("VFD KEY: %s\n", vfd_key);
+    // printf("\n#################################\n");
+    // printf("VFD KEY: %s\n", vfd_key);
 
     char* variante = strtok(NULL, ",");
     char* codigo_bus = strtok(NULL, ",");
@@ -73,13 +73,13 @@ void process_row(HashMap* delay_map, char* line) {
     UNUSED(hora);
     UNUSED(fecha_hora_paso);
 
-    hash_map_insert_vfd_delays(delay_map, vfd_key, line, atoi(ordinal), atof(retraso));
+    delay_map_insert(delay_map, vfd_key, atoi(ordinal), atof(retraso), line);
 
     free(line_copy);
-    printf("#################################\n");
+    // printf("#################################\n");
 }
 
-void map_delays(HashMap* delay_map, char* filename) {
+void map_delays(DelayMap* delay_map, char* filename) {
     fprintf(stderr, "FILENAME: %s \n", filename);
 
     FILE* file = fopen(filename, "r");
@@ -105,7 +105,7 @@ void map_delays(HashMap* delay_map, char* filename) {
     int i = 1;
     while ((read = getline(&line, &len, file)) != -1) {
         if (read <= 1) continue; // Skip empty lines
-        printf("Processing VFD: %d \n", i);
+        // printf("Processing VFD: %d \n", i);
         process_row(delay_map, line);
         i++;
         free(line);

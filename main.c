@@ -19,7 +19,7 @@ char** capturas = NULL;
 char** directorios = NULL;
 char** assigned_days = NULL;
 HashMap* vft_map = NULL;
-HashMap* delay_map = NULL;
+DelayMap* delay_map = NULL;
 
 void free_memory() {
     // Perform any necessary cleanup here
@@ -84,18 +84,11 @@ int main(int argc, char** argv) {
     // Distribute dirs among processes
     assigned_days = distribute(directorios, NUM_DAYS, rank, size);
 
+    delay_map = create_delay_map();
+
     // Each process reads its assigned directories
     for (int i = 0; assigned_days[i] != NULL; i++) {
         char * day_str = get_day_from_dir_name(assigned_days[i]);
-        char* delay_file = generate_delay_file_name("data/retrasos", atoi(day_str));
-        HashMap *delay_map = create_hash_map();
-        map_delays(delay_map, delay_file);
-        printf("\nPRINTING MAP...\n");
-        print_hash_map(delay_map);
-        free_hash_map(delay_map);
-        free(delay_file);
-        continue;
-
         printf("Process %d reading file %s from day %s\n", rank, assigned_days[i], day_str);
 
         capturas = generate_location_file_names(assigned_days[i], atoi(day_str), NUM_HOURS_PER_DAY);
@@ -114,6 +107,15 @@ int main(int argc, char** argv) {
             // Run Python script
             // python_calculate_delays();
         }
+
+        char* delay_file = generate_delay_file_name("data/retrasos", atoi(day_str));
+        map_delays(delay_map, delay_file);
+
+        printf("\nPRINTING MAP...\n");
+        print_delay_map(delay_map);
+
+        free_delay_map(delay_map);
+        free(delay_file);
 
         free(horarios);
         horarios = NULL;
