@@ -2,8 +2,13 @@
 import sys
 import csv
 import os
+sys.stderr = open(os.devnull, 'w')
 import warnings
+
 warnings.filterwarnings('ignore')
+# Suprimir advertencias específicas
+
+
 # Configurar las variables de entorno necesarias maquina gabriel
 
 os.environ['QGIS_PREFIX_PATH'] = "/usr"
@@ -31,6 +36,7 @@ from qgis.core import (
     QgsFields,QgsField    
 )
 
+
 # Inicializar QgsApplication
 QgsApplication.setPrefixPath('/usr', True)
 qgs = QgsApplication([], False)
@@ -47,6 +53,7 @@ QgsApplication.processingRegistry().addProvider(QgsNativeAlgorithms())
 
 
 def load_list_as_layer(list,x_field, y_field, crs,name):
+    sys.stderr = open(os.devnull, 'w')
     warnings.filterwarnings('ignore')
     layer = QgsVectorLayer(f"Point?crs={crs}", name , "memory")
     if not layer.isValid():
@@ -145,8 +152,8 @@ def escribir_csv(row):
 
 #este proceedimento recibe dos diccionario y devuelve en el csv salida los atrasos para cada vfd
 def cargarCapas_y_Calculo(capturas,horarios,salida):
+    sys.stderr = open(os.devnull, 'w')
     global VFD
-    
     # Definir el sistema de coordenadas de origen (latitud-longitud, WGS84)
     wgs84 = 'EPSG:4326'  # WGS84
     # Definir el sistema de coordenadas de destino (proyectadas, EPSG específico)
@@ -256,7 +263,7 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
             
                 fecha_hora_estimada = calcular_hora_estimada(reg_a, reg_b, parada_valida)
                   
-                # vfd_string = VFD
+                vfd_string = VFD
                 fecha_vfd = datetime.strptime(vfd_string.split('_')[-1], '%Y-%m-%d').date()
                 if parada_valida['dia_anterior'] in [ 'S', '*']:
                     fecha_vfd += timedelta(days=1)
