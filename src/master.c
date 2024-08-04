@@ -109,3 +109,15 @@ void master_code(int size, int from_day, int num_days) {
     // Collect results and finalize the delay map
     fprintf(stderr,"Master: All tasks completed.\n");
 }
+
+void run_single_instance(int from_day, int num_days, int num_hours_per_day) {
+    // Generate the list of dir names
+    char** directorios = generate_directories(from_day, num_days);
+
+    char** assigned_days = NULL;
+    distribute(directorios, num_days, 0, 1, &assigned_days);
+
+    DelayMap *delay_map = create_delay_map();
+
+    perform_task(0, assigned_days, num_hours_per_day, delay_map);
+}

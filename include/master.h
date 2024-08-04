@@ -13,7 +13,9 @@
 #include "delay_calculation.h"
 #include "result_gathering.h"
 #include "string_array.h"
+#include "worker.h"
 
 void master_code(int size, int from_day, int num_days);
+void run_single_instance();
 
 #endif // MASTER_H

@@ -41,7 +41,7 @@ char* generate_delay_file_name(char* path, int day) {
 int distribute(char** file_names, int num_files, int rank, int size, char*** assigned_files) {
     int files_per_process = num_files / size;
     int extra_files = num_files % size;
-    int task = rank-1;
+    int task = rank > 0 ? rank-1 : rank;
 
     int start_idx = task * files_per_process + (task < extra_files ? task : extra_files);
     int end_idx = start_idx + files_per_process + (task < extra_files);

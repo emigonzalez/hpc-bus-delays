@@ -51,12 +51,16 @@ int main(int argc, char** argv) {
     signal(SIGINT, handle_signal);  // Handle Ctrl+C (interrupt signal)
     signal(SIGTERM, handle_signal); // Handle termination signal
 
-    if (rank == 0) {
-        // Master code
-        master_code(size, FROM_DAY, NUM_DAYS);
+    if (size > 1) {
+        if (rank == 0) {
+            // Master code
+            master_code(size, FROM_DAY, NUM_DAYS);
+        } else {
+            // Worker code
+            worker_code(rank, NUM_HOURS_PER_DAY);
+        }
     } else {
-        // Worker code
-        worker_code(rank, NUM_HOURS_PER_DAY);
+        run_single_instance(FROM_DAY, NUM_DAYS, NUM_HOURS_PER_DAY);
     }
 
     // Finalize the MPI environment

@@ -15,5 +15,6 @@
 #include "string_array.h"
 
 void worker_code(int rank, int num_hours_per_day);
+void perform_task(int rank, char** assigned_days, int num_hours_per_day, DelayMap *delay_map);
 
 #endif // WORKER_H
