@@ -240,7 +240,7 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
     buffer_output_path = 'memory:'
     buffer_params = {
         'INPUT': capa_vfd,
-        'DISTANCE': 250,
+        'DISTANCE': 100,
         'SEGMENTS': 5,
         'END_CAP_STYLE': 0,
         'JOIN_STYLE': 0,
@@ -276,7 +276,7 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
         # Obtener los dos registros más cercanos en capa_vfd
         nearest_ids = spatial_index.nearestNeighbor(parada_valida.geometry(), 2)
         if  len(nearest_ids) < 2:
-            print('***************   parada sin vecinos  **********************')
+            # print('***************   parada sin vecinos  **********************')
             continue
         else:
             # Verificar que los IDs obtenidos sean diferentes y la distancia entre ellos sea mayor que cero
@@ -286,38 +286,46 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
             
             registros_misma_geometria = [reg_a, reg_b]
             cantidad_iguales = len(nearest_ids)  
-            while True:
-                for nearest_id in nearest_ids:
-                    reg_c = capa_vfd.getFeature(nearest_id)
-                    if reg_c.geometry().equals(reg_a.geometry()):
-                        registros_misma_geometria.append(reg_c)
-                    else:
-                        break
-                if reg_c.geometry().equals(reg_a.geometry()):
-                    cantidad_iguales += 1
-                    if cantidad_iguales > 40:
+            
+            while reg_a.geometry().asPoint() == reg_b.geometry().asPoint():
+            # while True:
+                cantidad_iguales+=1
+                # Si los dos registros están en el mismo lugar, obtener el siguiente más cercano
+                nearest_ids = spatial_index.nearestNeighbor(parada_valida.geometry().asPoint(), cantidad_iguales)
+                reg_a = capa_vfd.getFeature(nearest_ids[0])  # Usar nearest_ids[1] en lugar de nearest_ids[0]
+                reg_b = capa_vfd.getFeature(nearest_ids[len(nearest_ids)-1])  # Usar nearest_ids[2] en lugar de nearest_ids[1]
+
+                # for nearest_id in nearest_ids:
+                #     reg_c = capa_vfd.getFeature(nearest_id)
+                #     if reg_c.geometry().equals(reg_a.geometry()):
+                #         registros_misma_geometria.append(reg_c)
+                #     else:
+                #         break
+                # if reg_c.geometry().equals(reg_a.geometry()):
+                #     cantidad_iguales += 1
+                if cantidad_iguales > 40:
                         registroCumputable = False
                         break
-                else:
-                    break
-                nearest_ids = spatial_index.nearestNeighbor(parada_valida.geometry().asPoint(), cantidad_iguales)
-            
-            print('vecinos:', nearest_ids, cantidad_iguales)
+                # else:
+                #         break
+                # nearest_ids = spatial_index.nearestNeighbor(parada_valida.geometry().asPoint(), cantidad_iguales)
+                
+            # print('vecinos:', nearest_ids, cantidad_iguales)
             if registroCumputable:
-                registro_mas_temprano = min(registros_misma_geometria, key=lambda reg: reg['fecha'])
-                registro_mas_tarde = max(registros_misma_geometria, key=lambda reg: reg['fecha'])
-                if parada_valida['ordinal'] == ordinal_terminal:  # Lógica para la parada final del VFT
-                    print('***************   parada final   **********************')
-                    # Seleccionar el registro más temprano en tiempo
-                    # print('vecinos:', nearest_ids, cantidad_iguales)
-                    reg_a = registro_mas_temprano
-                elif parada_valida['ordinal'] == "1": # Lógica para la parada de salida del VFT
-                    reg_a = registro_mas_tarde
-                    # print('##############   parada inicial    #############')
-                else :  # Lógica para las paradas intermedias de VFT
-                    reg_a = reg_a
+                # registro_mas_temprano = min(registros_misma_geometria, key=lambda reg: reg['fecha'])
+                # registro_mas_tarde = max(registros_misma_geometria, key=lambda reg: reg['fecha'])
+                # if parada_valida['ordinal'] == ordinal_terminal:  # Lógica para la parada final del VFT
+                #     print('***************   parada final   **********************')
+                #     # Seleccionar el registro más temprano en tiempo
+                #     # print('vecinos:', nearest_ids, cantidad_iguales)
+                #     reg_a = registro_mas_temprano
+                # elif parada_valida['ordinal'] == "1": # Lógica para la parada de salida del VFT
+                #     reg_a = registro_mas_tarde
+                #     # print('##############   parada inicial    #############')
+                # else :  # Lógica para las paradas intermedias de VFT
+                #     reg_a = reg_a
             
-                fecha_hora_estimada = calcular_hora_estimada(reg_a, reg_c, parada_valida)
+                fecha_hora_estimada = calcular_hora_estimada(reg_a, reg_b, parada_valida)
                   
                 vfd_string = VFD
                 fecha_vfd = datetime.strptime(vfd_string.split('_')[-1], '%Y-%m-%d').date()
@@ -355,7 +363,7 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
             #     'retraso': retraso
             # })
         
-        print('parada procesada: ', parada_valida['ordinal'],' #vecinos: ', cantidad_iguales) 
+        # print('parada procesada: ', parada_valida['ordinal'],' #vecinos: ', cantidad_iguales) 
         # print('vecinos:', nearest_ids, cantidad_iguales)
 
     
@@ -556,7 +564,7 @@ def procesar_archivos_retornar_atrasos(archivo_vfd, archivo_capturas,archivo_hor
                 horarios_dict.extend = horarios_data[horario_index:]
                 horario_index = len(horarios_data)  # Finaliza
 
-            print(VFD)
+            # print(VFD)
             # if VFD =='7884_14100_2024-06-10':
             #     cargarCapas_y_Calculo(capturas_dict, horarios_dict, salida) 
             #     break
