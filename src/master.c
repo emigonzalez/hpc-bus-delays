@@ -1,5 +1,8 @@
 #include "master.h"
 
+const char* sales_filename = "data/viajes/viajes_por_Variante_dia_parada.csv";
+const char* output_filename = "data/retrasos/resumen.csv";
+
 // Function for master to distribute tasks
 void distribute_tasks(int size, int from_day, int num_days) {
     // Generate the list of dir names
@@ -102,6 +105,7 @@ void master_code(int size, int from_day, int num_days) {
     // printf("\n MASTER PRINTING MAP \n");
     // print_delay_map(master_map);
     // printf("\n FINISHED PRINTING MAP \n");
+    generate_csv(master_map, sales_filename, output_filename);
 
     // Clean up master map
     free_delay_map(master_map);
@@ -120,4 +124,6 @@ void run_single_instance(int from_day, int num_days, int num_hours_per_day) {
     DelayMap *delay_map = create_delay_map();
 
     perform_task(0, assigned_days, num_hours_per_day, delay_map);
+
+    generate_csv(delay_map, sales_filename, output_filename);
 }

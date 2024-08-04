@@ -39,7 +39,9 @@ DelayEntry *create_delay_entry(const char *key) {
     }
     entry->key = strdup(key);
     entry->rows = NULL;
+    entry->row = NULL;
     entry->row_count = 0;
+    entry->max_delay = 0.0;
     entry->next = NULL;
     return entry;
 }
@@ -92,6 +94,30 @@ void insert_sorted(DelayEntry *entry, Delay *new_delay) {
     entry->row_count++;
 }
 
+DelayEntry *delay_map_insert_row(DelayMap *map, const char *key, const char *row) {
+    unsigned long index = create_hash(key, map->size);
+    DelayEntry *entry = map->buckets[index];
+    DelayEntry *prev = NULL;
+
+    while (entry != NULL && strcmp(entry->key, key) != 0) {
+        prev = entry;
+        entry = entry->next;
+    }
+
+    if (entry == NULL) {
+        entry = create_delay_entry(key);
+        if (prev == NULL) {
+            map->buckets[index] = entry;
+        } else {
+            prev->next = entry;
+        }
+        map->count++;
+    }
+
+    entry->row = strdup(row);
+    return entry;
+}
+
 // Insert a row into the hash map
 DelayEntry *delay_map_insert(DelayMap *map, const char *key, size_t bus_stop, double delay, const char *row) {
     unsigned long index = create_hash(key, map->size);
@@ -123,6 +149,7 @@ DelayEntry *delay_map_insert(DelayMap *map, const char *key, size_t bus_stop, do
     delay_entry->bus_stop = bus_stop;
     delay_entry->delay = delay;
     delay_entry->row = strdup(row);
+    entry->max_delay += delay;
     insert_sorted(entry, delay_entry);
 
     return entry;
@@ -172,4 +199,40 @@ void print_delay_map(DelayMap *map) {
             entry = entry->next;
         }
     }
+}
+
+DelayEntry** delay_map_get_all_keys(DelayMap *map, size_t *key_count) {
+    *key_count = 0;
+    
+    // First, count the number of entries
+    for (size_t i = 0; i < map->size; ++i) {
+        DelayEntry *entry = map->buckets[i];
+        while (entry != NULL) {
+            (*key_count)++;
+            entry = entry->next;
+        }
+    }
+    
+    if (*key_count == 0) {
+        return NULL;
+    }
+
+    // Allocate memory for the array of entries
+    DelayEntry **keys = (DelayEntry **)malloc(*key_count * sizeof(DelayEntry *));
+    if (!keys) {
+        fprintf(stderr, "Error: memory allocation for keys array failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Populate the array with entries
+    size_t index = 0;
+    for (size_t i = 0; i < map->size; ++i) {
+        DelayEntry *entry = map->buckets[i];
+        while (entry != NULL) {
+            keys[index++] = entry;
+            entry = entry->next;
+        }
+    }
+
+    return keys;
 }

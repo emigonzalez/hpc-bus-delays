@@ -99,7 +99,7 @@ void map_locations_to_schedules(char* fileName, char* date, HashMap* vft_map) {
         return;
     }
 
-    fprintf(stderr,"VFD GENERATED.    ");
+    fprintf(stderr,"       VFD GENERATED.    ");
     // Example: Print grouped data
     // printf("\nPRINTING MAP...\n");
     // print_hash_map(vfd_map);
