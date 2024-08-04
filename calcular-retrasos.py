@@ -540,13 +540,19 @@ def leer_archivo_vft(archivo_vft):
 
 VFD=""
 
-archivo_vfd = os.getcwd() + '/orden_vfd2.csv' #csv de los vfd agrupados opr vfd
-archivo_vft = os.getcwd() + '/horarios_paradas_vft.csv' # csv de las paradas para sacar el vfg
-salida = os.getcwd() + '/data/retrasos.csv'  #csv de los atrasos
+fechaProcesar = sys.argv[2]
+dondeCorrer = sys.argv[1]
 
-capturas_file = os.getcwd() + '/data/capturas.csv' #csv de las capturas ordenas por vfd
-horarios_file = os.getcwd() + '/data/horarios.csv' # csv de las paradas ordenadas por vfd
-vfd_file      = os.getcwd() + '/data/vfd.csv' # csv de los vfd ,cant_capturas, cant_horarios
+if dondeCorrer == 'v':
+    salida = os.getcwd() + '/data/retrasos.csv'  #csv de los atrasos
+    capturas_file = os.getcwd() + '/data/capturas.csv' #csv de las capturas ordenas por vfd
+    horarios_file = os.getcwd() + '/data/horarios.csv' # csv de las paradas ordenadas por vfd
+    vfd_file      = os.getcwd() + '/data/vfd.csv' # csv de los vfd ,cant_capturas, cant_horarios
+else:
+    salida = os.getcwd() + f'/data/retrasos/retrasos_{fechaProcesar}.csv'  #csv de los atrasos
+    capturas_file = os.getcwd() + f'/data/temp/capturas_{fechaProcesar}.csv' #csv de las capturas ordenas por vfd
+    horarios_file = os.getcwd() + f'/data/temp/horarios_{fechaProcesar}.csv' # csv de las paradas ordenadas por vfd
+    vfd_file      = os.getcwd() + f'/data/temp/vfd_{fechaProcesar}.csv' # csv de los vfd ,cant_capturas, cant_horarios
 
 # Leer archivo con coma como delimitador
 capturas_data = read_csv(capturas_file, delimiter=',')
