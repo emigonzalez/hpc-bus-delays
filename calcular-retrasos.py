@@ -44,7 +44,7 @@ Processing.initialize()
 QgsApplication.processingRegistry().addProvider(QgsNativeAlgorithms())
 
 
-#BorrarFuncion esta funcion no va a estar mas una vez que el c le pase los diccionarios
+
 def load_list_as_layer(list,x_field, y_field, crs,name):
     layer = QgsVectorLayer(f"Point?crs={crs}", name , "memory")
     if not layer.isValid():
@@ -54,12 +54,9 @@ def load_list_as_layer(list,x_field, y_field, crs,name):
     
     for field in list[0].keys():
         # Define fields
-        if (field == "latitud" or 
-            field == "longitud" or 
-            field == "X" or 
-            field == "Y" ):
+        if field.lower() in ["latitud", "longitud", "x", "y"]:
             fields.append(QgsField(field, QVariant.Double))
-        elif (field == 'fecha'):
+        elif field.lower() == 'fecha':
             fields.append(QgsField(field, QVariant.DateTime))
         else:
             fields.append(QgsField(field, QVariant.String))
@@ -68,59 +65,19 @@ def load_list_as_layer(list,x_field, y_field, crs,name):
     layer.updateFields()
 
     for coord in list:
-        # print(" **********************")
-        # print (coord.values())
-        coord[x_field] = float(coord[x_field].replace(',', '.'))
-        coord[y_field] = float(coord[y_field].replace(',', '.'))
-        point = QgsPointXY(coord[x_field],coord[y_field])
+        x = float(coord[x_field].replace(',', '.'))
+        y = float(coord[y_field].replace(',', '.'))
+        point = QgsPointXY(x, y)
 
         feature = QgsFeature()
         feature.setAttributes([*coord.values()])
         feature.setGeometry(QgsGeometry.fromPointXY(point))
         features.append(feature)
+
     layer.dataProvider().addFeatures(features)
     layer.updateExtents()
     QgsProject.instance().addMapLayer(layer)
     return layer
-
-# posible mejor
-# def load_dict_as_layer(data_dict, x_field, y_field, crs, name):
-#     layer = QgsVectorLayer(f"Point?crs={crs}", name, "memory")
-#     if not layer.isValid():
-#         raise Exception(f"Failed to load layer: {layer.error()}")
-    
-#     features = []
-#     fields = QgsFields()
-    
-#     # Define fields based on the keys of the dictionary
-#     for field in data_dict.keys():
-#         if field.lower() in ['latitud', 'longitud', 'x', 'y']:
-#             fields.append(QgsField(field, QVariant.Double))
-#         elif field.lower() == 'fecha':
-#             fields.append(QgsField(field, QVariant.DateTime))
-#         else:
-#             fields.append(QgsField(field, QVariant.String))
-    
-#     layer.dataProvider().addAttributes(fields)
-#     layer.updateFields()
-
-#     # Create features from the dictionary
-#     for key, values in data_dict.items():
-#         x_value = float(values[x_field].replace(',', '.')) if isinstance(values[x_field], str) else values[x_field]
-#         y_value = float(values[y_field].replace(',', '.')) if isinstance(values[y_field], str) else values[y_field]
-        
-#         point = QgsPointXY(x_value, y_value)
-        
-#         feature = QgsFeature()
-#         feature.setAttributes([*values.values()])
-#         feature.setGeometry(QgsGeometry.fromPointXY(point))
-#         features.append(feature)
-    
-#     layer.dataProvider().addFeatures(features)
-#     layer.updateExtents()
-#     QgsProject.instance().addMapLayer(layer)
-    
-#     return layer
 
 
 # Function to save a layer as a shapefile
@@ -178,11 +135,11 @@ def calcular_hora_estimada(reg_a, reg_b, parada):
 
     if velocidad_estimada > 0:
         if proyeccion_ap < 0:
-            distancia_a_parada = mag_ap
+            distancia_a_parada = proyeccion_ap
             tiempo_hasta_parada = distancia_a_parada / velocidad_estimada
             hora_estimada = fecha_a - timedelta(seconds=tiempo_hasta_parada)
         elif proyeccion_ap > longitud_vector_ab:
-            distancia_b_parada = mag_bp
+            distancia_b_parada = proyeccion_ap
             tiempo_hasta_parada = distancia_b_parada / velocidad_estimada
             hora_estimada = fecha_b + timedelta(seconds=tiempo_hasta_parada)
         else:
@@ -203,24 +160,13 @@ def escribir_csv(row):
 #este proceedimento recibe dos diccionario y devuelve en el csv salida los atrasos para cada vfd
 def cargarCapas_y_Calculo(capturas,horarios,salida):
     global VFD
-    # funcion para guardar en la salida.csv una fila
-    #BorrarFuncion esta funcion no va a estar mas una vez que el c le pase los diccionarios
-    # def escribir_csv(row):
-    #     with open(salida, 'a', newline='') as file:
-    #         writer = csv.writer(file)
-    #         # Escribir la row
-    #         writer.writerow(row)
-
-    #escribe en la cabecera de la salida
-    # escribir_csv(['VFD', 'variante', 'codigo_bus', 'linea', 'hora', 'ordinal','fecha_hora_paso', 'retraso'])
-
+    
     # Definir el sistema de coordenadas de origen (latitud-longitud, WGS84)
     wgs84 = 'EPSG:4326'  # WGS84
     # Definir el sistema de coordenadas de destino (proyectadas, EPSG específico)
     utm21s = 'EPSG:32721'
     
     # Load list como layer no diccionario
-    # BorrarFuncion esto no se va a llamar asi
     capa_vfd = load_list_as_layer(capturas, 'latitud', 'longitud', wgs84,"vfd")
     capa_vft = load_list_as_layer(horarios, 'X', 'Y', utm21s,"vft")
     
@@ -281,7 +227,7 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
         else:
             # Verificar que los IDs obtenidos sean diferentes y la distancia entre ellos sea mayor que cero
             reg_a = capa_vfd.getFeature(nearest_ids[0])
-            reg_b = capa_vfd.getFeature(nearest_ids[1])
+            reg_b = capa_vfd.getFeature(nearest_ids[-1])
             registroCumputable = True
             
             registros_misma_geometria = [reg_a, reg_b]
@@ -303,7 +249,7 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
                 #         break
                 # if reg_c.geometry().equals(reg_a.geometry()):
                 #     cantidad_iguales += 1
-                if cantidad_iguales > 40:
+                if cantidad_iguales > 10:
                         registroCumputable = False
                         break
                 # else:
@@ -348,7 +294,9 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
                     cantidad_iguales,
                     parada_valida['cod_ubic_parada'],
                     parada_valida['X'],
-                    parada_valida['Y']
+                    parada_valida['Y'],
+                    transformar_fechas(reg_a['fecha']),
+                    transformar_fechas(reg_b['fecha'])
                 ]
                 escribir_csv(row)
             else:
