@@ -10,6 +10,7 @@ char** generate_directories(int from_day, int num_days) {
         directories[(day-1)] = (char*)malloc(26 * sizeof(char));
         sprintf(directories[(day-1)], "data/capturas/2024-06-%02d", from_day + day-1);
     }
+    directories[num_days] = NULL;
     return directories;
 }
 
@@ -19,6 +20,7 @@ char** generate_location_file_names(char* path, int day, int num_hours_per_day) 
         file_names[hour] = (char*)malloc(53 * sizeof(char));
         sprintf(file_names[hour], "%s/stm-buses-2024-06-%02d_%02d.csv", path, day, hour);
     }
+    file_names[num_hours_per_day] = NULL;
     return file_names;
 }
 

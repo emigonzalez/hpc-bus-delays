@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mpi.h>
+#include <stdio.h>
 
 void recv_string_array(char ***strings, int *num_strings, int source, int tag, MPI_Comm comm);
 void send_string_array(char **strings, int num_strings, int dest, int tag, MPI_Comm comm);

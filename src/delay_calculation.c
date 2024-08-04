@@ -56,8 +56,8 @@ void process_row(DelayMap* delay_map, char* line) {
         return;
     }
 
-    printf("\n#################################\n");
-    printf("VFD KEY: %s\n", vfd_key);
+    // printf("\n#################################\n");
+    // printf("VFD KEY: %s\n", vfd_key);
 
     char* variante = strtok(NULL, ",");
     char* codigo_bus = strtok(NULL, ",");
@@ -72,12 +72,12 @@ void process_row(DelayMap* delay_map, char* line) {
     UNUSED(linea);
     UNUSED(hora);
     UNUSED(fecha_hora_paso);
-    printf("BEFORE MAP INSERT %ld \n", delay_map->size);
+    // printf("BEFORE MAP INSERT %ld \n", delay_map->size);
     delay_map_insert(delay_map, vfd_key, atoi(ordinal), atof(retraso), line);
-    printf("AFTER MAP INSERT\n");
+    // printf("AFTER MAP INSERT\n");
 
     free(line_copy);
-    printf("#################################\n");
+    // printf("#################################\n");
 }
 
 void map_delays(DelayMap* delay_map, char* filename) {
@@ -106,7 +106,7 @@ void map_delays(DelayMap* delay_map, char* filename) {
     int i = 1;
     while ((read = getline(&line, &len, file)) != -1) {
         if (read <= 1) continue; // Skip empty lines
-        printf("Processing VFD: %d \n", i);
+        // printf("Processing VFD: %d \n", i);
         process_row(delay_map, line);
         i++;
         free(line);

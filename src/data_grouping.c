@@ -368,10 +368,10 @@ HashMap* group_data_by_vfd(char* filename, HashMap* vft_map) {
         }
 
         char* vfd_key = NULL;
-        printf("\n#################################\n");
+        // printf("\n#################################\n");
         vfd_key = create_vfd_key(line_copy);
-        printf("VFD KEY: %s\n", vfd_key);
-        printf("ROW: %s", line);
+        // printf("VFD KEY: %s\n", vfd_key);
+        // printf("ROW: %s", line);
 
         if (vfd_key != NULL) {
             Entry* vfd_entry = hash_map_search(vfd_map, vfd_key);
@@ -382,14 +382,14 @@ HashMap* group_data_by_vfd(char* filename, HashMap* vft_map) {
             } else if (!hash_map_search(discarded_vfds, vfd_key)) {
                 // Generate VFT and look for data in the vft_map
                 char* vft_key = create_vft_from_vfd(vfd_key);
-                printf("VFT KEY: %s", vft_key);
+                // printf("VFT KEY: %s", vft_key);
                 Entry* vft_entry = hash_map_search(vft_map, vft_key);
 
                 if (vft_entry != NULL) {
                     Entry* vfd_entry = add_vfd_to_map(vfd_map, vfd_key, line);
                     repoint_vfts_to_vfd_map(vfd_entry, vft_entry);
                 } else {
-                    printf(" does not exist.\n");
+                    // printf(" does not exist.\n");
                     add_vfd_to_map(discarded_vfds, vfd_key, NULL);
                 }
 
@@ -398,13 +398,13 @@ HashMap* group_data_by_vfd(char* filename, HashMap* vft_map) {
 
             free(vfd_key);
         } else {
-            printf("INVALID VFD KEY\n");
+            // printf("INVALID VFD KEY\n");
         }
 
         free(line_copy); // Free the copy after processing
         free(line);
         line = NULL;
-        printf("#################################\n");
+        // printf("#################################\n");
     }
 
     fclose(file);
