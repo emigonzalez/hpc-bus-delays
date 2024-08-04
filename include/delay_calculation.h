@@ -3,7 +3,7 @@
 
 #include "delay_map.h"
 
-void python_calculate_delays();
+void python_calculate_delays(int day);
 void map_delays(DelayMap* delay_map, char* filename);
 
 #endif // DELAY_CALCULATION_H

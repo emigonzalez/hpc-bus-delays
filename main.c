@@ -50,7 +50,7 @@ void perform_task(int rank, char** assigned_days, DelayMap *delay_map) {
             printf("####### RUNNING WITH FILE: %s ########\n", capturas[j]);
 
             // Run Python script
-            // python_calculate_delays();
+            python_calculate_delays(atoi(day_str));
         }
 
         char* delay_file = generate_delay_file_name("data/retrasos", atoi(day_str));
