@@ -14,7 +14,7 @@ HashMap* group_schedules(char* horarios) {
         fprintf(stderr, "COULD NOT GENERATE VFT.\n");
         return NULL;
     } else {
-        fprintf(stderr,"VFT GENERATED      ");
+        fprintf(stderr,"VFT GENERATED      \n");
         return vft_map;
     }
 }
@@ -104,7 +104,7 @@ void map_locations_to_schedules(char* fileName, char* date, HashMap* vft_map) {
     // printf("\nPRINTING MAP...\n");
     // print_hash_map(vfd_map);
 
-    printf("HashMap (%zu, %zu) ", vfd_map->size, vfd_map->count);
+    printf("HashMap (%zu, %zu)       ", vfd_map->size, vfd_map->count);
 
     generate_vfd_file(date, vfd_map);
 
