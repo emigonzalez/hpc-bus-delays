@@ -36,21 +36,22 @@ char* generate_delay_file_name(char* path, int day) {
     return file_name;
 }
 
-char** distribute(char** file_names, int num_files, int rank, int size) {
+int distribute(char** file_names, int num_files, int rank, int size, char*** assigned_files) {
     int files_per_process = num_files / size;
     int extra_files = num_files % size;
+    int task = rank-1;
 
-    int start_idx = rank * files_per_process + (rank < extra_files ? rank : extra_files);
-    int end_idx = start_idx + files_per_process + (rank < extra_files);
+    int start_idx = task * files_per_process + (task < extra_files ? task : extra_files);
+    int end_idx = start_idx + files_per_process + (task < extra_files);
 
     int assigned_count = end_idx - start_idx;
-    char** assigned_files = (char**)malloc((assigned_count + 1) * sizeof(char*));
+    *assigned_files = (char**)malloc((assigned_count + 1) * sizeof(char*));
     for (int i = start_idx; i < end_idx; i++) {
-        assigned_files[i - start_idx] = strdup(file_names[i]);
+        *assigned_files[i - start_idx] = strdup(file_names[i]);
     }
-    assigned_files[assigned_count] = NULL; // Null-terminate the array
+    *assigned_files[assigned_count] = NULL; // Null-terminate the array
 
-    return assigned_files;
+    return assigned_count;
 }
 
 char* get_day_from_dir_name(const char *str) {
