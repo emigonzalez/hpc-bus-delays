@@ -9,44 +9,17 @@
 #include "location_mapping.h"
 #include "delay_calculation.h"
 #include "result_gathering.h"
+#include "string_array.h"
 
 #define FROM_DAY 10
 #define NUM_DAYS 1
-#define NUM_HOURS_PER_DAY 1
+#define NUM_HOURS_PER_DAY 24
 
 char* horarios = NULL;
 char** capturas = NULL;
 char** directorios = NULL;
 char** assigned_days = NULL;
 HashMap* vft_map = NULL;
-
-/*
-void free_memory() {
-    // Perform any necessary cleanup here
-    if (capturas != NULL) {
-        for (int i = 0; i < NUM_DAYS * NUM_HOURS_PER_DAY; i++) {
-            free(capturas[i]);
-        }
-        free(capturas);
-    }
-
-    if (assigned_days != NULL) {
-        for (int i = 0; assigned_days[i] != NULL; i++) {
-            free(assigned_days[i]);
-        }
-        free(assigned_days);
-    }
-
-    if (directorios != NULL) {
-         for (int i = 0; i < NUM_DAYS; i++) {
-            free(directorios[i]);
-        }
-        free(directorios);
-    }
-
-    // if (vft_map != NULL) free_hash_map(vft_map);
-}
-*/
 
 void handle_signal(int signal) {
     printf("Received signal %d, performing cleanup...\n", signal);
@@ -85,19 +58,10 @@ void perform_task(int rank, char** assigned_days, DelayMap *delay_map) {
 
         char* delay_file = generate_delay_file_name("data/retrasos", atoi(day_str));
         map_delays(delay_map, delay_file);
-
-        printf("\nPRINTING MAP...\n");
-        print_delay_map(delay_map);
-
-        free_delay_map(delay_map);
         free(delay_file);
-
-        free(horarios);
-        horarios = NULL;
-        free(capturas);
-        capturas = NULL;
-        free_hash_map(vft_map);
-        vft_map = NULL;
+        free(horarios); horarios = NULL;
+        free_string_array(capturas); capturas = NULL;
+        free_hash_map(vft_map); vft_map = NULL;
     }
 }
 
@@ -110,14 +74,13 @@ void receive_tasks(int rank, int size, DelayMap *delay_map) {
     // Receive the array of strings from the master process
     recv_string_array(&received_strings, &num_strings, 0, 0, MPI_COMM_WORLD);
 
-
     printf("Process %d received array: %d\n", rank, num_strings);
 
     // Perform task (e.g., process delays)
     perform_task(rank, received_strings, delay_map);
 
     // Free the allocated memory
-    // free_string_array(&assigned_days);
+    free_string_array(received_strings);
 }
 
 // Function for master to distribute tasks
@@ -178,7 +141,7 @@ int main(int argc, char** argv) {
         }
 
         // Collect results and finalize the delay map
-        printf("Master: All tasks completed.\n");
+        fprintf(stderr,"Master: All tasks completed.\n");
     } else {
         // Worker processes access the delay map through the memory window
         // access_delay_map_window(&delay_map, win, rank);
@@ -186,14 +149,14 @@ int main(int argc, char** argv) {
         // Receive tasks from the master
         receive_tasks(rank, size, delay_map);
 
-        // Free allocated memory
-        // free_memory();
-
         // Notify the master that the task is complete
         MPI_Send(NULL, 0, MPI_BYTE, 0, 1, MPI_COMM_WORLD);
     }
 
-    // free_delay_map(delay_map);
+    // Free allocated memory
+    // free_memory();
+    free_delay_map(delay_map);
+
     // Finalize the MPI environment
     // MPI_Win_free(&win);
     MPI_Finalize();
