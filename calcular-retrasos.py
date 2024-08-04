@@ -1,23 +1,20 @@
 # -*- coding: utf-8 -*-
 import sys
-import csv
 import os
-sys.stderr = open(os.devnull, 'w')
+import csv
 import warnings
+sys.stderr = open(os.devnull, 'w')
 
+# Suprimir advertencias
 warnings.filterwarnings('ignore')
-# Suprimir advertencias específicas
-
 
 # Configurar las variables de entorno necesarias maquina gabriel
-
 os.environ['QGIS_PREFIX_PATH'] = "/usr"
 os.environ['QT_QPA_PLATFORM'] = 'offscreen'  # Configuración para modo sin pantalla
 os.environ['PYTHONPATH'] = '/usr/share'
 os.environ['LD_LIBRARY_PATH'] = '/usr/share/qgis/python/plugins/'
 
 # Configurar las variables de entorno necesarias maquina facultad
-
 
 from PyQt5.QtCore import QVariant
 from datetime import datetime, timedelta
@@ -29,13 +26,10 @@ from qgis.core import (
     QgsFeature,
     QgsGeometry,
     QgsDistanceArea,
-    QgsVectorFileWriter,
     QgsCoordinateReferenceSystem,
-    QgsPoint,
     QgsPointXY,
     QgsFields,QgsField    
 )
-
 
 # Inicializar QgsApplication
 QgsApplication.setPrefixPath('/usr', True)
@@ -346,8 +340,6 @@ def read_csv(file_path, delimiter=','):
         reader = csv.DictReader(csvfile, delimiter=delimiter)
         data = list(reader)
     return data
-
-# VFD=""
 
 fechaProcesar = sys.argv[2]
 dondeCorrer = sys.argv[1]
