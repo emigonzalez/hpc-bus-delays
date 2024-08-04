@@ -33,11 +33,11 @@ void run_python_script(const char *script_name, int day) {
 }
 
 void python_calculate_delays(int day) {
-    fprintf(stderr,"\nCALLING PYTHON SCRIPT %s \n", script_name);
+    // fprintf(stderr,"\nCALLING PYTHON SCRIPT %s \n", script_name);
     // Call the function to run the Python script with the hash map pointer
     run_python_script(script_name, day);
 
-    fprintf(stderr,"END PYTHON :) \n");
+    // fprintf(stderr,"END PYTHON :) \n");
 
     return;
 }
@@ -94,11 +94,7 @@ void map_delays(DelayMap* delay_map, char* filename) {
     size_t read;
 
     // Read and skip the header line
-    if ((read = getline(&line, &len, file)) != -1) {
-        // Optionally, print or process the header line
-        printf("Header: %s \n", line);
-        // VFD,variante,codigo_bus,linea,hora,ordinal,fecha_hora_paso,retraso
-    }
+    if ((read = getline(&line, &len, file)) != -1);
 
     // Ensure line is freed before the next read
     free(line);

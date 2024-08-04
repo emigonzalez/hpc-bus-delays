@@ -325,7 +325,7 @@ def procesar_archivos_retornar_atrasos(archivo_vfd, archivo_capturas,archivo_hor
             else:
                 horarios_dict.extend = horarios_data[horario_index:]
                 horario_index = len(horarios_data)  # Finaliza
-            print(VFD)
+            # print(VFD)
             # if VFD =='7884_14100_2024-06-10':
             #     cargarCapas_y_Calculo(capturas_dict, horarios_dict, salida) 
             #     break
