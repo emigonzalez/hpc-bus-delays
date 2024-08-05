@@ -15,7 +15,7 @@ os.environ['PYTHONPATH'] = '/usr/share'
 os.environ['LD_LIBRARY_PATH'] = '/usr/share/qgis/python/plugins/'
 
 # Configurar las variables de entorno necesarias maquina facultad
-
+ 
 from PyQt5.QtCore import QVariant
 from datetime import datetime, timedelta
 from qgis.core import (
@@ -198,7 +198,7 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
     ordinal_terminal = ultimo_registro['ordinal']  # Obtener el valor del campo 'ordinal' del último registro
     # print(f"Ordinal de el destino en vft: {ordinal_terminal}")
 
-    # Iterar sobre las paradas validas en el buffer
+    # Iterar sobre las paradas validas en el buffer,
     resultados = []
     cont = 0
     for parada_valida in paradas_validas:
