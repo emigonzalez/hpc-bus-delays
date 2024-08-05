@@ -1,28 +1,27 @@
-CC = mpicc
-CFLAGS = -Iinclude -Wall -fPIC  # Added -fPIC for position-independent code
+CXX = mpic++
+CXXFLAGS = -Iinclude -Wall -fPIC -std=c++11  # Added -fPIC for position-independent code
 OBJDIR = objects
 SRCDIR = src
 TESTDIR = tests
 
-SOURCES = $(wildcard $(SRCDIR)/*.c)
-OBJECTS = $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(SOURCES))
-TEST_SOURCES = $(wildcard $(TESTDIR)/*.c)
-TEST_OBJECTS = $(patsubst $(TESTDIR)/%.c,$(OBJDIR)/%.o,$(TEST_SOURCES))
+SOURCES = $(wildcard $(SRCDIR)/*.cpp)
+OBJECTS = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SOURCES))
+TEST_SOURCES = $(wildcard $(TESTDIR)/*.cpp)
+TEST_OBJECTS = $(patsubst $(TESTDIR)/%.cpp,$(OBJDIR)/%.o,$(TEST_SOURCES))
 EXEC = main
 
-all: $(EXEC) 
+all: $(EXEC)
 
-$(EXEC): $(OBJECTS) main.c
-	$(CC) $(CFLAGS) -o $@ $^
+$(EXEC): $(OBJECTS) $(OBJDIR)/main.o
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
-
-$(OBJDIR)/%.o: $(SRCDIR)/%.c
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	@mkdir -p $(OBJDIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(OBJDIR)/%.o: $(TESTDIR)/%.c
+$(OBJDIR)/main.o: main.cpp
 	@mkdir -p $(OBJDIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
 	rm -rf $(OBJDIR) $(EXEC) $(EXEC).80s*
