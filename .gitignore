@@ -1,6 +1,7 @@
 .vscode
 data
 objects
-main*
+main
+main.80*
 *.so
 python3.*
