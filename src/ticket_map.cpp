@@ -4,18 +4,7 @@
 #include <memory>
 #include <functional>
 
-#include "data_grouping.hpp"
-#include "date_to_day_type.hpp"
-#include "delay_calculation.hpp"
-#include "delay_map.hpp"
-#include "file_distribute.hpp"
-#include "hash_map.hpp"
-#include "location_mapping.hpp"
-#include "master.hpp"
-#include "result_gathering.hpp"
-#include "string_array.hpp"
 #include "ticket_map.hpp"
-#include "worker.hpp"
 
 unsigned long TicketMap::create_ticket_hash(const std::string& str) {
     std::hash<std::string> hasher;

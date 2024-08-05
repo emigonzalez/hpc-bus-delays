@@ -6,8 +6,8 @@
 #include <vector>
 #include <memory>
 
-#define INITIAL_SIZE 1000
-#define LOAD_FACTOR 0.75
+#define TICKET_MAP_INITIAL_SIZE 1000
+#define TICKET_MAP_LOAD_FACTOR 0.75
 
 class TicketEntry {
 public:
@@ -20,7 +20,7 @@ public:
 
 class TicketMap {
 public:
-    TicketMap(size_t initial_size = INITIAL_SIZE);
+    TicketMap(size_t initial_size = TICKET_MAP_INITIAL_SIZE);
     TicketEntry* insert(const std::string &key, size_t passenger_count);
     TicketEntry* search(const std::string &key) const;
     void print() const;

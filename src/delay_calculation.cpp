@@ -7,18 +7,8 @@
 #include <string>
 #include <map>
 
-#include "data_grouping.hpp"
-#include "date_to_day_type.hpp"
-#include "delay_calculation.hpp"
 #include "delay_map.hpp"
-#include "file_distribute.hpp"
-#include "hash_map.hpp"
-#include "location_mapping.hpp"
-#include "master.hpp"
-#include "result_gathering.hpp"
-#include "string_array.hpp"
-#include "ticket_map.hpp"
-#include "worker.hpp"
+#include "delay_calculation.hpp"
 
 // Path to the Python script
 const std::string script_name = "calcular-retrasos.py";

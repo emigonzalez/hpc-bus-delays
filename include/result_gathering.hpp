@@ -3,6 +3,7 @@
 
 #include <string>
 #include "ticket_map.hpp"
+#include "delay_map.hpp"
 
 TicketMap* group_tickets(const std::string& filename);
 void generate_csv(DelayMap* delay_map, const std::string& sales_filename, const std::string& output_filename);

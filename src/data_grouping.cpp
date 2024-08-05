@@ -11,19 +11,9 @@
 #include <cmath>
 #include <unordered_map>
 
-#include "data_grouping.hpp"
 #include "date_to_day_type.hpp"
-#include "delay_calculation.hpp"
-#include "delay_map.hpp"
-#include "file_distribute.hpp"
+#include "data_grouping.hpp"
 #include "hash_map.hpp"
-#include "location_mapping.hpp"
-#include "master.hpp"
-#include "result_gathering.hpp"
-#include "string_array.hpp"
-#include "ticket_map.hpp"
-#include "worker.hpp"
-
 
 using namespace std;
 
@@ -188,7 +178,7 @@ HashMap* group_data_by_vft(const string& filename) {
 }
 
 // Function to create VFT from VFD
-std::string create_vft_from_vfd(const string& vfd) {
+std::string create_vft_from_vfd(std::string vfd) {
     auto vfd_copy = vfd;
     istringstream iss(vfd_copy);
     string variante, frecuencia, date;
@@ -234,7 +224,7 @@ HashMap* group_data_by_vfd(const string& filename, HashMap* vft_map) {
         if (line.empty()) continue; // Skip empty lines
 
         auto line_copy = line;
-        auto vfd_key = create_vfd_key(line_copy);
+        std::string vfd_key = create_vfd_key(line_copy);
         if (!vfd_key.empty()) {
             auto vfd_entry = vft_map->hash_map_search(vfd_key);
 

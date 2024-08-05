@@ -4,18 +4,7 @@
 #include <string>
 #include <memory>
 
-#include "data_grouping.hpp"
-#include "date_to_day_type.hpp"
-#include "delay_calculation.hpp"
-#include "delay_map.hpp"
-#include "file_distribute.hpp"
 #include "hash_map.hpp"
-#include "location_mapping.hpp"
-#include "master.hpp"
-#include "result_gathering.hpp"
-#include "string_array.hpp"
-#include "ticket_map.hpp"
-#include "worker.hpp"
 
 Entry* HashMap::hash_map_insert_vft(const std::string& key, const std::string& row) {
     auto& entry = map[key];
