@@ -1,5 +1,8 @@
 #include "master.h"
 
+const char* sales_filename = "data/viajes/viajes_por_Variante_dia_parada.csv";
+const char* output_filename = "data/retrasos/resumen.csv";
+
 // Function for master to distribute tasks
 void distribute_tasks(int size, int from_day, int num_days) {
     // Generate the list of dir names
@@ -88,20 +91,14 @@ void master_code(int size, int from_day, int num_days) {
             free(rows);
             free(key);
         }
-        printf("\n FIN PID: %d \n", i);
     }
-
-    printf("\n FIN FIN FIN!!!! \n");
 
     // Wait for all worker processes to complete
     for (int i = 1; i < size; i++) {
         MPI_Recv(NULL, 0, MPI_BYTE, i, 7, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
-    // Now master_map contains all delays from all workers
-    // printf("\n MASTER PRINTING MAP \n");
-    // print_delay_map(master_map);
-    // printf("\n FINISHED PRINTING MAP \n");
+    generate_csv(master_map, sales_filename, output_filename);
 
     // Clean up master map
     free_delay_map(master_map);
@@ -114,10 +111,24 @@ void run_single_instance(int from_day, int num_days, int num_hours_per_day) {
     // Generate the list of dir names
     char** directorios = generate_directories(from_day, num_days);
 
+    if (directorios == NULL) {
+        return;
+    }
+
     char** assigned_days = NULL;
     distribute(directorios, num_days, 0, 1, &assigned_days);
+
+    if (assigned_days == NULL) {
+        return;
+    };
 
     DelayMap *delay_map = create_delay_map();
 
     perform_task(0, assigned_days, num_hours_per_day, delay_map);
+
+    if (delay_map == NULL) return;
+
+    generate_csv(delay_map, sales_filename, output_filename);
+
+    free_delay_map(delay_map);
 }

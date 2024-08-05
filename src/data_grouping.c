@@ -389,8 +389,6 @@ HashMap* group_data_by_vfd(char* filename, HashMap* vft_map) {
             }
 
             free(vfd_key);
-        } else {
-            // printf("INVALID VFD KEY\n");
         }
 
         free(line_copy); // Free the copy after processing

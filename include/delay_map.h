@@ -17,7 +17,9 @@ typedef struct Delay {
 typedef struct DelayEntry {
     char *key;
     Delay **rows;
+    char* row;
     size_t row_count;
+    double max_delay;
     struct DelayEntry *next;
 } DelayEntry;
 
@@ -32,5 +34,7 @@ DelayEntry *delay_map_insert(DelayMap *map, const char *key, size_t bus_stop, do
 DelayEntry *delay_map_search(DelayMap *map, const char *key);
 void free_delay_map(DelayMap *map);
 void print_delay_map(DelayMap *map);
+DelayEntry** delay_map_get_all_keys(DelayMap *map, size_t *key_count);
+DelayEntry *delay_map_insert_row(DelayMap *map, const char *key, const char *row);
 
 #endif // DELAY_MAP_H

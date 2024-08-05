@@ -42,18 +42,18 @@ void python_calculate_delays(int day) {
     return;
 }
 
-void process_row(DelayMap* delay_map, char* line) {
+int process_row(DelayMap* delay_map, char* line) {
     char* line_copy = strdup(line);
     if (line_copy == NULL) {
         perror("Failed to duplicate line");
         free(line);
-        return;
+        return -1;
     }
 
     char* vfd_key = strtok(line_copy, ",");
     if (vfd_key == NULL || strcmp(vfd_key, "VFD") == 0) {
         free(line_copy);
-        return;
+        return -1;
     }
 
     // printf("\n#################################\n");
@@ -78,15 +78,16 @@ void process_row(DelayMap* delay_map, char* line) {
 
     free(line_copy);
     // printf("#################################\n");
+    return 1;
 }
 
-void map_delays(DelayMap* delay_map, char* filename) {
+int map_delays(DelayMap* delay_map, char* filename) {
     fprintf(stderr, "FILENAME: %s \n", filename);
 
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
         fprintf(stderr, "Error opening file: %s\n", filename);
-        return;
+        return -1;
     }
 
     char *line = NULL;
@@ -99,15 +100,15 @@ void map_delays(DelayMap* delay_map, char* filename) {
     // Ensure line is freed before the next read
     free(line);
     line = NULL;
-    int i = 1;
+
     while ((read = getline(&line, &len, file)) != -1) {
         if (read <= 1) continue; // Skip empty lines
         // printf("Processing VFD: %d \n", i);
         process_row(delay_map, line);
-        i++;
         free(line);
         line = NULL;
     }
 
     fclose(file);
+    return 1;
 }

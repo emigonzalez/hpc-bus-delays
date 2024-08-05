@@ -7,15 +7,33 @@ void perform_task(int rank, char** assigned_days, int num_hours_per_day, DelayMa
         fprintf(stderr,"\n Process %d reading file %s from day %s\n", rank, assigned_days[i], day_str);
 
         char** capturas = generate_location_file_names(assigned_days[i], atoi(day_str), num_hours_per_day);
+
+        if (capturas == NULL) {
+            continue;
+        }
+        
         char* horarios = generate_schedule_file_name("data/horarios", atoi(day_str));
+
+        if (horarios == NULL) {
+            free_string_array(capturas);
+            continue;
+        }
 
         printf("HORARIOS: %s\n", horarios);
         HashMap* vft_map = group_schedules(horarios);
 
+        if (vft_map == NULL) {
+            free_string_array(capturas);
+            free(horarios);
+            continue;
+        }
+
         // Iterate over each location file
         for (int j = 0; j < num_hours_per_day; j++) {
             // Generate VFD map and all fields to be picked by Python script
-            map_locations_to_schedules(capturas[j], assigned_days[i], vft_map);
+            int ok = map_locations_to_schedules(capturas[j], assigned_days[i], vft_map);
+
+            if (!ok) continue;
 
             // printf("####### RUNNING WITH FILE: %s ########\n", capturas[j]);
             int len = strlen(capturas[j]);
