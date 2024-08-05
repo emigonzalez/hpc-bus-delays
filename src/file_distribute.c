@@ -43,6 +43,7 @@ int distribute(char** file_names, int num_files, int rank, int size, char*** ass
     int extra_files = num_files % size;
     int task = rank > 0 ? rank-1 : rank;
 
+
     int start_idx = task * files_per_process + (task < extra_files ? task : extra_files);
     int end_idx = start_idx + files_per_process + (task < extra_files);
 
@@ -51,7 +52,7 @@ int distribute(char** file_names, int num_files, int rank, int size, char*** ass
     for (int i = start_idx; i < end_idx; i++) {
         *assigned_files[i - start_idx] = strdup(file_names[i]);
     }
-    *assigned_files[assigned_count] = NULL; // Null-terminate the array
+    // *assigned_files[assigned_count] = NULL; // Null-terminate the array
 
     return assigned_count;
 }
