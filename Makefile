@@ -1,5 +1,5 @@
 CC = mpicc
-CFLAGS = -Iinclude -Wall
+CFLAGS = -Iinclude -Wall -fPIC  # Added -fPIC for position-independent code
 OBJDIR = objects
 SRCDIR = src
 TESTDIR = tests
