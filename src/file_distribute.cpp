@@ -5,7 +5,20 @@
 #include <sstream>
 #include <iomanip>
 #include <cstring>
+
+#include "data_grouping.hpp"
+#include "date_to_day_type.hpp"
+#include "delay_calculation.hpp"
+#include "delay_map.hpp"
 #include "file_distribute.hpp"
+#include "hash_map.hpp"
+#include "location_mapping.hpp"
+#include "master.hpp"
+#include "result_gathering.hpp"
+#include "string_array.hpp"
+#include "ticket_map.hpp"
+#include "worker.hpp"
+
 
 // Generate directory names
 std::vector<std::string> generate_directories(int from_day, int num_days) {
@@ -45,11 +58,12 @@ std::string generate_delay_file_name(const std::string& path, int day) {
 }
 
 // Distribute files among MPI processes
-int distribute(const std::vector<std::string>& file_names, int rank, int size, std::vector<std::string>& assigned_files) {
+std::vector<std::string> distribute(std::vector<std::string> file_names, int rank, int size) {
+    std::vector<std::string> assigned_files;
     int num_files = file_names.size();
     int files_per_process = num_files / size;
     int extra_files = num_files % size;
-    int task = rank > 0 ? rank - 1 : rank;
+    int task = rank;
 
     int start_idx = task * files_per_process + (task < extra_files ? task : extra_files);
     int end_idx = start_idx + files_per_process + (task < extra_files ? 1 : 0);
@@ -59,7 +73,7 @@ int distribute(const std::vector<std::string>& file_names, int rank, int size, s
         assigned_files.push_back(file_names[i]);
     }
 
-    return assigned_files.size();
+    return assigned_files;
 }
 
 // Get day from directory name

@@ -7,7 +7,20 @@
 #include <unordered_map>
 #include <memory>
 #include <cstring>
+
+#include "data_grouping.hpp"
+#include "date_to_day_type.hpp"
+#include "delay_calculation.hpp"
+#include "delay_map.hpp"
+#include "file_distribute.hpp"
+#include "hash_map.hpp"
+#include "location_mapping.hpp"
+#include "master.hpp"
 #include "result_gathering.hpp"
+#include "string_array.hpp"
+#include "ticket_map.hpp"
+#include "worker.hpp"
+
 
 #define UNUSED(x) (void)(x) // to suppress warning about unused variable
 
@@ -99,7 +112,7 @@ TicketMap* group_tickets(const std::string& filename) {
 
         // Add the row to the corresponding group
         if (!key.empty()) {
-            ticket_map_insert(ticket_map, key.c_str(), passenger_count);
+            ticket_map->ticket_map_insert(key, passenger_count);
         }
     }
 
@@ -110,16 +123,16 @@ std::string copy_string(const std::string& s) {
     return s.substr(0, s.length() - 2);
 }
 
-std::unique_ptr<DelayMap> summarize_delays(DelayMap* delay_map) {
-    auto new_map = std::unique_ptr<DelayMap>(create_delay_map());
+DelayMap* summarize_delays(DelayMap* delay_map) {
+    auto new_map = new DelayMap();
 
     size_t key_count;
-    auto entries = delay_map_get_all_keys(delay_map, &key_count);
+    auto entries = delay_map->delay_map_get_all_keys(key_count);
 
-    for (size_t i = 0; i < key_count; i++) {
-        for (size_t j = 0; j < entries[i]->row_count; j++) {
-            auto delay = entries[i]->rows[j];
-
+    for (auto entry : entries) {
+        for (size_t j = 0; j < entry->rows.size(); j++) {
+            auto delay = entry->rows[j];
+            
             std::string variante, fecha_hora_paso, retraso, cod_parada, X, Y;
             get_delay_fields(delay->row, variante, fecha_hora_paso, retraso, cod_parada, X, Y);
             std::string fecha = fecha_hora_paso.substr(0, fecha_hora_paso.find(' '));
@@ -130,7 +143,7 @@ std::unique_ptr<DelayMap> summarize_delays(DelayMap* delay_map) {
 
             std::string key = variante + "_" + fecha + "_" + cod_parada;
 
-            auto exist = delay_map_search(new_map.get(), key.c_str());
+            auto exist = new_map->delay_map_search(key);
 
             std::string r;
             if (exist != nullptr) {
@@ -142,7 +155,7 @@ std::unique_ptr<DelayMap> summarize_delays(DelayMap* delay_map) {
 
             std::string new_Y = copy_string(Y); // Remove line break
             std::string new_row = fecha + "," + variante + "," + r + "," + cod_parada + "," + X + "," + new_Y;
-            delay_map_insert_row(new_map.get(), key.c_str(), new_row.c_str());
+            new_map->delay_map_insert(key, j, std::stof(retraso), new_row);
         }
     }
 
@@ -164,12 +177,12 @@ void generate_csv(DelayMap* delay_map, const std::string& sales_filename, const 
     file << "fecha,variante,retraso,cod_parada,X,Y,cantidad_pasajeros\n";
 
     size_t key_count;
-    auto entries = delay_map_get_all_keys(new_delay.get(), &key_count);
+    auto entries = new_delay->delay_map_get_all_keys(key_count);
 
-    for (size_t i = 0; i < key_count; i++) {
-        auto ticket_entry = ticket_map_search(ticket_map, entries[i]->key);
+    for (auto entry : entries) {
+        auto ticket_entry = ticket_map->ticket_map_search(entry->key);
         if (ticket_entry != nullptr) {
-            file << entries[i]->row << "," << ticket_entry->passenger_count << "\n";
+            file << entry->row << "," << ticket_entry->passenger_count << "\n";
         }
     }
 }

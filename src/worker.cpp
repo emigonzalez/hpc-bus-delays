@@ -1,4 +1,16 @@
+#include "data_grouping.hpp"
+#include "date_to_day_type.hpp"
+#include "delay_calculation.hpp"
+#include "delay_map.hpp"
+#include "file_distribute.hpp"
+#include "hash_map.hpp"
+#include "location_mapping.hpp"
+#include "master.hpp"
+#include "result_gathering.hpp"
+#include "string_array.hpp"
+#include "ticket_map.hpp"
 #include "worker.hpp"
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -9,7 +21,7 @@
 void perform_task(int rank, std::vector<std::string> assigned_days, int num_hours_per_day, DelayMap* delay_map) {
     // Each process reads its assigned directories
     for (const auto& day : assigned_days) {
-        std::string day_str = get_day_from_dir_name(day.c_str());
+        std::string day_str = get_day_from_dir_name(day);
         std::cerr << "\n Process " << rank << " reading file " << day << " from day " << day_str << "\n";
 
         std::vector<std::string> capturas = generate_location_file_names(day, std::stoi(day_str), num_hours_per_day);
@@ -34,7 +46,7 @@ void perform_task(int rank, std::vector<std::string> assigned_days, int num_hour
         // Iterate over each location file
         for (int j = 0; j < num_hours_per_day; ++j) {
             // Generate VFD map and all fields to be picked by Python script
-            int ok = map_locations_to_schedules(capturas[j].c_str(), day.c_str(), vft_map);
+            int ok = map_locations_to_schedules(capturas[j], day, vft_map);
 
             if (!ok) continue;
 
@@ -46,7 +58,7 @@ void perform_task(int rank, std::vector<std::string> assigned_days, int num_hour
         }
 
         std::string delay_file = generate_delay_file_name("data/retrasos", std::stoi(day_str));
-        map_delays(delay_map, delay_file.c_str());
+        map_delays(delay_map, delay_file);
         std::cerr << "####### FINISHED DELAY " << rank << " FOR FILE: " << delay_file << " ########\n";
     }
 }

@@ -1,9 +1,22 @@
-#include "master.hpp"
 #include <vector>
 #include <string>
 #include <cstring>
 #include <cstdlib>
 #include <mpi.h>
+
+#include "data_grouping.hpp"
+#include "date_to_day_type.hpp"
+#include "delay_calculation.hpp"
+#include "delay_map.hpp"
+#include "file_distribute.hpp"
+#include "hash_map.hpp"
+#include "location_mapping.hpp"
+#include "master.hpp"
+#include "result_gathering.hpp"
+#include "string_array.hpp"
+#include "ticket_map.hpp"
+#include "worker.hpp"
+
 
 const std::string sales_filename = "data/viajes/viajes_por_Variante_dia_parada.csv";
 const std::string output_filename = "data/retrasos/resumen.csv";
@@ -13,13 +26,12 @@ void distribute_tasks(int size, int from_day, int num_days) {
     // Generate the list of dir names
     std::vector<std::string> directorios = generate_directories(from_day, num_days);
 
-    for (int i = 1; i < size; i++) {
+    for (int i = 0; i < size; i++) {
         // Distribute dirs among processes
-        std::vector<std::string> assigned_days;
-        int len = distribute(directorios, num_days, i, size, assigned_days);
+        std::vector<std::string> assigned_days = distribute(directorios, i, size);
 
         // Send the dirs to worker
-        send_string_array(assigned_days, len, i, 0, MPI_COMM_WORLD);
+        send_string_array(assigned_days, assigned_days.size(), i, 0, MPI_COMM_WORLD);
     }
 }
 
@@ -108,8 +120,7 @@ void run_single_instance(int from_day, int num_days, int num_hours_per_day) {
         return;
     }
 
-    std::vector<std::string> assigned_days;
-    distribute(directorios, num_days, 0, 1, assigned_days);
+    std::vector<std::string> assigned_days = distribute(directorios, 0, 1);
 
     if (assigned_days.empty()) {
         return;
@@ -121,7 +132,7 @@ void run_single_instance(int from_day, int num_days, int num_hours_per_day) {
 
     if (delay_map == NULL) return;
 
-    generate_csv(delay_map, sales_filename.c_str(), output_filename.c_str());
+    generate_csv(delay_map, sales_filename, output_filename);
 
     delete delay_map;
 }

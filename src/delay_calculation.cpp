@@ -6,7 +6,19 @@
 #include <cstring>
 #include <string>
 #include <map>
+
+#include "data_grouping.hpp"
+#include "date_to_day_type.hpp"
 #include "delay_calculation.hpp"
+#include "delay_map.hpp"
+#include "file_distribute.hpp"
+#include "hash_map.hpp"
+#include "location_mapping.hpp"
+#include "master.hpp"
+#include "result_gathering.hpp"
+#include "string_array.hpp"
+#include "ticket_map.hpp"
+#include "worker.hpp"
 
 // Path to the Python script
 const std::string script_name = "calcular-retrasos.py";
@@ -55,7 +67,7 @@ int process_row(DelayMap* delay_map, const std::string& line) {
     std::getline(line_stream, fecha_hora_paso, ',');
     std::getline(line_stream, retraso, ',');
 
-    delay_map->delay_map_insert(vfd_key.c_str(), std::stoi(ordinal), std::stof(retraso), line.c_str());
+    delay_map->delay_map_insert(vfd_key, std::stoi(ordinal), std::stof(retraso), line);
 
     return 1;
 }

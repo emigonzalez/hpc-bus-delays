@@ -11,10 +11,19 @@
 #include <cmath>
 #include <unordered_map>
 
-// Include the necessary headers for your custom functions
 #include "data_grouping.hpp"
 #include "date_to_day_type.hpp"
+#include "delay_calculation.hpp"
+#include "delay_map.hpp"
+#include "file_distribute.hpp"
 #include "hash_map.hpp"
+#include "location_mapping.hpp"
+#include "master.hpp"
+#include "result_gathering.hpp"
+#include "string_array.hpp"
+#include "ticket_map.hpp"
+#include "worker.hpp"
+
 
 using namespace std;
 
@@ -230,13 +239,13 @@ HashMap* group_data_by_vfd(const string& filename, HashMap* vft_map) {
             auto vfd_entry = vft_map->hash_map_search(vfd_key);
 
             if (vfd_entry) {
-                // insert_to_vfds(vfd_entry, line.c_str());
+                vfd_map->hash_map_insert_vfd(vfd_key, line);
             } else if (!discarded_vfds->hash_map_search(vfd_key)) {
                 auto vft_key = create_vft_from_vfd(vfd_key);
-                if (vft_key.empty()) {
+                if (!vft_key.empty()) {
                     auto vft_entry = vft_map->hash_map_search(vft_key);
                     if (vft_entry) {
-                        auto vfd_entry = vfd_map->hash_map_insert_vfd(vfd_key, line.c_str());
+                        auto vfd_entry = vfd_map->hash_map_insert_vfd(vfd_key, line);
                         repoint_vfts_to_vfd_map(vfd_entry, vft_entry);
                     } else {
                         discarded_vfds->hash_map_insert_vfd(vfd_key, nullptr);

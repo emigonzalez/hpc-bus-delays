@@ -6,16 +6,24 @@
 #include <string>
 #include <memory>
 
-class Entry {
-public:
+// class Entry {
+// public:
+//     std::string key;
+//     std::vector<std::string> vfd_rows;
+//     std::vector<std::string> vft_rows;
+//     int bus_stop;
+//     double delay;
+
+//     Entry(const std::string& key, int bus_stop = 0, double delay = 0.0)
+//         : key(key), bus_stop(bus_stop), delay(delay) {}
+// };
+
+struct Entry {
     std::string key;
     std::vector<std::string> vfd_rows;
     std::vector<std::string> vft_rows;
-    int bus_stop;
-    double delay;
-
-    Entry(const std::string& key, int bus_stop = 0, double delay = 0.0)
-        : key(key), bus_stop(bus_stop), delay(delay) {}
+    int bus_stop = 0;
+    double delay = 0.0;
 };
 
 class HashMap {
