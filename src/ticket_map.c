@@ -41,15 +41,6 @@ TicketEntry *create_ticket_entry(const char *key) {
     return entry;
 }
 
-// Function to create a new Ticket
-// Ticket *create_ticket(size_t bus_stop, size_t passenger_count) {
-//     Ticket *ticket = (Ticket *)malloc(sizeof(Ticket));
-//     ticket->bus_stop = bus_stop;
-//     ticket->passenger_count = passenger_count;
-//     ticket->row = strdup(row);
-//     return ticket;
-// }
-
 // Function to insert a ticket into the TicketMap
 TicketEntry *ticket_map_insert(TicketMap *map, const char *key, size_t passenger_count) {
     // Compute the hash to find the bucket

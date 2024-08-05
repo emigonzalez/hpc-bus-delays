@@ -9,12 +9,6 @@
 #define INITIAL_SIZE 1000
 #define LOAD_FACTOR 0.75
 
-// typedef struct Ticket {
-//     size_t bus_stop;
-//     size_t passenger_count;
-//     char* row;
-// } Ticket;
-
 typedef struct TicketEntry {
     char *key;
     size_t passenger_count;

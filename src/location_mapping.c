@@ -30,7 +30,7 @@ char* generate_file_name(const char* path, const char* file_name_prefix, char* f
     return result;
 }
 
-void generate_vfd_file(char* date, HashMap* map) {
+int generate_vfd_file(char* date, HashMap* map) {
     const char *vfd_filename = generate_file_name(temp, "vfd", date);
     const char *capturas_filename = generate_file_name(temp, "capturas", date);
     const char *horarios_filename = generate_file_name(temp, "horarios", date);
@@ -38,14 +38,14 @@ void generate_vfd_file(char* date, HashMap* map) {
     FILE *vfd_file = fopen(vfd_filename, "w");
     if (!vfd_file) {
         perror("Failed to create vfd_file");
-        return;
+        return -1;
     }
 
     FILE *capturas_file = fopen(capturas_filename, "w");
     if (!capturas_file) {
         perror("Failed create capturas file");
         fclose(vfd_file);
-        return;
+        return -1;
     }
 
     FILE *horarios_file = fopen(horarios_filename, "w");
@@ -53,7 +53,7 @@ void generate_vfd_file(char* date, HashMap* map) {
         perror("Failed to create horarios file");
         fclose(vfd_file);
         fclose(capturas_file);
-        return;
+        return -1;
     }
 
     // Write the CSV header
@@ -88,15 +88,16 @@ void generate_vfd_file(char* date, HashMap* map) {
     fclose(vfd_file);
     fclose(capturas_file);
     fclose(horarios_file);
+    return 1;
 }
 
-void map_locations_to_schedules(char* fileName, char* date, HashMap* vft_map) {
+int map_locations_to_schedules(char* fileName, char* date, HashMap* vft_map) {
     // printf("GENERATING VFD...\n");
     HashMap* vfd_map = group_data_by_vfd(fileName, vft_map);
 
     if (vfd_map == NULL) {
         fprintf(stderr, "INVALID VFD MAPS FOR %s.\n", fileName);
-        return;
+        return -1;
     }
 
     fprintf(stderr,"       VFD GENERATED.    ");
@@ -106,9 +107,9 @@ void map_locations_to_schedules(char* fileName, char* date, HashMap* vft_map) {
 
     printf("HashMap (%zu, %zu)       ", vfd_map->size, vfd_map->count);
 
-    generate_vfd_file(date, vfd_map);
+    int ok = generate_vfd_file(date, vfd_map);
 
     // Free the hash map
     free_vfd_hash_map(vfd_map);
-    return;
+    return ok || -1;
 }
