@@ -11,7 +11,7 @@ const char *script_name = "calcular-retrasos.py";
 void run_python_script(const char *script_name, int day) {
     // Call the Python script
     char command[256];
-    snprintf(command, sizeof(command), "python3.10 %s n 2024-06-%02d", script_name, day);
+    snprintf(command, sizeof(command), "python3 %s n 2024-06-%02d", script_name, day);
     FILE *fp = popen(command, "r");
     if (fp == NULL) {
         perror("popen");
