@@ -75,10 +75,11 @@ void add_seconds_to_date(const char* date, int seconds, char* resultado) {
     // Add or substract n seconds
     time_t t = mktime(&tm_date);
     t += seconds; //
-    struct tm* new_tm_date = localtime(&t);
+    struct tm new_tm_date;
+    localtime_r(&t, &new_tm_date);
 
     // Format new date back to string
-    strftime(resultado, 11, "%Y-%m-%d", new_tm_date);
+    strftime(resultado, 11, "%Y-%m-%d", &new_tm_date);
 }
 
 // Function to adjust the date based on time and frequency
@@ -94,8 +95,6 @@ void ajustar_fecha(const char* fecha, const char* frecuencia, char* resultado) {
     int time_number = convertir_a_minutos(time_frecuencia);
     int frecuencia_number = convertir_a_minutos(frecuencia);
 
-    // printf("FECHA: %s, FRECUENCIA: %s, TIMEN: %d, FN: %d \n", fecha, frecuencia, time_number, frecuencia_number);
-
     // If difference more than 21 hour difference, it means that bus departues the day before snapshot.
     if (frecuencia_number > time_number && frecuencia_number - time_number > (21 * 60)) {
         // Subtract a day from the date
@@ -110,10 +109,12 @@ void ajustar_fecha(const char* fecha, const char* frecuencia, char* resultado) {
 }
 
 Entry* add_vft_to_map(HashMap *map, const char *key, const char *row) {
+    if (key == NULL || row == NULL) return NULL;
+
     Entry* entry = hash_map_insert_vft(map, key, row);
     if (!entry) {
-        fprintf(stderr, "Error: failed to add VFT to map\n");
-        exit(EXIT_FAILURE);
+        fprintf(stderr, "Error: failed to add VFT to map %s %s\n", key, row);
+        return NULL;
     }
     return entry;
 }
@@ -123,7 +124,7 @@ Entry* add_vfd_to_map(HashMap *map, const char *key, const char *row) {
 
     Entry* vfd_entry = hash_map_insert_vfd(map, key, row);
     if (!vfd_entry) {
-        fprintf(stderr, "Error: failed to add VFD to map\n");
+        fprintf(stderr, "Error: failed to add VFD to map %s %s\n", key, row);
     }
     return vfd_entry;
 }
@@ -162,6 +163,16 @@ char* create_vfd_key(char* line) {
     UNUSED(version);
     UNUSED(velocidad);
 
+    if (
+        latitud == NULL ||
+        longitud == NULL ||
+        frecuencia == NULL ||
+        fecha == NULL ||
+        variante == NULL
+    ) {
+        return NULL;
+    }
+
     // Check if latitud or longitud is 0
     if (
         strcmp(latitud, "0") == 0 ||
@@ -181,6 +192,10 @@ char* create_vfd_key(char* line) {
     // Create the group key "<variante>_<frecuencia>_<dia>\0"
     size_t key_length = strlen(variante) + strlen(frecuencia) + strlen(date) + 2 + 1; 
     char* key = (char*)malloc(key_length * sizeof(char));
+    if (key == NULL) {
+        fprintf(stderr, "Memory allocation failed on data_grouping.c -> create_vfd_key() \n");
+        return NULL;
+    }
 
     // Create the key in the format variante_frecuencia_yyyy-mm-dd
     snprintf(key, key_length, "%s_%s_%s", variante, frecuencia, date);
@@ -205,8 +220,12 @@ char* create_vft_key(char* line) {
     UNUSED(latitud);
     UNUSED(longitud);
 
-    if (tipo_dia == NULL || variante == NULL || frecuencia == NULL || dia_anterior == NULL) {
-        fprintf(stderr, "Error: Missing data from row to VFT");
+    if (
+        tipo_dia == NULL ||
+        variante == NULL ||
+        frecuencia == NULL ||
+        dia_anterior == NULL
+    ) {
         return NULL;
     }
 
@@ -225,6 +244,10 @@ char* create_vft_key(char* line) {
 
     size_t key_length = strlen(variante) + strlen(frecuencia) + 3 + 1; // "<cod_variante>_<frecuencia>_<tipo_dia>\0"
     char* key = (char*)malloc(key_length * sizeof(char));
+    if (key == NULL) {
+        fprintf(stderr, "Memory allocation failed on data_grouping.c -> create_vft_key() \n");
+        return NULL;
+    }
 
     // Create the vft keydate
     snprintf(key, key_length, "%s_%s_%d", variante, frecuencia, tipo_dia_int);
@@ -265,6 +288,7 @@ HashMap* group_data_by_vft(char* filename) {
         char* line_copy = strdup(line);
         if (line_copy == NULL) {
             perror("Failed to duplicate line");
+            free(line); line = NULL;
             continue;
         }
 
@@ -277,8 +301,7 @@ HashMap* group_data_by_vft(char* filename) {
             free(key);
         } else {
             free(line_copy);
-            free(line);
-            line = NULL;
+            free(line); line = NULL;
             continue;
         }
 
@@ -287,7 +310,6 @@ HashMap* group_data_by_vft(char* filename) {
         line = NULL;
     }
 
-    free(line);
     fclose(file);
 
     return map;
@@ -360,10 +382,7 @@ HashMap* group_data_by_vfd(char* filename, HashMap* vft_map) {
         }
 
         char* vfd_key = NULL;
-        // printf("\n#################################\n");
         vfd_key = create_vfd_key(line_copy);
-        // printf("VFD KEY: %s\n", vfd_key);
-        // printf("ROW: %s", line);
 
         if (vfd_key != NULL) {
             Entry* vfd_entry = hash_map_search(vfd_map, vfd_key);
@@ -372,16 +391,13 @@ HashMap* group_data_by_vfd(char* filename, HashMap* vft_map) {
                 // Add the row to the vfd_map
                 insert_to_vfds(vfd_entry, line);
             } else if (!hash_map_search(discarded_vfds, vfd_key)) {
-                // Generate VFT and look for data in the vft_map
                 char* vft_key = create_vft_from_vfd(vfd_key);
-                // printf("VFT KEY: %s", vft_key);
                 Entry* vft_entry = hash_map_search(vft_map, vft_key);
 
                 if (vft_entry != NULL) {
                     Entry* vfd_entry = add_vfd_to_map(vfd_map, vfd_key, line);
                     repoint_vfts_to_vfd_map(vfd_entry, vft_entry);
                 } else {
-                    // printf(" does not exist.\n");
                     add_vfd_to_map(discarded_vfds, vfd_key, NULL);
                 }
 
@@ -394,7 +410,6 @@ HashMap* group_data_by_vfd(char* filename, HashMap* vft_map) {
         free(line_copy); // Free the copy after processing
         free(line);
         line = NULL;
-        // printf("#################################\n");
     }
 
     fclose(file);
