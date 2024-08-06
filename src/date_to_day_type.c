@@ -16,13 +16,13 @@ int get_day_of_week(const char* date_str) {
     struct tm tm_date = {0};
     if (strptime(date_str, "%Y-%m-%d", &tm_date) == NULL) {
         fprintf(stderr, "Error parsing date: %s\n", date_str);
-        exit(EXIT_FAILURE);
+        return -1;
     }
     // Use mktime to convert tm structure to time_t and normalize the tm structure
     time_t time = mktime(&tm_date);
     if (time == -1) {
         fprintf(stderr, "Error converting date to time_t: %s\n", date_str);
-        exit(EXIT_FAILURE);
+        return -1;
     }
     // Return the day of the week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
     return tm_date.tm_wday;
@@ -49,11 +49,3 @@ int date_to_date_type(const char* date_str) {
         default: return 0;
     }
 }
-
-// int main() {
-//     const char* date_str = "2024-06-11"; // Example date
-
-//     printf("Date %s is a %d\n", date_str, date_to_date_type(date_str));
-
-//     return 0;
-// }

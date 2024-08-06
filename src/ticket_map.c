@@ -15,7 +15,7 @@ TicketMap *create_ticket_map() {
     TicketMap *map = (TicketMap *)malloc(sizeof(TicketMap));
     if (!map) {
         fprintf(stderr, "Error: memory allocation failed\n");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
     map->size = INITIAL_SIZE;
     map->count = 0;
@@ -23,7 +23,7 @@ TicketMap *create_ticket_map() {
     if (!map->buckets) {
         fprintf(stderr, "Error: memory allocation failed\n");
         free(map);
-        exit(EXIT_FAILURE);
+        return NULL;
     }
     return map;
 }
@@ -33,7 +33,7 @@ TicketEntry *create_ticket_entry(const char *key) {
     TicketEntry *entry = (TicketEntry *)malloc(sizeof(TicketEntry));
     if (!entry) {
         fprintf(stderr, "Error: memory allocation failed\n");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
     entry->key = strdup(key);
     entry->passenger_count = 0;

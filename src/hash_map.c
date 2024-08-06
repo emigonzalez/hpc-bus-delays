@@ -15,7 +15,7 @@ HashMap *create_hash_map() {
     HashMap *map = (HashMap *)malloc(sizeof(HashMap));
     if (map == NULL) {
         perror("Failed to create hash map");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
     map->size = INITIAL_SIZE;
     map->count = 0;
@@ -23,7 +23,7 @@ HashMap *create_hash_map() {
     if (map->buckets == NULL) {
         perror("Failed to create hash map buckets");
         free(map);
-        exit(EXIT_FAILURE);
+        return NULL;
     }
     return map;
 }
@@ -84,7 +84,7 @@ void resize_hash_map(HashMap *map) {
     Entry **new_buckets = calloc(new_size, sizeof(Entry *));
     if (!new_buckets) {
         fprintf(stderr, "Error: memory allocation failed\n");
-        exit(EXIT_FAILURE);
+        return;
     }
 
     for (size_t i = 0; i < map->size; i++) {
@@ -106,14 +106,14 @@ Entry* create_entry(const char *key) {
     Entry *entry = (Entry *)malloc(sizeof(Entry));
     if (!entry) {
         fprintf(stderr, "Error creating entry for key %s: memory allocation failed\n", key);
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
     entry->key = strdup(key);
     if (!entry->key) {
         fprintf(stderr, "Error adding key %s to entry: memory allocation failed for key\n", key);
         free(entry);
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
     entry->vfd_rows = NULL;
@@ -283,7 +283,7 @@ Entry** get_all_keys(HashMap *map, size_t *key_count) {
     Entry **keys = (Entry **)malloc(*key_count * sizeof(Entry *));
     if (!keys) {
         fprintf(stderr, "Error: memory allocation for keys array failed\n");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
     // Populate the array with entries
