@@ -10,5 +10,6 @@ void recv_string_array(char ***strings, int *num_strings, int source, int tag, M
 void send_string_array(char **strings, int num_strings, int dest, int tag, MPI_Comm comm);
 void free_string_array(char** array);
 void print_string_array(char** array);
+void copy_string_array(char** src, char*** dest, int num_strings);
 
 #endif // STRING_ARRAY_H
