@@ -127,16 +127,9 @@ void run_single_instance(int from_day, int num_days, int num_hours_per_day) {
         return;
     }
 
-    char** assigned_days = NULL;
-    distribute(directorios, num_days, 0, 1, &assigned_days);
-
-    if (assigned_days == NULL) {
-        return;
-    };
-
     DelayMap *delay_map = create_delay_map();
 
-    perform_task(0, assigned_days, num_hours_per_day, delay_map);
+    perform_task(0, directorios, num_hours_per_day, delay_map);
 
     if (delay_map == NULL) return;
 

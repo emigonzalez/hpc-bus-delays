@@ -6,9 +6,9 @@
 
 char** generate_directories(int from_day, int num_days) {
     char** directories = (char**)malloc(num_days * sizeof(char*));
-    for (int day = 1; day <= num_days; day++) {
-        directories[(day-1)] = (char*)malloc(26 * sizeof(char));
-        sprintf(directories[(day-1)], "data/capturas/2024-06-%02d", from_day + day-1);
+    for (int day = 0; day < num_days; day++) {
+        directories[day] = (char*)malloc(26 * sizeof(char));
+        sprintf(directories[day], "data/capturas/2024-06-%02d", from_day + day);
     }
     directories[num_days] = NULL;
     return directories;
@@ -50,7 +50,7 @@ int distribute(char** file_names, int num_files, int rank, int size, char*** ass
     for (int i = start_idx; i < end_idx; i++) {
         *assigned_files[i - start_idx] = strdup(file_names[i]);
     }
-    *assigned_files[assigned_count] = '\0'; // Null-terminate the array
+    *assigned_files[assigned_count] = NULL; // Null-terminate the array
 
     return assigned_count;
 }
