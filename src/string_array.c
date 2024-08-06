@@ -1,10 +1,11 @@
 
 #include "string_array.h"
 
-void free_string_array(char** array) {
+void free_string_array(char** array, size_t size) {
     if (array != NULL) {
-         for (int i = 0; array[i] != NULL; i++) {
-            free(array[i]);
+         for (int i = 0; i < size || array[i] != NULL; i++) {
+            if (array[i]) free(array[i]);
+            array[i] = NULL;
         }
         free(array);
     }

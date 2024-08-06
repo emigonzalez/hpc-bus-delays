@@ -15,14 +15,12 @@ void perform_task(int rank, char** assigned_days, int num_hours_per_day, DelayMa
         char* horarios = generate_schedule_file_name("data/horarios", atoi(day_str));
 
         if (horarios == NULL) {
-            free_string_array(capturas);
             continue;
         }
 
         HashMap* vft_map = group_schedules(horarios);
 
         if (vft_map == NULL) {
-            free_string_array(capturas);
             free(horarios);
             continue;
         }
@@ -34,7 +32,6 @@ void perform_task(int rank, char** assigned_days, int num_hours_per_day, DelayMa
 
             if (!ok) continue;
 
-            // printf("####### RUNNING WITH FILE: %s ########\n", capturas[j]);
             int len = strlen(capturas[j]);
             printf(" %s \n", capturas[j] + len - 28);
 
@@ -47,9 +44,8 @@ void perform_task(int rank, char** assigned_days, int num_hours_per_day, DelayMa
         fprintf(stderr,"####### FINISHED DELAY %d FOR FILE: %s ########\n", rank, delay_file);
 
         // Free the allocated memory
-        free(delay_file);
+        free(delay_file); delay_file = NULL;
         free(horarios); horarios = NULL;
-        free_string_array(capturas); capturas = NULL;
         free_hash_map(vft_map); vft_map = NULL;
     }
 
@@ -74,7 +70,7 @@ void receive_tasks(int rank, int num_hours_per_day, DelayMap *delay_map) {
     fprintf(stderr,"\n ******* Process %d finished its tasks: %d *******\n", rank, num_strings);
 
     // Free the allocated memory
-    free_string_array(received_strings);
+    free_string_array(received_strings, num_strings);
 }
 
 void worker_code(int rank, int num_hours_per_day) {

@@ -23,11 +23,11 @@ char** distribute_tasks(int size, int from_day, int num_days) {
         }
 
         // Free the array
-        free_string_array(assigned_days);
+        free_string_array(assigned_days, len);
         assigned_days = NULL;
     }
 
-    free_string_array(directorios);
+    free_string_array(directorios, num_days);
     directorios = NULL;
 
     return master_tasks;
