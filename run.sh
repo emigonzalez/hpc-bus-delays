@@ -9,9 +9,9 @@ NC='\033[0m' # No Color
 
 # Define default values for arguments if not set
 FROM_DAY=${FROM_DAY:-10}
-NUM_DAYS=${NUM_DAYS:-1}
-NUM_HOURS_PER_DAY=${NUM_HOURS_PER_DAY:-2}
-PROCESSES=${PROCESSES:-1}
+NUM_DAYS=${NUM_DAYS:-2}
+NUM_HOURS_PER_DAY=${NUM_HOURS_PER_DAY:-24}
+PROCESSES=${PROCESSES:-2}
 
 # Print the values being used
 echo -e "${YELLOW}Running with the following settings:${NC}"
@@ -29,4 +29,4 @@ make
 
 # Run the program with the specified number of processes
 echo -e "${YELLOW}Running program with mpirun -np $PROCESSES ./main $FROM_DAY $NUM_DAYS $NUM_HOURS_PER_DAY${NC}"
-mpirun -np $PROCESSES ./main $FROM_DAY $NUM_DAYS $NUM_HOURS_PER_DAY
+time mpirun -np $PROCESSES ./main $FROM_DAY $NUM_DAYS $NUM_HOURS_PER_DAY
