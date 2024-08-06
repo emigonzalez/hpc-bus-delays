@@ -1,7 +1,10 @@
 # Makefile
 
-# Default value for the number of processes
+# Define default arguments
 PROCESSES ?= 1
+FROM_DAY ?= 10
+NUM_DAYS ?= 1
+NUM_HOURS_PER_DAY ?= 2
 
 CC = mpicc
 CFLAGS = -Iinclude -Wall -fPIC
@@ -33,11 +36,11 @@ $(OBJDIR)/%.o: $(TESTDIR)/%.c
 
 # Target for running the MPI program
 run: main
-	mpirun -np $(PROCESSES) ./main
+	mpirun -np $(PROCESSES) ./main $(FROM_DAY) $(NUM_DAYS) $(NUM_HOURS_PER_DAY)
 
 # Debug targets
 valgrind: main
-	mpirun -np $(PROCESSES) valgrind --leak-check=full ./main
+	mpirun -np $(PROCESSES) valgrind --leak-check=full ./main $(FROM_DAY) $(NUM_DAYS) $(NUM_HOURS_PER_DAY)
 
 clean:
 	rm -rf $(OBJDIR) $(EXEC) $(EXEC).80s*
