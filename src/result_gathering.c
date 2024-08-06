@@ -198,8 +198,10 @@ DelayMap* summarize_delays(DelayMap* delay_map) {
 
 
 void generate_csv(DelayMap* delay_map, const char* sales_filename, const char* output_filename) {
+    fprintf(stderr,"  DELAY SUMMARIZATION IN PROGRESS...     \n");
     DelayMap* new_delay = summarize_delays(delay_map);
 
+    fprintf(stderr,"  PROCESSING SALES DATA...     \n");
     TicketMap* ticket_map = group_tickets(sales_filename);
 
     FILE *file = fopen(output_filename, "w");
@@ -207,6 +209,8 @@ void generate_csv(DelayMap* delay_map, const char* sales_filename, const char* o
         perror("Failed to create file");
         return;
     }
+
+    fprintf(stderr,"  GENERATING CSV...     \n");
 
     // Write the CSV header
     fprintf(file, "fecha,variante,retraso,cod_parada,X,Y,cantidad_pasajeros\n");
@@ -223,4 +227,6 @@ void generate_csv(DelayMap* delay_map, const char* sales_filename, const char* o
             continue;
         }
     }
+
+    fprintf(stderr,"  CSV GENERATED     \n");
 }

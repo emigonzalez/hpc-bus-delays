@@ -11,12 +11,11 @@ const char *script_name = "calcular-retrasos.py";
 void run_python_script(const char *script_name, int day) {
     // Call the Python script
     char command[256];
-    snprintf(command, sizeof(command), "python3.10 %s n 2024-06-%02d", script_name, day);
-    // snprintf(command, sizeof(command), "python3.10 calcular-retrasos_conC.py");
+    snprintf(command, sizeof(command), "python3 %s n 2024-06-%02d", script_name, day);
     FILE *fp = popen(command, "r");
     if (fp == NULL) {
         perror("popen");
-        exit(1);
+        return;
     }
 
     // Read the Python script output (if any)
@@ -33,11 +32,8 @@ void run_python_script(const char *script_name, int day) {
 }
 
 void python_calculate_delays(int day) {
-    // fprintf(stderr,"\nCALLING PYTHON SCRIPT %s \n", script_name);
     // Call the function to run the Python script with the hash map pointer
     run_python_script(script_name, day);
-
-    // fprintf(stderr,"END PYTHON :) \n");
 
     return;
 }
@@ -46,7 +42,6 @@ int process_row(DelayMap* delay_map, char* line) {
     char* line_copy = strdup(line);
     if (line_copy == NULL) {
         perror("Failed to duplicate line");
-        free(line);
         return -1;
     }
 
@@ -56,8 +51,6 @@ int process_row(DelayMap* delay_map, char* line) {
         return -1;
     }
 
-    // printf("\n#################################\n");
-    // printf("VFD KEY: %s\n", vfd_key);
 
     char* variante = strtok(NULL, ",");
     char* codigo_bus = strtok(NULL, ",");
@@ -72,12 +65,10 @@ int process_row(DelayMap* delay_map, char* line) {
     UNUSED(linea);
     UNUSED(hora);
     UNUSED(fecha_hora_paso);
-    // printf("BEFORE MAP INSERT %ld \n", delay_map->size);
+
     delay_map_insert(delay_map, vfd_key, atoi(ordinal), atof(retraso), line);
-    // printf("AFTER MAP INSERT\n");
 
     free(line_copy);
-    // printf("#################################\n");
     return 1;
 }
 
@@ -99,11 +90,10 @@ int map_delays(DelayMap* delay_map, char* filename) {
 
     // Ensure line is freed before the next read
     free(line);
-    line = NULL;
+    line = NULL;    
 
     while ((read = getline(&line, &len, file)) != -1) {
         if (read <= 1) continue; // Skip empty lines
-        // printf("Processing VFD: %d \n", i);
         process_row(delay_map, line);
         free(line);
         line = NULL;

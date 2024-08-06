@@ -1,10 +1,11 @@
 
 #include "string_array.h"
 
-void free_string_array(char** array) {
+void free_string_array(char** array, size_t size) {
     if (array != NULL) {
-         for (int i = 0; array[i] != NULL; i++) {
-            free(array[i]);
+         for (int i = 0; i < size || array[i] != NULL; i++) {
+            if (array[i]) free(array[i]);
+            array[i] = NULL;
         }
         free(array);
     }
@@ -43,5 +44,30 @@ void print_string_array(char** array) {
 
     for (int i = 0; array[i] != NULL; i++) {
         printf("%s", array[i]);
+    }
+}
+
+void copy_string_array(char** src, char*** dest, int num_strings) {
+    // Allocate memory for the array of string pointers
+    *dest = (char**)malloc(num_strings * sizeof(char*));
+    if (*dest == NULL) {
+        fprintf(stderr, "Memory allocation failed for string array\n");
+        return;
+    }
+
+    // Allocate memory and copy each string
+    for (int i = 0; i < num_strings; ++i) {
+        (*dest)[i] = (char*)malloc(strlen(src[i]) + 1); // +1 for the null terminator
+        if ((*dest)[i] == NULL) {
+            fprintf(stderr, "Memory allocation failed for string %d\n", i);
+            // Free already allocated memory in case of failure
+            for (int j = 0; j < i; ++j) {
+                free((*dest)[j]);
+            }
+            free(*dest);
+            *dest = NULL;
+            return;
+        }
+        strcpy((*dest)[i], src[i]);
     }
 }

@@ -7,14 +7,13 @@
 const char* temp = "data/temp";
 
 HashMap* group_schedules(char* horarios) {
-    // printf("\nGENERATING VFT...\n");
     HashMap* vft_map = group_data_by_vft(horarios);
 
     if (vft_map == NULL) {
         fprintf(stderr, "COULD NOT GENERATE VFT.\n");
         return NULL;
     } else {
-        fprintf(stderr,"VFT GENERATED      \n");
+        fprintf(stderr,"VFT GENERATED FOR %s     \n", horarios);
         return vft_map;
     }
 }
@@ -92,7 +91,6 @@ int generate_vfd_file(char* date, HashMap* map) {
 }
 
 int map_locations_to_schedules(char* fileName, char* date, HashMap* vft_map) {
-    // printf("GENERATING VFD...\n");
     HashMap* vfd_map = group_data_by_vfd(fileName, vft_map);
 
     if (vfd_map == NULL) {
@@ -101,11 +99,8 @@ int map_locations_to_schedules(char* fileName, char* date, HashMap* vft_map) {
     }
 
     fprintf(stderr,"       VFD GENERATED.    ");
-    // Example: Print grouped data
-    // printf("\nPRINTING MAP...\n");
-    // print_hash_map(vfd_map);
 
-    printf("HashMap (%zu, %zu)       ", vfd_map->size, vfd_map->count);
+    printf("VFD HashMap (Buckets: %zu, Keys: %zu)       ", vfd_map->size, vfd_map->count);
 
     int ok = generate_vfd_file(date, vfd_map);
 

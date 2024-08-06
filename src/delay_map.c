@@ -17,7 +17,7 @@ DelayMap *create_delay_map() {
     DelayMap *map = (DelayMap *)malloc(sizeof(DelayMap));
     if (!map) {
         fprintf(stderr, "Error: memory allocation failed\n");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
     map->size = INITIAL_SIZE;
     map->count = 0;
@@ -25,7 +25,7 @@ DelayMap *create_delay_map() {
     if (!map->buckets) {
         fprintf(stderr, "Error: memory allocation failed\n");
         free(map);
-        exit(EXIT_FAILURE);
+        return NULL;
     }
     return map;
 }
@@ -35,7 +35,7 @@ DelayEntry *create_delay_entry(const char *key) {
     DelayEntry *entry = (DelayEntry *)malloc(sizeof(DelayEntry));
     if (!entry) {
         fprintf(stderr, "Error: memory allocation failed\n");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
     entry->key = strdup(key);
     entry->rows = NULL;
@@ -52,12 +52,9 @@ void insert_sorted(DelayEntry *entry, Delay *new_delay) {
     for (size_t i = 0; i < entry->row_count; i++) {
         if (entry->rows[i]->bus_stop == new_delay->bus_stop) {
             // Update delay and row if a duplicate is found
-            // printf("REPLACE ROW! i = %ld. ROW: %s", i, entry->rows[i]->row);
             double delay_n = fabs(entry->rows[i]->delay);
             double new_delay_n = fabs(new_delay->delay);
             double prev_delay_n = i > 0 ? fabs(entry->rows[i-1]->delay) : 0;
-
-            // printf("DELAYS! prev: %f, actual: %f, new: %f, prev-actual: %f, prev-new: %f", prev_delay_n, delay_n, new_delay_n, fabs(prev_delay_n - delay_n), fabs(prev_delay_n - new_delay_n));
 
             if (fabs(prev_delay_n - delay_n) > fabs(prev_delay_n - new_delay_n)) {
                 entry->rows[i]->delay = new_delay->delay;
@@ -75,21 +72,24 @@ void insert_sorted(DelayEntry *entry, Delay *new_delay) {
     Delay **new_rows = (Delay **)malloc((entry->row_count + 1) * sizeof(Delay *));
     if (!new_rows) {
         fprintf(stderr, "Error: memory allocation failed\n");
-        exit(EXIT_FAILURE);
+        free(new_delay->row); // Free new_delay's row if allocation fails
+        free(new_delay);      // Free new_delay object if allocation fails
+        return;
     }
 
-    // Insert in sorted order
+    // Copy existing pointers to new_rows
     size_t i;
     for (i = 0; i < entry->row_count && entry->rows[i]->bus_stop < new_delay->bus_stop; i++) {
         new_rows[i] = entry->rows[i];
     }
 
+    // Insert in sorted order
     new_rows[i] = new_delay;
     for (; i < entry->row_count; i++) {
         new_rows[i + 1] = entry->rows[i];
     }
 
-    free(entry->rows);
+    // free(entry->rows);
     entry->rows = new_rows;
     entry->row_count++;
 }
@@ -142,7 +142,7 @@ DelayEntry *delay_map_insert(DelayMap *map, const char *key, size_t bus_stop, do
     Delay *delay_entry = (Delay *)malloc(sizeof(Delay));
     if (!delay_entry) {
         fprintf(stderr, "Error: memory allocation failed\n");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
     // Parse the row to fill delay_entry data (assuming CSV format)
@@ -221,7 +221,7 @@ DelayEntry** delay_map_get_all_keys(DelayMap *map, size_t *key_count) {
     DelayEntry **keys = (DelayEntry **)malloc(*key_count * sizeof(DelayEntry *));
     if (!keys) {
         fprintf(stderr, "Error: memory allocation for keys array failed\n");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
     // Populate the array with entries

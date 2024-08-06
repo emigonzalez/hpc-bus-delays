@@ -1,3 +1,15 @@
+/*
+ * main.c
+ *
+ * Descripcion: 
+ *   Punto de entrada donde se inicializa MPI y cada proceso ejecuta sus tareas.
+ * 
+ * Autores:
+ *   Emiliano Gonzalez
+ *   Gabriel Acosta
+ *
+ * Fecha: 4 de Agosto de 2024
+ */
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,28 +25,64 @@
 #include "worker.h"
 #include "master.h"
 
-#define FROM_DAY 10
-#define NUM_DAYS 1
-#define NUM_HOURS_PER_DAY 24
+#define DEFAULT_FROM_DAY 10
+#define DEFAULT_NUM_DAYS 1
+#define DEFAULT_NUM_HOURS_PER_DAY 2
 
-char* horarios = NULL;
-char** capturas = NULL;
-char** directorios = NULL;
-char** assigned_days = NULL;
-HashMap* vft_map = NULL;
-
+/**
+ * @brief Maneja las señales de interrupciones para finalizar el codigo de forma segura.
+ * 
+ * @param signal Tipo de interrupcion e.g. SIGINT y SIGTERM
+ * 
+ * @return void
+ */
 void handle_signal(int signal) {
-    printf("Received signal %d, performing cleanup...\n", signal);
+    printf("Received signal %d, exiting...\n", signal);
 
-    MPI_Finalize();
+    // If some condition is met, forcefully exit
+    if (signal > 0) {
+        MPI_Abort(MPI_COMM_WORLD, signal);
+    } else {
+        MPI_Finalize();
+    }
 
-    printf("Cleanup done, exiting...\n");
-    exit(EXIT_SUCCESS);
+    exit(signal);
 }
 
+/**
+ * @brief Funcion principal de la aplicacion.
+ *
+ * and performs the main operations. It also handles any necessary cleanup
+ * before exiting.
+ *
+ * @param argc El numero de argumentos recibidos.
+ * @param argv Un arreglo de strings con los argumentos recibidos.
+ * 
+ * @return Retorna cero si ejecuto correctamente. De lo contrario retorna otro entero distinto de cero.
+ */
 int main(int argc, char** argv) {
-    if (FROM_DAY + NUM_DAYS > 31) {
-        printf("INVALID VALUES. FROM_DAY = %d, NUM_DAYS = %d\n", FROM_DAY, NUM_DAYS);
+    int from_day = DEFAULT_FROM_DAY;
+    int num_days = DEFAULT_NUM_DAYS;
+    int num_hours_per_day = DEFAULT_NUM_HOURS_PER_DAY;
+
+    // Parse command-line arguments
+    if (argc > 1) {
+        from_day = atoi(argv[1]);
+    }
+    if (argc > 2) {
+        num_days = atoi(argv[2]);
+    }
+    if (argc > 3) {
+        num_hours_per_day = atoi(argv[3]);
+    }
+
+    if (
+        from_day < 0 || from_day > 30 ||
+        num_days < 0 || num_days > 30 ||
+        num_hours_per_day < 0 || num_hours_per_day > 24 ||
+        from_day + num_days > 31
+    ) {
+        printf("INVALID VALUES. FROM_DAY = %d, NUM_DAYS = %d NUM_HOURS_PER_DAY = %d\n", from_day, num_days, num_hours_per_day);
         exit(1);
     }
 
@@ -45,22 +93,25 @@ int main(int argc, char** argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     // Error handling setup
-    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
     // Register signal handler
     signal(SIGINT, handle_signal);  // Handle Ctrl+C (interrupt signal)
     signal(SIGTERM, handle_signal); // Handle termination signal
+    signal(SIGSEGV, handle_signal);  // Handle segmentation faults
+    signal(SIGABRT, handle_signal);  // Handle abort signals
 
     if (size > 1) {
         if (rank == 0) {
             // Master code
-            master_code(size, FROM_DAY, NUM_DAYS);
+            master_code(size, from_day, num_days, num_hours_per_day);
         } else {
             // Worker code
-            worker_code(rank, NUM_HOURS_PER_DAY);
+            worker_code(rank, num_hours_per_day);
         }
     } else {
-        run_single_instance(FROM_DAY, NUM_DAYS, NUM_HOURS_PER_DAY);
+        // Run all the code if there's a single process running
+        run_single_instance(from_day, num_days, num_hours_per_day);
     }
 
     // Finalize the MPI environment

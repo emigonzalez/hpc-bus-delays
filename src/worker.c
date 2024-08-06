@@ -4,7 +4,7 @@ void perform_task(int rank, char** assigned_days, int num_hours_per_day, DelayMa
     // Each process reads its assigned directories
     for (int i = 0; assigned_days[i] != NULL; i++) {
         char * day_str = get_day_from_dir_name(assigned_days[i]);
-        fprintf(stderr,"\n Process %d reading file %s from day %s\n", rank, assigned_days[i], day_str);
+        fprintf(stderr,"\n   Process %d reading file '%s' from day %s   \n", rank, assigned_days[i], day_str);
 
         char** capturas = generate_location_file_names(assigned_days[i], atoi(day_str), num_hours_per_day);
 
@@ -15,15 +15,12 @@ void perform_task(int rank, char** assigned_days, int num_hours_per_day, DelayMa
         char* horarios = generate_schedule_file_name("data/horarios", atoi(day_str));
 
         if (horarios == NULL) {
-            free_string_array(capturas);
             continue;
         }
 
-        printf("HORARIOS: %s\n", horarios);
         HashMap* vft_map = group_schedules(horarios);
 
         if (vft_map == NULL) {
-            free_string_array(capturas);
             free(horarios);
             continue;
         }
@@ -35,7 +32,6 @@ void perform_task(int rank, char** assigned_days, int num_hours_per_day, DelayMa
 
             if (!ok) continue;
 
-            // printf("####### RUNNING WITH FILE: %s ########\n", capturas[j]);
             int len = strlen(capturas[j]);
             printf(" %s \n", capturas[j] + len - 28);
 
@@ -48,11 +44,13 @@ void perform_task(int rank, char** assigned_days, int num_hours_per_day, DelayMa
         fprintf(stderr,"####### FINISHED DELAY %d FOR FILE: %s ########\n", rank, delay_file);
 
         // Free the allocated memory
-        free(delay_file);
+        free(delay_file); delay_file = NULL;
         free(horarios); horarios = NULL;
-        free_string_array(capturas); capturas = NULL;
         free_hash_map(vft_map); vft_map = NULL;
     }
+
+    // Synchronize all processes
+    MPI_Barrier(MPI_COMM_WORLD);
 }
 
 // Function for workers to receive tasks
@@ -64,15 +62,15 @@ void receive_tasks(int rank, int num_hours_per_day, DelayMap *delay_map) {
     // Receive the array of strings from the master process
     recv_string_array(&received_strings, &num_strings, 0, 0, MPI_COMM_WORLD);
 
-    fprintf(stderr,"\n ******* Process %d received array: %d ***********\n", rank, num_strings);
+    fprintf(stderr,"\n ******* Process %d received array: %d *******\n", rank, num_strings);
 
     // Perform task (e.g., process delays)
     perform_task(rank, received_strings, num_hours_per_day, delay_map);
 
-    fprintf(stderr,"\n ******* THE END Process %d received array: %d ***********\n", rank, num_strings);
+    fprintf(stderr,"\n ******* Process %d finished its tasks: %d *******\n", rank, num_strings);
 
     // Free the allocated memory
-    free_string_array(received_strings);
+    free_string_array(received_strings, num_strings);
 }
 
 void worker_code(int rank, int num_hours_per_day) {
