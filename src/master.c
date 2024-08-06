@@ -4,17 +4,23 @@ const char* sales_filename = "data/viajes/viajes_por_Variante_dia_parada.csv";
 const char* output_filename = "data/retrasos/resumen.csv";
 
 // Function for master to distribute tasks
-void distribute_tasks(int size, int from_day, int num_days) {
+char** distribute_tasks(int size, int from_day, int num_days) {
     // Generate the list of dir names
     char** directorios = generate_directories(from_day, num_days);
+    char** master_tasks = NULL;
 
-    for (int i = 1; i < size; i++) {
+    for (int i = 0; i < size; i++) {
         // Distribute dirs among processes
         char** assigned_days = NULL;
         int len = distribute(directorios, num_days, i, size, &assigned_days);
 
         // Send the dirs to worker
-        send_string_array(assigned_days, len, i, 0, MPI_COMM_WORLD);
+        if (i > 0) {
+            send_string_array(assigned_days, len, i, 0, MPI_COMM_WORLD);
+        } else {
+            // Copy the assigned days for master to return it
+            copy_string_array(assigned_days, &master_tasks, len);
+        }
 
         // Free the array
         free_string_array(assigned_days);
@@ -23,6 +29,8 @@ void distribute_tasks(int size, int from_day, int num_days) {
 
     free_string_array(directorios);
     directorios = NULL;
+
+    return master_tasks;
 }
 
 void get_bus_stop_delay_from_row(const char* row, size_t* bus_stop, double* delay) {
@@ -46,12 +54,15 @@ void get_bus_stop_delay_from_row(const char* row, size_t* bus_stop, double* dela
     }
 }
 
-void master_code(int size, int from_day, int num_days) {
+void master_code(int size, int from_day, int num_days, int num_hours_per_day) {
     // Master process
-    distribute_tasks(size, from_day, num_days);
+    char** master_tasks = distribute_tasks(size, from_day, num_days);
 
     // Create the master delay map
     DelayMap *master_map = create_delay_map();
+
+    // Perform task (e.g., process delays)
+    perform_task(0, master_tasks, num_hours_per_day, master_map);
 
     for (int i = 1; i < size; i++) {
         // Receive the number of key-value pairs 
@@ -98,6 +109,7 @@ void master_code(int size, int from_day, int num_days) {
         MPI_Recv(NULL, 0, MPI_BYTE, i, 7, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
+    // Generate CSV with delays and people affected by it
     generate_csv(master_map, sales_filename, output_filename);
 
     // Clean up master map
@@ -131,4 +143,6 @@ void run_single_instance(int from_day, int num_days, int num_hours_per_day) {
     generate_csv(delay_map, sales_filename, output_filename);
 
     free_delay_map(delay_map);
+
+    fprintf(stderr,"All tasks completed.\n");
 }
