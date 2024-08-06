@@ -613,29 +613,24 @@ Para el análisis utilizaremos estos dos términos:
 \end{figure}
 
 El esquema de la figura 1 retrata la estrategia de resolución. En este esquema:\\
-El proceso master divide inicialmente el conjunto de datos entre los procesos esclavos utilizando MPI.
-Cada esclavo divide los datos asignados equitativamente entre los hilos utilizando OpenMP, para luego realizar el análisis y procesamiento de los mismos.
-Existe colaboración entre esclavos para el cálculo de ciertos datos, los cuales son almacenados en memoria compartida.
-Al final los esclavos retornan sus resultados al master.
+El proceso master divide inicialmente el conjunto de datos entre los procesos esclavos utilizando MPI. Para eso, los datos se agrupan en carpetas, una por cada dia , se analizo los datos, y se creeyo conviente agrupar los 24 archivos de horarios por dia en carpetas. Inicialmente, se penso en la colaboracion entre los esclavos para el analisis delos VFT que esta procesando y la posibilidad de compartirlo con otros esclavos, pero debido a la alta velocidad que un nodo era capa de agrupar en VFT, se descarto esa posbilidad, ya que generaria un overhead importante en las comunicaiones, generando atrasos. Se opto entonces, en que cada nodo analice el archivo de horarios que le corresponde a cada bloque. 
+Los esclavos primero agrupan por VFD, y para cada VFD consiguen los datos del VFT correspondiente en el archivo de horarios, generando un archivo temporal que luego sera enviado a un proceso que corre en Python y utiliza bibliotecas de PyQGIS. Este una vez retornado los atrasos correspondiente, para cada parada en las que existen capturas cercanas, eliminan todo tipo de capa o memoria que pudo haber utilizado el QGIS.
+Al final del procesameinto del bloque, los esclavos retornan sus resultados al master, pero antes hace un preprocesamiento, para sacar datos incongruentes que surgen a partir del calculo de los atrasos. 
 
-Para la implementación se utilizará un modelo maestro/esclavo usando un esquema de descomposición de dominio. Esta implementación se hará en C con la bibliotecas MPI, y los algoritmos de los nodos en OpenMP.
+Para la implementación se utilizó un modelo maestro/esclavo usando un esquema de descomposición de dominio. Esta implementación se realizo  en C/C++ con la biblioteca MPI.
 
-Cada proceso esclavo realiza un procesamiento de los datos asignados agrupando por VFD y así obteniendo los retrasos para las paradas correspondientes. Por otra parte un grupo de procesos se encargará del análisis de los datos de los que se obtendrá la venta de boletos por parada durante los meses de junio de los pasados dos años.
+Cada proceso esclavo realiza un procesamiento de los datos asignados agrupando por VFD y así obteniendo los retrasos para las paradas correspondientes. En gran parte debido a que los procesos llevarian gran parte del tiempo de computo, se pensó en preprocesar el archivo de ventas, este por su parte no se tomo de junio de años anteriores como se pensaba en un primer momento.  Debido en el atraso en la publicación de los datos, por suerte pudimos contar con las ventas de pasajes en el mes de junio casi al final del mes de julio del presente año. Con estos números, se tiene una idea de a que cantidad gente afecta los atrasos.
 
-Los datos obtenidos desde la API serán divididos por bloques. Estos bloques serán distribuidos dependiendo de la cantidad de procesos con los que se cuente, pero para poder controlar el correcto funcionamiento de los nodos, se harán pruebas, para determinar qué cantidad de bloques se dará por vez a cada uno, esto en vistas de analizar las posibles caídas de nodos en el sistema, y qué repercusión tendrá sobre el funcionamiento de éste.
-Debido a que el menor flujo de información de los buses reportados sucede a la 3 AM (aproximadamente), los datos serán divididos entre bloques de 24 horas desde las 3 AM de un día hasta las 3 AM del día siguiente, con lo cuál disminuirá la cantidad de VFDs parciales que se repartirán, entre los procesos con los que se ejecute el sistema.
-
-Por otro lado, los datos de los horarios de pasada por día y por parada, serán compartidos entre los procesos, con estos se generarán los VFTs, que en conjunto con los VFD, se utilizarán para calcular el retraso en las paradas por las que pasa la línea para los  datos dentro del VFD.
+Los datos obtenidos desde la API se dividieron por bloques de 24 horas. Estos bloques son distribuidos dependiendo de la cantidad de procesos con los que se cuente, pero para poder controlar el correcto funcionamiento de los nodos, con las pruebas realizadas, se determino que, la cantidad de bloques (días) a distribuir sera de una unidad. Con las medidas realizadas. se llega a que la contabilizacion de unas 24 horas de un día, insume aproximadamente media hora. Por tal motivo, la cantidad de bloques que se distribuirá, se dará por vez a cada uno, esto en vistas de analizar las posibles caídas del sistema y poder tener un parcial de los atrasos cumputados.
+Inicialmente, se pensó en separar por bloques desde las 3 AM (aproximadamente), los datos serian divididos entre bloques de 24 horas hasta las 2 AM del día siguiente, pero debido al poco timpo en que realizamos las pruebas, optamos por separar en bloques *carpetas* con las 24 horas del dia. De igual manera, los horarios de los buses cambian todos los dias, asi que generaromos un archivo pora cada dia. Como el archivo de Python procesara todo un dia, al final del procesamiento hecho por el codigo en C, los VFD parciales se limitaran a los datos que luego una el master.
 
 Cada proceso deberá ordenar los datos por VFD antes de procesarlos. Esto hará que cada uno de ellos cuente con datos totales o parciales para determinado VFD. Luego del ordenamiento se realizará el procesamiento de los datos.
 
-Cada proceso deberá obtener un VFT (a demanda),  correspondiente a cada VFD. Cómo existirá más de un proceso que necesite utilizar el mismo VFT, se deberá implementar un mecanismo para evitar, en lo posible, la redundancia en el cálculo de los VFT, y a su vez hacer colaborativa la realización de esta tarea. Para esto, se pueden utilizar ventanas de memoria compartida donde cada proceso, le comunica al resto, mediante un broadcast, que realizará el cálculo de determinado VFT y reserva un segmento de memoria donde se va a almacenar este dato, para que luego pueda ser accedido por otros procesos que los necesiten.
-
-Se implementarán dos algoritmos: uno para procesar el
-conjunto de datos en cada proceso (ordenar en VFDs y obtener VFTs), esta implementación se hará en C con la bibliotecas OpenMP, luego se utilizará para el cálculo de la demora, un script de Python utilizando librerías de QGIS \cite{qgis}, que realizará las siguientes tareas: transformar las coordenadas de las paradas del VFT de los sistemas WGS84 a UTM 21S, determinar qué paradas del VFT serán cubiertas por el recorrido del VFD (ya que pueden ser parciales), luego para estas paradas válidas se calculará la hora de pasada utilizando para ellos los dos registros más cercanos, retornando así la demora en minutos para cada parada e incluyendo datos relevantes para un posterior análisis . 
+Se implementaron dos algoritmos: uno para procesar el
+conjunto de datos en cada proceso (ordenar en VFDs y obtener VFTs), esta implementación se realiza en C y luego se utiliza para el cálculo de la demora, un script de Python utilizando librerías de QGIS \cite{qgis}, que realiza las siguientes tareas: transformar las coordenadas de las paradas del VFT de los sistemas WGS84 a UTM 21S, determinar qué paradas del VFT serán cubiertas por el recorrido del VFD (ya que pueden ser parciales). Luego, para estas paradas válidas se calcula la hora de pasada utilizando para ellos los dos registros más cercanos, retornando así la demora en minutos para cada parada e incluyendo datos relevantes para un posterior análisis . 
 
 \subsection{Post-procesamiento de los resultados}
-Una vez el maestro obtiene los resultados, hace un análisis posterior para devolver la demora para cada parada para cada VFD, y enlaza estos datos con la cantidad de personas por parada, que se estima afecta este retraso.
+Una vez el nodo termina de analizar el bloque , la informacion la procesa y se la envia al master, este a su vez mergea los datos para devolver la demora para cada parada para cada dia, variante y enlaza estos datos con la cantidad de personas por parada, que se estima afecta este retraso.
 
 \section{Análisis experimental}
 \subsection{Rendimiento}
@@ -835,5 +830,3 @@ URL: \url{https://www.qgis.org/es/site/about/index.html}
 
 % that's all folks
 \end{document}
-
-
