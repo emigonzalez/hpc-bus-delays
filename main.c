@@ -37,12 +37,16 @@
  * @return void
  */
 void handle_signal(int signal) {
-    printf("Received signal %d, performing cleanup...\n", signal);
+    printf("Received signal %d, exiting...\n", signal);
 
-    MPI_Finalize();
+    // If some condition is met, forcefully exit
+    if (signal > 0) {
+        MPI_Abort(MPI_COMM_WORLD, signal);
+    } else {
+        MPI_Finalize();
+    }
 
-    printf("Cleanup done, exiting...\n");
-    exit(EXIT_SUCCESS);
+    exit(signal);
 }
 
 /**
@@ -94,6 +98,8 @@ int main(int argc, char** argv) {
     // Register signal handler
     signal(SIGINT, handle_signal);  // Handle Ctrl+C (interrupt signal)
     signal(SIGTERM, handle_signal); // Handle termination signal
+    signal(SIGSEGV, handle_signal);  // Handle segmentation faults
+    signal(SIGABRT, handle_signal);  // Handle abort signals
 
     if (size > 1) {
         if (rank == 0) {
