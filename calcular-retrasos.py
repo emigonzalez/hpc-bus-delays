@@ -225,36 +225,13 @@ def cargarCapas_y_Calculo(capturas,horarios,salida):
                 reg_a = capa_vfd.getFeature(nearest_ids[0])  # Usar nearest_ids[1] en lugar de nearest_ids[0]
                 reg_b = capa_vfd.getFeature(nearest_ids[len(nearest_ids)-1])  # Usar nearest_ids[2] en lugar de nearest_ids[1]
 
-                # for nearest_id in nearest_ids:
-                #     reg_c = capa_vfd.getFeature(nearest_id)
-                #     if reg_c.geometry().equals(reg_a.geometry()):
-                #         registros_misma_geometria.append(reg_c)
-                #     else:
-                #         break
-                # if reg_c.geometry().equals(reg_a.geometry()):
-                #     cantidad_iguales += 1
                 if cantidad_iguales > 10:
                         registroCumputable = False
                         break
-                # else:
-                #         break
-                # nearest_ids = spatial_index.nearestNeighbor(parada_valida.geometry().asPoint(), cantidad_iguales)
-                
+ 
             # print('vecinos:', nearest_ids, cantidad_iguales)
             if registroCumputable:
-                # registro_mas_temprano = min(registros_misma_geometria, key=lambda reg: reg['fecha'])
-                # registro_mas_tarde = max(registros_misma_geometria, key=lambda reg: reg['fecha'])
-                # if parada_valida['ordinal'] == ordinal_terminal:  # Lógica para la parada final del VFT
-                #     print('***************   parada final   **********************')
-                #     # Seleccionar el registro más temprano en tiempo
-                #     # print('vecinos:', nearest_ids, cantidad_iguales)
-                #     reg_a = registro_mas_temprano
-                # elif parada_valida['ordinal'] == "1": # Lógica para la parada de salida del VFT
-                #     reg_a = registro_mas_tarde
-                #     # print('##############   parada inicial    #############')
-                # else :  # Lógica para las paradas intermedias de VFT
-                #     reg_a = reg_a
-            
+    
                 fecha_hora_estimada = calcular_hora_estimada(reg_a, reg_b, parada_valida)
                   
                 vfd_string = VFD
