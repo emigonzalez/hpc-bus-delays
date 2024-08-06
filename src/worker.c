@@ -25,28 +25,35 @@ void perform_task(int rank, char** assigned_days, int num_hours_per_day, DelayMa
             continue;
         }
 
+        HashMap* vfd_map = create_hash_map();
+
         // Iterate over each location file
         for (int j = 0; j < num_hours_per_day; j++) {
             // Generate VFD map and all fields to be picked by Python script
-            int ok = map_locations_to_schedules(capturas[j], assigned_days[i], vft_map);
+            int ok = map_locations_to_schedules(capturas[j], assigned_days[i], vft_map, vfd_map);
 
             if (!ok) continue;
 
             int len = strlen(capturas[j]);
             printf(" %s \n", capturas[j] + len - 28);
 
-            // Run Python script
-            python_calculate_delays(atoi(day_str));
         }
+
+        printf("$$$$$$$$$$$ PRINTING MAP $$$$$$$$$ \n");
+        // print_hash_map(vfd_map);
+
+        // Run Python script
+        python_calculate_delays(atoi(day_str));
 
         char* delay_file = generate_delay_file_name("data/retrasos", atoi(day_str));
         map_delays(delay_map, delay_file);
-        fprintf(stderr,"####### FINISHED DELAY %d FOR FILE: %s ########\n", rank, delay_file);
 
+        fprintf(stderr,"####### FINISHED DELAY %d FOR FILE: %s ########\n", rank, delay_file);
         // Free the allocated memory
         free(delay_file); delay_file = NULL;
         free(horarios); horarios = NULL;
         free_hash_map(vft_map); vft_map = NULL;
+        free_vfd_hash_map(vfd_map); vfd_map = NULL;
     }
 
     // Synchronize all processes

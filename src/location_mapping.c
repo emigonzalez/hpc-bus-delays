@@ -90,8 +90,8 @@ int generate_vfd_file(char* date, HashMap* map) {
     return 1;
 }
 
-int map_locations_to_schedules(char* fileName, char* date, HashMap* vft_map) {
-    HashMap* vfd_map = group_data_by_vfd(fileName, vft_map);
+int map_locations_to_schedules(char* fileName, char* date, HashMap* vft_map, HashMap* vfd_map) {
+    group_data_by_vfd(fileName, vft_map, vfd_map);
 
     if (vfd_map == NULL) {
         fprintf(stderr, "INVALID VFD MAPS FOR %s.\n", fileName);
@@ -104,7 +104,5 @@ int map_locations_to_schedules(char* fileName, char* date, HashMap* vft_map) {
 
     int ok = generate_vfd_file(date, vfd_map);
 
-    // Free the hash map
-    free_vfd_hash_map(vfd_map);
     return ok || -1;
 }
