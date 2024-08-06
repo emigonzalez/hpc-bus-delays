@@ -337,29 +337,26 @@ char* create_vft_from_vfd(char* vfd) {
     return key;
 }
 
-HashMap* group_data_by_vfd(char* filename, HashMap* vft_map) {
+void group_data_by_vfd(char* filename, HashMap* vft_map, HashMap* vfd_map) {
     if (filename == NULL) {
         fprintf(stderr, "Error: filename pointer is NULL\n");
-        return NULL;
+        return;
     }
 
     if (vft_map == NULL) {
         fprintf(stderr, "NO VFT MAP PROVIDED\n");
-        return NULL;
+        return;
     }
 
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
         fprintf(stderr, "Error opening file: %s\n", filename);
-        return NULL;
+        return;
     }
 
     char *line = NULL;
     size_t len = 0;
     ssize_t read;
-
-    // Create a hash map for vfd_map
-    HashMap *vfd_map = create_hash_map();
 
     HashMap *discarded_vfds = create_hash_map();
 
@@ -415,5 +412,4 @@ HashMap* group_data_by_vfd(char* filename, HashMap* vft_map) {
     fclose(file);
 
     free_hash_map(discarded_vfds);
-    return vfd_map;
 }
