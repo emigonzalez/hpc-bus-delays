@@ -133,18 +133,18 @@ int main(int argc, char** argv) {
         }
         directories[count] = NULL;
 
-        // Create and populate the local delay map
+        // crea y carga el mapa local de atrasos
         DelayMap *delay_map = create_delay_map();
 
         if (rank == 0) {
-            // Master code
+            // Codigo del master
             master_code(size, num_hours_per_day, directories, delay_map);
         } else {
-            // Worker code
+            // codigo delos esclavos
             worker_code(rank, num_hours_per_day, directories, delay_map);
         }
     } else {
-        // Run all the code if there's a single process running
+        // correr todo el codigo si es el unico proceso lanzado
         run_single_instance(from_day, num_days, num_hours_per_day);
     }
 
