@@ -54,15 +54,9 @@ void get_bus_stop_delay_from_row(const char* row, size_t* bus_stop, double* dela
     }
 }
 
-void master_code(int size, int from_day, int num_days, int num_hours_per_day) {
-    // Master process
-    char** master_tasks = distribute_tasks(size, from_day, num_days);
-
-    // Create the master delay map
-    DelayMap *master_map = create_delay_map();
-
+void master_code(int size, int num_hours_per_day, char** strings, DelayMap *master_map) {
     // Perform task (e.g., process delays)
-    perform_task(0, master_tasks, num_hours_per_day, master_map);
+    perform_task(0, strings, num_hours_per_day, master_map);
 
     for (int i = 1; i < size; i++) {
         // Receive the number of key-value pairs 

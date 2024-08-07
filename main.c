@@ -25,9 +25,9 @@
 #include "worker.h"
 #include "master.h"
 
-#define DEFAULT_FROM_DAY 10
-#define DEFAULT_NUM_DAYS 1
-#define DEFAULT_NUM_HOURS_PER_DAY 2
+#define DEFAULT_FROM_DAY 1
+#define DEFAULT_NUM_DAYS 30
+#define DEFAULT_NUM_HOURS_PER_DAY 24
 
 /**
  * @brief Maneja las señales de interrupciones para finalizar el codigo de forma segura.
@@ -86,8 +86,10 @@ int main(int argc, char** argv) {
         exit(1);
     }
 
+    // Inicializar MPI
     MPI_Init(&argc, &argv);
 
+    // Obtener el rango del proceso y el tamaño total de los procesos
     int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -102,12 +104,44 @@ int main(int argc, char** argv) {
     signal(SIGABRT, handle_signal);  // Handle abort signals
 
     if (size > 1) {
+        // Cada proceso recibe una porción del arreglo de nombres de archivo
+        int count = DEFAULT_NUM_DAYS / size;
+        char local_filenames[count][11];
+
+        // Los nombres de archivo a distribuir
+        char filenames[DEFAULT_NUM_DAYS][11] = {
+            "2024-06-01","2024-06-02","2024-06-03","2024-06-04","2024-06-05",
+            "2024-06-06","2024-06-07","2024-06-08","2024-06-09","2024-06-10",
+            "2024-06-11","2024-06-12","2024-06-13","2024-06-14","2024-06-15",
+            "2024-06-16","2024-06-17","2024-06-18","2024-06-19","2024-06-20",
+            "2024-06-21","2024-06-22","2024-06-23","2024-06-24","2024-06-25",
+            "2024-06-26","2024-06-27","2024-06-28","2024-06-29","2024-06-30"
+        };
+
+        MPI_Scatter(filenames, count * 11, MPI_CHAR, local_filenames, count * 11, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+        // Cada proceso imprime los archivos que le fueron asignados
+        printf("\n Proceso %d procesa los siguientes dias: \n", rank);
+        for (int i = 0; i < count; i++) {
+            printf("%s\n", local_filenames[i]);
+        }
+
+        char** directories = (char**)malloc(count * sizeof(char*));
+        for (int day = 0; day < count; day++) {
+            directories[day] = (char*)malloc(26 * sizeof(char));
+            sprintf(directories[day], "data/capturas/%s", local_filenames[day]);
+        }
+        directories[count] = NULL;
+
+        // Create and populate the local delay map
+        DelayMap *delay_map = create_delay_map();
+
         if (rank == 0) {
             // Master code
-            master_code(size, from_day, num_days, num_hours_per_day);
+            master_code(size, num_hours_per_day, directories, delay_map);
         } else {
             // Worker code
-            worker_code(rank, num_hours_per_day);
+            worker_code(rank, num_hours_per_day, directories, delay_map);
         }
     } else {
         // Run all the code if there's a single process running

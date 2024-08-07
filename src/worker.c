@@ -39,9 +39,6 @@ void perform_task(int rank, char** assigned_days, int num_hours_per_day, DelayMa
 
         }
 
-        printf("$$$$$$$$$$$ PRINTING MAP $$$$$$$$$ \n");
-        // print_hash_map(vfd_map);
-
         // Run Python script
         python_calculate_delays(atoi(day_str));
 
@@ -80,12 +77,9 @@ void receive_tasks(int rank, int num_hours_per_day, DelayMap *delay_map) {
     free_string_array(received_strings, num_strings);
 }
 
-void worker_code(int rank, int num_hours_per_day) {
-    // Create and populate the local delay map
-    DelayMap *worker_map = create_delay_map();
-
-    // Receive tasks from the master
-    receive_tasks(rank, num_hours_per_day, worker_map);
+void worker_code(int rank, int num_hours_per_day, char** strings, DelayMap *worker_map) {
+    // Perform task (e.g., process delays)
+    perform_task(rank, strings, num_hours_per_day, worker_map);
 
     int key_count = worker_map->count;
     // printf("Before MPI_Send %d, %d \n", 0, key_count);
