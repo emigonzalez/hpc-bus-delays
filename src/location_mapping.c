@@ -13,7 +13,7 @@ HashMap* group_schedules(char* horarios, int rank) {
         fprintf(stderr, "COULD NOT GENERATE VFT.\n");
         return NULL;
     } else {
-        fprintf(stderr,"VFT GENERADO PARA %s  por el proceso %d \n", horarios, rank);
+        // fprintf(stderr,"VFT GENERADO PARA %s  por el proceso %d \n", horarios, rank);
         return vft_map;
     }
 }
