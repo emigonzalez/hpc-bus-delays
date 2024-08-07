@@ -425,4 +425,5 @@ void group_data_by_vfd(char* filename, HashMap* vft_map, HashMap* vfd_map) {
     fclose(file);
 
     free_hash_map(discarded_vfds);
+    fprintf(stderr,"       VFD GENERADO.    ");
 }
