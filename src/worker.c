@@ -46,7 +46,7 @@ void perform_task(int rank, char** assigned_days, int num_hours_per_day, DelayMa
         char* delay_file = generate_delay_file_name("data/retrasos", atoi(day_str));
         map_delays(delay_map, delay_file);
 
-        fprintf(stderr,"####### FINALIZADO ATRASOS %d PARA EL ARVCHIVO: %s ########\n", rank, delay_file);
+        fprintf(stderr,"####### FINALIZADO ATRASOS PROCESO %d PARA LA CARPETA: %s ########\n", rank, delay_file);
         // Free the allocated memory
         free(delay_file); delay_file = NULL;
         free(horarios); horarios = NULL;
