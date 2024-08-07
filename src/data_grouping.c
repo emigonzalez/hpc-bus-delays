@@ -37,13 +37,18 @@ int convertir_a_minutos(const char* frecuencia) {
 }
 
 void time_to_frecuencia(const char* time, char* resultado) {
-    // Remove colon (:) from the time part
-    char time_without_colon[5]; // HHMM + null terminator
-    snprintf(time_without_colon, sizeof(time_without_colon), "%c%c%c%c",
-             time[0], time[1], time[3], time[4]);
+    // Remove colon (:) from the time part and add a '0' at the end
+    char time_without_colon[6]; // HHMM0 + null terminator
 
-    // Add a 0 at the end of time string without colon
-    strcat(time_without_colon, "0");
+    // Copy the time parts excluding the colon
+    time_without_colon[0] = time[0];
+    time_without_colon[1] = time[1];
+    time_without_colon[2] = time[3];
+    time_without_colon[3] = time[4];
+    time_without_colon[4] = '0';
+    time_without_colon[5] = '\0'; // Null-terminate the string
+
+    // Copy the result to the output parameter
     strcpy(resultado, time_without_colon);
 }
 
@@ -52,6 +57,7 @@ int extreme_delay(const char* fecha, const char* frecuencia) {
     char date_part[11];
     char time_part[6]; // HH:MM without seconds
     sscanf(fecha, "%10s %5s", date_part, time_part);
+
 
     char time_frecuencia[6];
     time_to_frecuencia(time_part, time_frecuencia);
@@ -173,6 +179,10 @@ char* create_vfd_key(char* line) {
         return NULL;
     }
 
+    int len = (strlen(fecha) - 1);
+    char* fecha2 = (char*)malloc(len * sizeof(char));
+    snprintf(fecha2, len, "%s", fecha);
+
     // Check if latitud or longitud is 0
     if (
         strcmp(latitud, "0") == 0 ||
@@ -187,7 +197,7 @@ char* create_vfd_key(char* line) {
 
     // Extract the date (yyyy-mm-dd) from the date string
     char date[11]; // yyyy-mm-dd is 10 characters + null terminator    
-    ajustar_fecha(fecha, frecuencia, date);
+    ajustar_fecha(fecha2, frecuencia, date);
 
     // Create the group key "<variante>_<frecuencia>_<dia>\0"
     size_t key_length = strlen(variante) + strlen(frecuencia) + strlen(date) + 2 + 1; 
@@ -199,6 +209,8 @@ char* create_vfd_key(char* line) {
 
     // Create the key in the format variante_frecuencia_yyyy-mm-dd
     snprintf(key, key_length, "%s_%s_%s", variante, frecuencia, date);
+
+    free(fecha2);
 
     return key;
 }
@@ -380,6 +392,7 @@ void group_data_by_vfd(char* filename, HashMap* vft_map, HashMap* vfd_map) {
 
         char* vfd_key = NULL;
         vfd_key = create_vfd_key(line_copy);
+
 
         if (vfd_key != NULL) {
             Entry* vfd_entry = hash_map_search(vfd_map, vfd_key);

@@ -31,6 +31,7 @@ void perform_task(int rank, char** assigned_days, int num_hours_per_day, DelayMa
         for (int j = 0; j < num_hours_per_day; j++) {
             // Generate VFD map and all fields to be picked by Python script
             int ok = map_locations_to_schedules(capturas[j], assigned_days[i], vft_map, vfd_map);
+		
 
             if (!ok) continue;
 
@@ -40,7 +41,7 @@ void perform_task(int rank, char** assigned_days, int num_hours_per_day, DelayMa
         }
 
         // Run Python script
-        python_calculate_delays(atoi(day_str));
+        //python_calculate_delays(atoi(day_str));
 
         char* delay_file = generate_delay_file_name("data/retrasos", atoi(day_str));
         map_delays(delay_map, delay_file);
