@@ -4,3 +4,4 @@ objects
 main*
 *.so
 python3.*
+mpi-archivos
