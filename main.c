@@ -140,11 +140,11 @@ int main(int argc, char** argv) {
             // Codigo del master
             master_code(size, num_hours_per_day, directories, delay_map);
         } else {
-            // codigo delos esclavos
+            // Codigo de los esclavos
             worker_code(rank, num_hours_per_day, directories, delay_map);
         }
     } else {
-        // correr todo el codigo si es el unico proceso lanzado
+        // Correr todo el codigo si es el unico proceso lanzado
         run_single_instance(from_day, num_days, num_hours_per_day);
     }
 
