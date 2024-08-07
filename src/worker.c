@@ -42,7 +42,7 @@ void perform_task(int rank, char** assigned_days, int num_hours_per_day, DelayMa
         printf("VFD HashMap (Buckets: %zu, Keys: %zu)       ", vfd_map->size, vfd_map->count);
 
         // Run Python script
-        //python_calculate_delays(atoi(day_str));
+        python_calculate_delays(atoi(day_str));
 
         char* delay_file = generate_delay_file_name("data/retrasos", atoi(day_str));
         map_delays(delay_map, delay_file);
