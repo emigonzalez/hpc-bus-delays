@@ -6,14 +6,14 @@
 
 const char* temp = "data/temp";
 
-HashMap* group_schedules(char* horarios) {
+HashMap* group_schedules(char* horarios, int rank) {
     HashMap* vft_map = group_data_by_vft(horarios);
 
     if (vft_map == NULL) {
         fprintf(stderr, "COULD NOT GENERATE VFT.\n");
         return NULL;
     } else {
-        fprintf(stderr,"VFT GENERATED FOR %s     \n", horarios);
+        fprintf(stderr,"VFT GENERADO PARA %s  por el proceso %d \n", horarios, rank);
         return vft_map;
     }
 }

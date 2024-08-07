@@ -18,7 +18,7 @@ void perform_task(int rank, char** assigned_days, int num_hours_per_day, DelayMa
             continue;
         }
 
-        HashMap* vft_map = group_schedules(horarios);
+        HashMap* vft_map = group_schedules(horarios, rank);
 
         if (vft_map == NULL) {
             free(horarios);
