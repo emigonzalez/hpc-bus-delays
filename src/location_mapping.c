@@ -98,9 +98,7 @@ int map_locations_to_schedules(char* fileName, char* date, HashMap* vft_map, Has
         return -1;
     }
 
-    fprintf(stderr,"       VFD GENERADO.    ");
-
-    printf("VFD HashMap (Buckets: %zu, Keys: %zu)       ", vfd_map->size, vfd_map->count);
+    // printf("VFD HashMap (Buckets: %zu, Keys: %zu)       ", vfd_map->size, vfd_map->count);
 
     int ok = generate_vfd_file(date, vfd_map);
 
