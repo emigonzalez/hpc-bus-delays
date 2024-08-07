@@ -73,7 +73,7 @@ int process_row(DelayMap* delay_map, char* line) {
 }
 
 int map_delays(DelayMap* delay_map, char* filename) {
-    fprintf(stderr, "FILENAME: %s \n", filename);
+    fprintf(stderr, "ARCHIVO: %s \n", filename);
 
     FILE* file = fopen(filename, "r");
     if (file == NULL) {

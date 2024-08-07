@@ -94,11 +94,11 @@ int map_locations_to_schedules(char* fileName, char* date, HashMap* vft_map, Has
     group_data_by_vfd(fileName, vft_map, vfd_map);
 
     if (vfd_map == NULL) {
-        fprintf(stderr, "INVALID VFD MAPS FOR %s.\n", fileName);
+        fprintf(stderr, "MAPA VFD INVALIDO PARA %s.\n", fileName);
         return -1;
     }
 
-    fprintf(stderr,"       VFD GENERATED.    ");
+    fprintf(stderr,"       VFD GENERADO.    ");
 
     printf("VFD HashMap (Buckets: %zu, Keys: %zu)       ", vfd_map->size, vfd_map->count);
 

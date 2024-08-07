@@ -192,7 +192,7 @@ char* create_vfd_key(char* line) {
         is_valid_departure_time(frecuencia) < 0 ||
         extreme_delay(fecha, frecuencia) > 0
     ) {
-        return NULL; // Skip this row
+        return NULL; // saltar esta fila
     }
 
     // Extract the date (yyyy-mm-dd) from the date string
@@ -398,7 +398,7 @@ void group_data_by_vfd(char* filename, HashMap* vft_map, HashMap* vfd_map) {
             Entry* vfd_entry = hash_map_search(vfd_map, vfd_key);
 
             if (vfd_entry != NULL) {
-                // Add the row to the vfd_map
+                // Agregar la fila al mapa vfd_map
                 insert_to_vfds(vfd_entry, line);
             } else if (!hash_map_search(discarded_vfds, vfd_key)) {
                 char* vft_key = create_vft_from_vfd(vfd_key);
