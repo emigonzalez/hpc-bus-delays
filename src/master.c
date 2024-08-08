@@ -102,11 +102,15 @@ void run_single_instance(int from_day, int num_days, int num_hours_per_day) {
         perform_task(0, directorios[i], num_hours_per_day, delay_map);
     }
 
-    if (delay_map == NULL) return;
+    if (delay_map == NULL){
+        free_string_array(directorios,num_hours_per_day);
+        return;
+    }
 
     generate_csv(delay_map, sales_filename, output_filename);
 
     free_delay_map(delay_map);
+    free_string_array(directorios,num_hours_per_day);
 
     fprintf(stderr,"All tasks completed.\n");
 }

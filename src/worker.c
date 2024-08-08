@@ -14,12 +14,14 @@ void perform_task(int rank, char* assigned_days, int num_hours_per_day, DelayMap
     char* horarios = generate_schedule_file_name("data/horarios", atoi(day_str));
 
     if (horarios == NULL) {
+            free_string_array(capturas, num_hours_per_day);
         return;
     }
 
     HashMap* vft_map = group_schedules(horarios, rank);
 
     if (vft_map == NULL) {
+            free_string_array(capturas, num_hours_per_day);
         free(horarios);
         return;
     }
@@ -46,13 +48,14 @@ void perform_task(int rank, char* assigned_days, int num_hours_per_day, DelayMap
     char* delay_file = generate_delay_file_name("data/retrasos", atoi(day_str));
     map_delays(delay_map, delay_file);
 
-    fprintf(stderr,"####### FINALIZADO ATRASOS PROCESO %d PARA LA CARPETA: %s ########\n", rank, delay_file);
-    // Free the allocated memory
-    free(delay_file); delay_file = NULL;
+        fprintf(stderr,"####### FINALIZADO ATRASOS PROCESO %d PARA LA CARPETA: %s ########\n", rank, delay_file);
+        // Free the allocated memory
 
-    free(horarios); horarios = NULL;
-    free_hash_map(vft_map); vft_map = NULL;
-    free_vfd_hash_map(vfd_map); vfd_map = NULL;
+        free(delay_file); delay_file = NULL;
+        free_vfd_hash_map(vfd_map); vfd_map = NULL;
+        free_hash_map(vft_map); vft_map = NULL;
+        free(horarios); horarios = NULL;
+        free_string_array(capturas, num_hours_per_day);
 
     // Synchronize all processes
     MPI_Barrier(MPI_COMM_WORLD);

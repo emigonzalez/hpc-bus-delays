@@ -169,22 +169,24 @@ DelayEntry *delay_map_search(DelayMap *map, const char *key) {
 
 // Free the memory allocated for the hash map
 void free_delay_map(DelayMap *map) {
-    for (size_t i = 0; i < map->size; i++) {
-        DelayEntry *entry = map->buckets[i];
-        while (entry != NULL) {
-            DelayEntry *temp = entry;
-            entry = entry->next;
-            free(temp->key);
-            for (size_t j = 0; j < temp->row_count; j++) {
-                free(temp->rows[j]->row);
-                free(temp->rows[j]);
+    if (map != NULL) { // Verifica si el mapa no es NULL
+        for (size_t i = 0; i < map->size; i++) {
+            DelayEntry *entry = map->buckets[i];
+            while (entry != NULL) {
+                DelayEntry *temp = entry;
+                entry = entry->next;
+                free(temp->key);
+                for (size_t j = 0; j < temp->row_count; j++) {
+                    free(temp->rows[j]->row);
+                    free(temp->rows[j]);
+                }
+                free(temp->rows);
+                free(temp);
             }
-            free(temp->rows);
-            free(temp);
         }
+        free(map->buckets);
+        free(map);
     }
-    free(map->buckets);
-    free(map);
 }
 
 // Print the hash map

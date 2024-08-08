@@ -19,7 +19,7 @@ char** generate_location_file_names(char* path, int day, int num_hours_per_day) 
     for (int hour = 0; hour < num_hours_per_day; hour++) {
         file_names[hour] = (char*)malloc(53 * sizeof(char));
         sprintf(file_names[hour], "%s/stm-buses-2024-06-%02d_%02d.csv", path, day, hour);
-    }
+    }                                  
     file_names[num_hours_per_day] = NULL;
     return file_names;
 }
@@ -58,7 +58,7 @@ int distribute(char** file_names, int num_files, int rank, int size, char*** ass
 char* get_day_from_dir_name(const char *str) {
     size_t len = strlen(str);
     if (len < 2) {
-        return NULL; // or handle this case as needed
+        return NULL; 
     }
-    return (char*)str + len - 2; // cast to char* to avoid const warning
+    return (char*)str + len - 2; // castear a char* to evitar warning
 }
