@@ -10,24 +10,6 @@ void gather_results() {
     return;
 }
 
-void get_delay_fields(const char* row, char** variante, char** fecha_hora_paso, char** retraso, char** cod_parada, char** X, char** Y) {
-    char* buffer = strdup(row);
-
-    // VFD,variante,codigo_bus,linea,hora,ordinal,fecha_hora_paso,retraso,vecinos,cod_parada,X,Y
-    strtok(buffer, ","); // VFD
-    *variante = strtok(NULL, ",");
-    strtok(NULL, ","); // codigo_bus
-    strtok(NULL, ","); // linea
-    strtok(NULL, ","); // hora
-    strtok(NULL, ","); // ordinal
-    *fecha_hora_paso = strtok(NULL, ",");
-    *retraso = strtok(NULL, ","); // retraso
-    strtok(NULL, ","); // vecinos
-    *cod_parada = strtok(NULL, ",");
-    *X = strtok(NULL, ",");
-    *Y = strtok(NULL, ",");
-}
-
 char* create_key(const char* row, size_t* bus_stop, size_t* passenger_count) {
     char buffer[256];
     strncpy(buffer, row, sizeof(buffer));
@@ -132,8 +114,19 @@ DelayMap* summarize_delays(DelayMap* delay_map) {
         for (size_t j = 0; j < entries[i]->row_count; j++) {
             Delay* delay = entries[i]->rows[j];
 
-            char* variante; char* fecha_hora_paso; char* retraso; char* cod_parada; char* X; char* Y;
-            get_delay_fields(delay->row, &variante, &fecha_hora_paso, &retraso, &cod_parada, &X, &Y);
+            char* buffer = strdup(delay->row);
+            strtok(buffer, ","); // VFD
+            char* variante = strtok(NULL, ",");
+            strtok(NULL, ","); // codigo_bus
+            strtok(NULL, ","); // linea
+            strtok(NULL, ","); // hora
+            strtok(NULL, ","); // ordinal
+            char* fecha_hora_paso = strtok(NULL, ",");
+            char* retraso = strtok(NULL, ","); // retraso
+            strtok(NULL, ","); // vecinos
+            char* cod_parada = strtok(NULL, ",");
+            char* X = strtok(NULL, ",");
+            char* Y = strtok(NULL, ",");
             char* fecha = strtok(fecha_hora_paso, " ");
 
             if (atof(retraso) < 0 || atof(retraso) > 50) {
@@ -163,9 +156,14 @@ DelayMap* summarize_delays(DelayMap* delay_map) {
             char* new_Y = copy_string(Y); // Remove line break
             sprintf(new_row, "%s,%s,%s,%s,%s,%s", fecha, variante, r, cod_parada, X, new_Y); 
             delay_map_insert_row(new_map, key, new_row);
+            free(new_row);
+            free(new_Y);
+            free(key);
+            free(buffer);
         }
     }
 
+    free(entries);
     return new_map;
 }
 

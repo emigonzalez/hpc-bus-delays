@@ -126,23 +126,21 @@ int main(int argc, char** argv) {
             printf("%s\n", local_filenames[i]);
         }
 
-        char** directories = (char**)malloc(count * sizeof(char*));
+        char** directories = (char**)malloc((count + 1) * sizeof(char*));
         for (int day = 0; day < count; day++) {
-            directories[day] = (char*)malloc(26 * sizeof(char));
+            directories[day] = (char*)malloc(25 * sizeof(char));
             sprintf(directories[day], "data/capturas/%s", local_filenames[day]);
         }
         directories[count] = NULL;
 
-        // crea y carga el mapa local de atrasos
-        DelayMap *delay_map = create_delay_map();
-
         if (rank == 0) {
             // Codigo del master
-            master_code(size, num_hours_per_day, directories, delay_map);
+            master_code(size, num_hours_per_day, directories);
         } else {
             // Codigo de los esclavos
-            worker_code(rank, num_hours_per_day, directories, delay_map);
+            worker_code(rank, num_hours_per_day, directories);
         }
+        free_string_array(directories, count);
     } else {
         // Correr todo el codigo si es el unico proceso lanzado
         run_single_instance(from_day, num_days, num_hours_per_day);

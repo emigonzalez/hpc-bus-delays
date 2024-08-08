@@ -15,7 +15,7 @@
 #include "string_array.h"
 #include "worker.h"
 
-void master_code(int size, int num_hours_per_day, char** strings, DelayMap *master_map);
+void master_code(int size, int num_hours_per_day, char** strings);
 void run_single_instance(int from_day, int num_days, int num_hours_per_day);
 
 #endif // MASTER_H

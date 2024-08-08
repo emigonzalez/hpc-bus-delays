@@ -3,36 +3,6 @@
 const char* sales_filename = "data/viajes/viajes_por_Variante_dia_parada.csv";
 const char* output_filename = "data/retrasos/resumen.csv";
 
-// Function for master to distribute tasks
-char** distribute_tasks(int size, int from_day, int num_days) {
-    // Generate the list of dir names
-    char** directorios = generate_directories(from_day, num_days);
-    char** master_tasks = NULL;
-
-    for (int i = 0; i < size; i++) {
-        // Distribute dirs among processes
-        char** assigned_days = NULL;
-        int len = distribute(directorios, num_days, i, size, &assigned_days);
-
-        // Send the dirs to worker
-        if (i > 0) {
-            send_string_array(assigned_days, len, i, 0, MPI_COMM_WORLD);
-        } else {
-            // Copy the assigned days for master to return it
-            copy_string_array(assigned_days, &master_tasks, len);
-        }
-
-        // Free the array
-        free_string_array(assigned_days, len);
-        assigned_days = NULL;
-    }
-
-    free_string_array(directorios, num_days);
-    directorios = NULL;
-
-    return master_tasks;
-}
-
 void get_bus_stop_delay_from_row(const char* row, size_t* bus_stop, double* delay) {
     char buffer[256];
     strncpy(buffer, row, sizeof(buffer));
@@ -54,53 +24,58 @@ void get_bus_stop_delay_from_row(const char* row, size_t* bus_stop, double* dela
     }
 }
 
-void master_code(int size, int num_hours_per_day, char** strings, DelayMap *master_map) {
-    // Perform task (e.g., process delays)
-    perform_task(0, strings, num_hours_per_day, master_map);
+void master_code(int size, int num_hours_per_day, char** strings) {
+    DelayMap *master_map = create_delay_map();
 
-    for (int i = 1; i < size; i++) {
-        // Receive the number of key-value pairs 
-        int key_count;
-        MPI_Recv(&key_count, 1, MPI_INT, i, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    for (int k = 0; strings[k] != NULL; k++) {
+        // Perform task (e.g., process delays)
+        perform_task(0, strings[k], num_hours_per_day, master_map);
 
-        for (int j = 0; j < key_count; j++) {
-            // Receive the length of the key
-            int key_length;
-            MPI_Recv(&key_length, 1, MPI_INT, i, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        for (int i = 1; i < size; i++) {
+            // Receive the number of key-value pairs 
+            int key_count;
+            MPI_Recv(&key_count, 1, MPI_INT, i, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-            // Receive the key
-            char *key = (char *)malloc(key_length);
-            MPI_Recv(key, key_length, MPI_CHAR, i, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            for (int j = 0; j < key_count; j++) {
+                // Receive the length of the key
+                int key_length;
+                MPI_Recv(&key_length, 1, MPI_INT, i, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-            // Receive the number of rows
-            size_t row_count;
-            MPI_Recv(&row_count, 1, MPI_UINT64_T, i, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                // Receive the key
+                char *key = (char *)malloc(key_length);
+                MPI_Recv(key, key_length, MPI_CHAR, i, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-            // Receive the rows
-            char **rows = (char **)malloc(row_count * sizeof(char *));
-            for (size_t j = 0; j < row_count; j++) {
-                int row_length;
-                MPI_Recv(&row_length, 1, MPI_INT, i, 5, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                rows[j] = (char *)malloc(row_length);
-                MPI_Recv(rows[j], row_length, MPI_CHAR, i, 6, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                // Receive the number of rows
+                size_t row_count;
+                MPI_Recv(&row_count, 1, MPI_UINT64_T, i, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+                // Receive the rows
+                char **rows = (char **)malloc(row_count * sizeof(char *));
+                for (size_t j = 0; j < row_count; j++) {
+                    int row_length;
+                    MPI_Recv(&row_length, 1, MPI_INT, i, 5, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                    rows[j] = (char *)malloc(row_length);
+                    MPI_Recv(rows[j], row_length, MPI_CHAR, i, 6, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                }
+
+                for (size_t j = 0; j < row_count; j++) {
+                    // Insert the key and rows into the master map
+                    size_t bus_stop;
+                    double delay;
+                    get_bus_stop_delay_from_row(rows[j], &bus_stop, &delay);
+                    delay_map_insert(master_map, key, bus_stop, delay, rows[j]);
+                    // free(rows[j]);
+                }
+
+                free(rows);
+                free(key);
             }
-
-            for (size_t j = 0; j < row_count; j++) {
-                // Insert the key and rows into the master map
-                size_t bus_stop;
-                double delay;
-                get_bus_stop_delay_from_row(rows[j], &bus_stop, &delay);
-                delay_map_insert(master_map, key, bus_stop, delay, rows[j]);
-            }
-
-            free(rows);
-            free(key);
         }
-    }
 
-    // Wait for all worker processes to complete
-    for (int i = 1; i < size; i++) {
-        MPI_Recv(NULL, 0, MPI_BYTE, i, 7, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        // Wait for all worker processes to complete
+        for (int i = 1; i < size; i++) {
+            MPI_Recv(NULL, 0, MPI_BYTE, i, 7, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        }
     }
 
     // Generate CSV with delays and people affected by it
@@ -123,7 +98,9 @@ void run_single_instance(int from_day, int num_days, int num_hours_per_day) {
 
     DelayMap *delay_map = create_delay_map();
 
-    perform_task(0, directorios, num_hours_per_day, delay_map);
+    for (int i = 0; directorios[i] != NULL; i++) {
+        perform_task(0, directorios[i], num_hours_per_day, delay_map);
+    }
 
     if (delay_map == NULL) return;
 
