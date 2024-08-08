@@ -64,7 +64,7 @@ void master_code(int size, int num_hours_per_day, char** strings) {
                     double delay;
                     get_bus_stop_delay_from_row(rows[j], &bus_stop, &delay);
                     delay_map_insert(master_map, key, bus_stop, delay, rows[j]);
-                    // free(rows[j]);
+                    free(rows[j]);
                 }
 
                 free(rows);
