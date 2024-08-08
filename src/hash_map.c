@@ -168,6 +168,7 @@ Entry *insert_to_vfts(Entry *entry, const char *row) {
         return NULL;
     }
     entry->vft_row_count++;
+    entry->vft_rows[entry->vft_row_count] = NULL;
     return entry;
 }
 
@@ -187,6 +188,7 @@ Entry *insert_to_vfds(Entry *entry, const char *row) {
         return NULL;
     }
     entry->vfd_row_count++;
+    entry->vfd_rows[entry->vfd_row_count] = NULL;
     return entry;
 }
 
