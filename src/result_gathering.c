@@ -10,41 +10,6 @@ void gather_results() {
     return;
 }
 
-void get_delay_fields(const char* row, char** variante, char** fecha_hora_paso, char** retraso, char** cod_parada, char** X, char** Y) {
-    char* buffer = strdup(row);
-
-    // VFD,variante,codigo_bus,linea,hora,ordinal,fecha_hora_paso,retraso,vecinos,cod_parada,X,Y
-    strtok(buffer, ","); // VFD
-    *variante = strtok(NULL, ",");
-    strtok(NULL, ","); // codigo_bus
-    strtok(NULL, ","); // linea
-    strtok(NULL, ","); // hora
-    strtok(NULL, ","); // ordinal
-    *fecha_hora_paso = strtok(NULL, ",");
-    *retraso = strtok(NULL, ","); // retraso
-    strtok(NULL, ","); // vecinos
-    *cod_parada = strtok(NULL, ",");
-    *X = strtok(NULL, ",");
-    *Y = strtok(NULL, ",");
-}
-
-void get_field_in_row_by_index(const char* row, int index, char** field) {
-    char* buffer = strdup(row);
-
-    char *token;
-    int i = 0;
-
-    // Tokenize the row based on commas
-    token = strtok(buffer, ",");
-    while (token != NULL) {
-        i++;
-        if (i == index) {
-            *field = token;
-        }
-        token = strtok(NULL, ",");
-    }
-}
-
 char* create_key(const char* row, size_t* bus_stop, size_t* passenger_count) {
     char buffer[256];
     strncpy(buffer, row, sizeof(buffer));
@@ -68,16 +33,6 @@ char* create_key(const char* row, size_t* bus_stop, size_t* passenger_count) {
     snprintf(key, key_length, "%s_%s_%s", sevar_codigo, fecha, codigo_parada_origen);
 
     return key;
-}
-
-void get_sales_fields(const char* row, char** fecha, char** codigo_parada_origen, char** sevar_codigo, char** cantidad_pasajeros) {
-    char* buffer = strdup(row);
-
-    // Tokenize the row based on commas
-    *fecha = strtok(buffer, ",");
-    *codigo_parada_origen = strtok(NULL, ",");
-    *sevar_codigo = strtok(NULL, ",");
-    *cantidad_pasajeros = strtok(NULL, ",");
 }
 
 TicketMap* group_tickets(const char* filename) {
@@ -159,8 +114,19 @@ DelayMap* summarize_delays(DelayMap* delay_map) {
         for (size_t j = 0; j < entries[i]->row_count; j++) {
             Delay* delay = entries[i]->rows[j];
 
-            char* variante; char* fecha_hora_paso; char* retraso; char* cod_parada; char* X; char* Y;
-            get_delay_fields(delay->row, &variante, &fecha_hora_paso, &retraso, &cod_parada, &X, &Y);
+            char* buffer = strdup(delay->row);
+            strtok(buffer, ","); // VFD
+            char* variante = strtok(NULL, ",");
+            strtok(NULL, ","); // codigo_bus
+            strtok(NULL, ","); // linea
+            strtok(NULL, ","); // hora
+            strtok(NULL, ","); // ordinal
+            char* fecha_hora_paso = strtok(NULL, ",");
+            char* retraso = strtok(NULL, ","); // retraso
+            strtok(NULL, ","); // vecinos
+            char* cod_parada = strtok(NULL, ",");
+            char* X = strtok(NULL, ",");
+            char* Y = strtok(NULL, ",");
             char* fecha = strtok(fecha_hora_paso, " ");
 
             if (atof(retraso) < 0 || atof(retraso) > 50) {
@@ -177,7 +143,7 @@ DelayMap* summarize_delays(DelayMap* delay_map) {
             DelayEntry* exist = delay_map_search(new_map, key);
 
             char r[100]; 
-        
+
             if (exist != NULL) {
                 double retraso_d = exist->max_delay + atof(retraso);
                 sprintf(r, "%f", retraso_d); 
@@ -190,9 +156,14 @@ DelayMap* summarize_delays(DelayMap* delay_map) {
             char* new_Y = copy_string(Y); // Remove line break
             sprintf(new_row, "%s,%s,%s,%s,%s,%s", fecha, variante, r, cod_parada, X, new_Y); 
             delay_map_insert_row(new_map, key, new_row);
+            free(new_row);
+            free(new_Y);
+            free(key);
+            free(buffer);
         }
     }
 
+    free(entries);
     return new_map;
 }
 
@@ -229,4 +200,8 @@ void generate_csv(DelayMap* delay_map, const char* sales_filename, const char* o
     }
 
     fprintf(stderr,"  CSV GENERADO     \n");
+
+    free(entries);
+    free_delay_map(new_delay);
+    free_ticket_map(ticket_map);
 }

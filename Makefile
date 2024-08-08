@@ -7,7 +7,7 @@ NUM_DAYS ?= 1
 NUM_HOURS_PER_DAY ?= 2
 
 CC = mpicc
-CFLAGS = -Iinclude -Wall -fPIC -std=gnu17
+CFLAGS = -Iinclude -Wall -fPIC -std=gnu17 -g
 #  -fsanitize=address -g
 # LDFLAGS = -fsanitize=address
 

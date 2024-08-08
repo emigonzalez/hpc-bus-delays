@@ -3,7 +3,7 @@
 
 void free_string_array(char** array, size_t size) {
     if (array != NULL) {
-         for (int i = 0; i < size || array[i] != NULL; i++) {
+         for (int i = 0; i < size   ; i++) {
             if (array[i]) free(array[i]);
             array[i] = NULL;
         }

@@ -5,9 +5,9 @@
 #include "file_distribute.h"
 
 char** generate_directories(int from_day, int num_days) {
-    char** directories = (char**)malloc(num_days * sizeof(char*));
+    char** directories = (char**)malloc((num_days + 1) * sizeof(char*));
     for (int day = 0; day < num_days; day++) {
-        directories[day] = (char*)malloc(26 * sizeof(char));
+        directories[day] = (char*)malloc(25 * sizeof(char));
         sprintf(directories[day], "data/capturas/2024-06-%02d", from_day + day);
     }
     directories[num_days] = NULL;
@@ -15,7 +15,7 @@ char** generate_directories(int from_day, int num_days) {
 }
 
 char** generate_location_file_names(char* path, int day, int num_hours_per_day) {
-    char** file_names = (char**)malloc(num_hours_per_day * sizeof(char*));
+    char** file_names = (char**)malloc((num_hours_per_day + 1) * sizeof(char*));
     for (int hour = 0; hour < num_hours_per_day; hour++) {
         file_names[hour] = (char*)malloc(53 * sizeof(char));
         sprintf(file_names[hour], "%s/stm-buses-2024-06-%02d_%02d.csv", path, day, hour);
