@@ -37,19 +37,19 @@ void master_code(int size, int num_hours_per_day, char** strings) {
             MPI_Recv(&key_count, 1, MPI_INT, i, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
             for (int j = 0; j < key_count; j++) {
-                // Receive the length of the key
+                // Recibe the length of the key
                 int key_length;
                 MPI_Recv(&key_length, 1, MPI_INT, i, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-                // Receive the key
+                // Recibe las claves pide memoria
                 char *key = (char *)malloc(key_length);
                 MPI_Recv(key, key_length, MPI_CHAR, i, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-                // Receive the number of rows
+                // Recibe el numero de filas
                 size_t row_count;
                 MPI_Recv(&row_count, 1, MPI_UINT64_T, i, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-                // Receive the rows
+                // Recibe las filas pide memoria
                 char **rows = (char **)malloc(row_count * sizeof(char *));
                 for (size_t j = 0; j < row_count; j++) {
                     int row_length;
@@ -64,7 +64,7 @@ void master_code(int size, int num_hours_per_day, char** strings) {
                     double delay;
                     get_bus_stop_delay_from_row(rows[j], &bus_stop, &delay);
                     delay_map_insert(master_map, key, bus_stop, delay, rows[j]);
-                    // free(rows[j]);
+                    free(rows[j]);
                 }
 
                 free(rows);
@@ -103,14 +103,14 @@ void run_single_instance(int from_day, int num_days, int num_hours_per_day) {
     }
 
     if (delay_map == NULL){
-        free_string_array(directorios,num_hours_per_day);
+        free_string_array(directorios,num_days);
         return;
     }
 
     generate_csv(delay_map, sales_filename, output_filename);
 
     free_delay_map(delay_map);
-    free_string_array(directorios,num_hours_per_day);
+    free_string_array(directorios,num_days);
 
     fprintf(stderr,"All tasks completed.\n");
 }

@@ -71,7 +71,7 @@ int process_row(DelayMap* delay_map, char* line) {
     free(line_copy);
     return 1;
 }
-
+// Genera los atrasos a partir del archivo de salida de QGIS
 int map_delays(DelayMap* delay_map, char* filename) {
     fprintf(stderr, "ARCHIVO: %s \n", filename);
 
@@ -85,20 +85,23 @@ int map_delays(DelayMap* delay_map, char* filename) {
     size_t len = 0;
     size_t read;
 
-    // Read and skip the header line
+    // Lee y salta la cabecera
     if ((read = getline(&line, &len, file)) != -1);
 
-    // Ensure line is freed before the next read
+    // Asegurar que la linea se libera antes de la proxima lectura
     free(line);
     line = NULL;    
 
     while ((read = getline(&line, &len, file)) != -1) {
-        if (read <= 1) continue; // Skip empty lines
+        if (read <= 1){ 
+            free(line);
+            continue;
+        } // Salta las lineas vacias
         process_row(delay_map, line);
         free(line);
         line = NULL;
     }
-
+    free(line);
     fclose(file);
     return 1;
 }

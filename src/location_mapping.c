@@ -4,7 +4,7 @@
 #include <string.h>
 #include "location_mapping.h"
 
-const char* temp = "data/temp";
+const char* carpeta_temp = "data/temp";
 
 HashMap* group_schedules(char* horarios, int rank) {
     HashMap* vft_map = group_data_by_vft(horarios);
@@ -21,7 +21,9 @@ HashMap* group_schedules(char* horarios, int rank) {
 char* generate_file_name(const char* path, const char* file_name_prefix, char* fileName) {
     size_t len = strlen(fileName);
     char* date_from_filename = (char*)fileName + len - 10;
-
+    // path = 9 carpeta temp
+    // file_name_prefix = "vfd"
+    // fecha data/capturas/2024-06-10"
     size_t result_len = strlen(path) + strlen(file_name_prefix) + 17;
     char* result = (char*)malloc(result_len * sizeof(char));
     sprintf(result, "%s/%s_%s.csv", path, file_name_prefix, date_from_filename);
@@ -30,28 +32,36 @@ char* generate_file_name(const char* path, const char* file_name_prefix, char* f
 }
 
 int generate_vfd_file(char* date, HashMap* map) {
-    const char *vfd_filename = generate_file_name(temp, "vfd", date);
-    const char *capturas_filename = generate_file_name(temp, "capturas", date);
-    const char *horarios_filename = generate_file_name(temp, "horarios", date);
+    char *vfd_filename = generate_file_name(carpeta_temp, "vfd", date);
 
     FILE *vfd_file = fopen(vfd_filename, "w");
     if (!vfd_file) {
+        free(vfd_filename);
         perror("Failed to create vfd_file");
         return -1;
     }
+    
+    char *capturas_filename = generate_file_name(carpeta_temp, "capturas", date);
 
     FILE *capturas_file = fopen(capturas_filename, "w");
     if (!capturas_file) {
         perror("Failed create capturas file");
+        free(vfd_filename);
+        free(capturas_filename);
         fclose(vfd_file);
         return -1;
     }
+    
+    char *horarios_filename = generate_file_name(carpeta_temp, "horarios", date);
 
     FILE *horarios_file = fopen(horarios_filename, "w");
     if (!horarios_file) {
         perror("Failed to create horarios file");
         fclose(vfd_file);
         fclose(capturas_file);
+        free(vfd_filename);
+        free(capturas_filename);
+        free(horarios_filename);
         return -1;
     }
 
@@ -87,6 +97,9 @@ int generate_vfd_file(char* date, HashMap* map) {
     fclose(vfd_file);
     fclose(capturas_file);
     fclose(horarios_file);
+    free(vfd_filename);
+    free(capturas_filename);
+    free(horarios_filename);
     return 1;
 }
 

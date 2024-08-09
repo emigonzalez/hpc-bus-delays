@@ -54,14 +54,14 @@ TicketEntry *ticket_map_insert(TicketMap *map, const char *key, size_t passenger
         entry = entry->next;
     }
 
-    // If entry doesn't exist, create a new one
+    // Si la entry no existe la creo y la inserto
     if (entry == NULL) {
         entry = create_ticket_entry(key);
         if (prev == NULL) {
-            // Insert at the head of the bucket
+            // insera en la cabeza del bucket porque el mapa esta vacio
             map->buckets[bucket_index] = entry;
         } else {
-            // Insert after the previous entry
+            // Inserta al final de la lista
             prev->next = entry;
         }
         map->count++;

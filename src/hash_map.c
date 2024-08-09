@@ -52,9 +52,9 @@ void free_hash_map(HashMap *map) {
         while (entry != NULL) {
             Entry *temp = entry;
             entry = entry->next;
-            free(temp->key);
             free_entry_vfts(temp);
             free_entry_vfds(temp);
+            free(temp->key);
             free(temp);
         }
     }
@@ -154,7 +154,7 @@ Entry *find_or_create_entry(HashMap *map, const char *key) {
 
 Entry *insert_to_vfts(Entry *entry, const char *row) {
     // Allocate memory for a new row
-    char **temp = (char **)realloc(entry->vft_rows, (entry->vft_row_count + 1) * sizeof(char *));
+    char **temp = (char **)realloc(entry->vft_rows, (entry->vft_row_count + 2) * sizeof(char *));
     if (!temp) {
         fprintf(stderr, "Error: insert_to_vfts memory reallocation failed for vft_rows \n");
         return NULL;
@@ -168,12 +168,13 @@ Entry *insert_to_vfts(Entry *entry, const char *row) {
         return NULL;
     }
     entry->vft_row_count++;
+    entry->vft_rows[entry->vft_row_count] = NULL;
     return entry;
 }
 
 Entry *insert_to_vfds(Entry *entry, const char *row) {
     // Allocate memory for a new row
-    char **temp = (char **)realloc(entry->vfd_rows, (entry->vfd_row_count + 1) * sizeof(char *));
+    char **temp = (char **)realloc(entry->vfd_rows, (entry->vfd_row_count + 2) * sizeof(char *));
     if (!temp) {
         fprintf(stderr, "Error: insert_to_vfds memory reallocation failed for vfd_rows\n");
         return NULL;
@@ -187,6 +188,7 @@ Entry *insert_to_vfds(Entry *entry, const char *row) {
         return NULL;
     }
     entry->vfd_row_count++;
+    entry->vfd_rows[entry->vfd_row_count] = NULL;
     return entry;
 }
 
@@ -266,7 +268,7 @@ int compare_keys(const void *a, const void *b) {
 Entry** get_all_keys(HashMap *map, size_t *key_count) {
     *key_count = 0;
     
-    // First, count the number of entries
+    //primero cuento el numero de entradas
     for (size_t i = 0; i < map->size; ++i) {
         Entry *entry = map->buckets[i];
         while (entry != NULL) {
@@ -286,7 +288,7 @@ Entry** get_all_keys(HashMap *map, size_t *key_count) {
         return NULL;
     }
 
-    // Populate the array with entries
+    // reapunta los punteros a las claves
     size_t index = 0;
     for (size_t i = 0; i < map->size; ++i) {
         Entry *entry = map->buckets[i];
@@ -296,7 +298,7 @@ Entry** get_all_keys(HashMap *map, size_t *key_count) {
         }
     }
 
-    // Sort the keys alphabetically by the key field
+    // ordena alfabeticamente segun la clave
     qsort(keys, *key_count, sizeof(Entry *), compare_keys);
 
     return keys;

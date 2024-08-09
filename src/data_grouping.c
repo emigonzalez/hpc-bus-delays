@@ -192,6 +192,7 @@ char* create_vfd_key(char* line) {
         is_valid_departure_time(frecuencia) < 0 ||
         extreme_delay(fecha, frecuencia) > 0
     ) {
+        free(fecha2);
         return NULL; // saltar esta fila
     }
 
@@ -204,6 +205,7 @@ char* create_vfd_key(char* line) {
     char* key = (char*)malloc(key_length * sizeof(char));
     if (key == NULL) {
         fprintf(stderr, "Memory allocation failed on data_grouping.c -> create_vfd_key() \n");
+        free(fecha2);
         return NULL;
     }
 
@@ -310,6 +312,7 @@ HashMap* group_data_by_vft(char* filename) {
         // Add the row to the corresponding group
         if (key != NULL) {
             add_vft_to_map(map, key, line);
+            free(line);
             free(key);
         } else {
             free(line_copy);
@@ -317,11 +320,11 @@ HashMap* group_data_by_vft(char* filename) {
             continue;
         }
 
+        // free(line);
         free(line_copy); // Free the copy after processing
-        free(line);
         line = NULL;
     }
-
+    free(line);
     fclose(file);
 
     return map;
@@ -335,7 +338,10 @@ char* create_vft_from_vfd(char* vfd) {
     char* frecuencia = strtok(NULL, "_");
     char* date = strtok(NULL, "_");
 
-    if (variante == NULL || frecuencia == NULL || date == NULL) return NULL;
+    if (variante == NULL || frecuencia == NULL || date == NULL){
+        free(vfd_copy);
+        return NULL;
+     }
 
     int tipo_dia_int = date_to_date_type(date);
 
@@ -372,17 +378,20 @@ void group_data_by_vfd(char* filename, HashMap* vft_map, HashMap* vfd_map) {
 
     HashMap *discarded_vfds = create_hash_map();
 
-    // Read and skip the header line
+    // Lee y salta la fila inicial
     if ((read = getline(&line, &len, file)) != -1);
 
-    // Ensure line is freed before the next read
+    // Asegurar de liberar para la proxima iteracion
     free(line);
     line = NULL;
 
     while ((read = getline(&line, &len, file)) != -1) {
-        if (read <= 1) continue; // Skip empty lines
+        if (read <= 1) {
+            free(line);
+            continue; // Salta las lineas vacias
+        }
 
-        // Split the line into columns
+        // copia la linea
         char* line_copy = strdup(line);
         if (line_copy == NULL) {
             perror("Failed to duplicate line");
@@ -417,11 +426,11 @@ void group_data_by_vfd(char* filename, HashMap* vft_map, HashMap* vfd_map) {
             free(vfd_key);
         }
 
-        free(line_copy); // Free the copy after processing
+        free(line_copy); // Libera la copya luego del proceso
         free(line);
         line = NULL;
     }
-
+    free(line);
     fclose(file);
 
     free_hash_map(discarded_vfds);

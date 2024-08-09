@@ -14,21 +14,21 @@ void perform_task(int rank, char* assigned_days, int num_hours_per_day, DelayMap
     char* horarios = generate_schedule_file_name("data/horarios", atoi(day_str));
 
     if (horarios == NULL) {
-            free_string_array(capturas, num_hours_per_day);
+        free_string_array(capturas, num_hours_per_day);
         return;
     }
 
     HashMap* vft_map = group_schedules(horarios, rank);
 
     if (vft_map == NULL) {
-            free_string_array(capturas, num_hours_per_day);
+        free_string_array(capturas, num_hours_per_day);
         free(horarios);
         return;
     }
 
     HashMap* vfd_map = create_hash_map();
 
-    // Iterate over each location file
+    // Iterar sobre los archivos de las capturas
     for (int j = 0; j < num_hours_per_day; j++) {
         // Generate VFD map and all fields to be picked by Python script
         int ok = map_locations_to_schedules(capturas[j], assigned_days, vft_map, vfd_map);
@@ -40,6 +40,7 @@ void perform_task(int rank, char* assigned_days, int num_hours_per_day, DelayMap
         printf(" %s \n", capturas[j] + len - 28);
 
     }
+
     // printf("VFD HashMap (Buckets: %zu, Keys: %zu)       ", vfd_map->size, vfd_map->count);
 
     // Run Python script
@@ -48,7 +49,7 @@ void perform_task(int rank, char* assigned_days, int num_hours_per_day, DelayMap
     char* delay_file = generate_delay_file_name("data/retrasos", atoi(day_str));
     map_delays(delay_map, delay_file);
 
-        fprintf(stderr,"####### FINALIZADO ATRASOS PROCESO %d PARA LA CARPETA: %s ########\n", rank, delay_file);
+        // fprintf(stderr,"####### FINALIZADO ATRASOS PROCESO %d PARA LA CARPETA: %s ########\n", rank, delay_file);
         // Free the allocated memory
 
         free(delay_file); delay_file = NULL;

@@ -61,12 +61,16 @@ TicketMap* group_tickets(const char* filename) {
     line = NULL;
 
     while ((read = getline(&line, &len, file)) != -1) {
-        if (read <= 1) continue; // Skip empty lines
+        if (read <= 1) {
+            free(line);
+            continue;
+        } // salta lineas en blanco
 
         // Split the line into columns
         char* line_copy = strdup(line);
         if (line_copy == NULL) {
             perror("Failed to duplicate line");
+            free(line);
             continue;
         }
 
@@ -79,14 +83,15 @@ TicketMap* group_tickets(const char* filename) {
         if (key != NULL) {
             ticket_map_insert(ticket_map, key, passenger_count);
             free(key);
-        } else {
-            free(line_copy);
-            free(line);
-            line = NULL;
-            continue;
-        }
+        } 
+        // else {
+        //     free(line_copy);
+        //     free(line);
+        //     line = NULL;
+        //     continue;
+        // }
 
-        free(line_copy); // Free the copy after processing
+        free(line_copy); // libera la copia luego de procesarla
         free(line);
         line = NULL;
     }
@@ -130,10 +135,12 @@ DelayMap* summarize_delays(DelayMap* delay_map) {
             char* fecha = strtok(fecha_hora_paso, " ");
 
             if (atof(retraso) < 0 || atof(retraso) > 50) {
+                free(buffer);
                 continue;
             }
 
             size_t key_length = strlen(fecha) + strlen(variante) + strlen(cod_parada) + 3; // "<v>_<f>_<p>\0"
+            // pido memoria para la clave
             char* key = (char*)malloc(key_length * sizeof(char));
 
             // Create the vft keydate
@@ -145,6 +152,7 @@ DelayMap* summarize_delays(DelayMap* delay_map) {
             char r[100]; 
 
             if (exist != NULL) {
+                // acumula atraso
                 double retraso_d = exist->max_delay + atof(retraso);
                 sprintf(r, "%f", retraso_d); 
             } else {
@@ -153,7 +161,7 @@ DelayMap* summarize_delays(DelayMap* delay_map) {
 
             size_t row_len = strlen(fecha) + strlen(variante) + strlen(r) + strlen(X) + strlen(Y) + strlen(cod_parada) + 5;
             char* new_row = (char*)malloc(row_len * sizeof(char));
-            char* new_Y = copy_string(Y); // Remove line break
+            char* new_Y = copy_string(Y); // Remueve fin de linea 
             sprintf(new_row, "%s,%s,%s,%s,%s,%s", fecha, variante, r, cod_parada, X, new_Y); 
             delay_map_insert_row(new_map, key, new_row);
             free(new_row);
@@ -178,6 +186,8 @@ void generate_csv(DelayMap* delay_map, const char* sales_filename, const char* o
     FILE *file = fopen(output_filename, "w");
     if (!file) {
         perror("Failed to create file");
+        free_delay_map(new_delay);
+        free_ticket_map(ticket_map);
         return;
     }
 
@@ -188,7 +198,8 @@ void generate_csv(DelayMap* delay_map, const char* sales_filename, const char* o
 
     size_t key_count;
     DelayEntry** entries = delay_map_get_all_keys(new_delay, &key_count);
-
+    
+    // llena el csv
     for (size_t i = 0; i < key_count; i++) {
         TicketEntry* ticket_entry = ticket_map_search(ticket_map, entries[i]->key);
         if (ticket_entry != NULL) {
@@ -202,6 +213,7 @@ void generate_csv(DelayMap* delay_map, const char* sales_filename, const char* o
     fprintf(stderr,"  CSV GENERADO     \n");
 
     free(entries);
-    free_delay_map(new_delay);
+    fclose(file);
     free_ticket_map(ticket_map);
+    free_delay_map(new_delay);
 }

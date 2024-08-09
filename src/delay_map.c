@@ -83,13 +83,14 @@ void insert_sorted(DelayEntry *entry, Delay *new_delay) {
         new_rows[i] = entry->rows[i];
     }
 
-    // Insert in sorted order
+    // Inserta ordenadao la fila
     new_rows[i] = new_delay;
+    // METE TODOS LOS RESTANTES
     for (; i < entry->row_count; i++) {
         new_rows[i + 1] = entry->rows[i];
     }
 
-    // free(entry->rows);
+    free(entry->rows);
     entry->rows = new_rows;
     entry->row_count++;
 }
@@ -98,7 +99,7 @@ DelayEntry *delay_map_insert_row(DelayMap *map, const char *key, const char *row
     unsigned long index = create_hash(key, map->size);
     DelayEntry *entry = map->buckets[index];
     DelayEntry *prev = NULL;
-
+    // camino por el entradas
     while (entry != NULL && strcmp(entry->key, key) != 0) {
         prev = entry;
         entry = entry->next;
@@ -113,6 +114,10 @@ DelayEntry *delay_map_insert_row(DelayMap *map, const char *key, const char *row
         }
         map->count++;
     }
+    else{
+        free(entry->row);
+    }
+
 
     entry->row = strdup(row);
     return entry;
@@ -181,6 +186,7 @@ void free_delay_map(DelayMap *map) {
                     free(temp->rows[j]);
                 }
                 free(temp->rows);
+                if (temp->row != NULL) free(temp->row);
                 free(temp);
             }
         }

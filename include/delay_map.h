@@ -10,7 +10,7 @@
 
 typedef struct Delay {
     size_t bus_stop;
-    double delay; // delay in minutes
+    double delay; // atraso en minutos 
     char* row;
 } Delay;
 
