@@ -350,10 +350,10 @@
 \usepackage[spanish]{babel}
 \usepackage{url}
 \usepackage{graphicx}
+\graphicspath{ {images/} }
 \usepackage[utf8]{inputenc}
 \usepackage{multirow}
 
-% \graphicspath{{/}}
 
 \begin{document}
 %
@@ -472,17 +472,17 @@ El presente artículo trata sobre el análisis de los retrasos en los horarios d
 % 
 % Here we have the typical use of a "T" for an initial drop letter
 % and "HIS" in caps to complete the first word.
-\IEEEPARstart{A}{} partir de los principios para el manejo de los datos abiertos en el gobierno \cite{principios} traducción de la intendencia de Montevideo (IM) \cite{datos-abiertos} , pone a disposición  de la ciudadanía la mayor parte de los datos públicos que esta maneja, para que puedan ser procesados por cualquier ciudadano, investigador, periodista, universidades y organizaciones nacionales y extranjeras \cite{areas-tematicas}, estos datos figuran tanto en la página de la IM \cite{ckan}, como en el catálogo de datos abiertos del Gobierno uruguayo \cite{catalogo-datos}.
+\IEEEPARstart{A}{} partir de los principios para el manejo de los datos abiertos en el gobierno, \cite{principios} \cite{datos-abiertos} la intendencia de Montevideo (IM) pone a disposición de la ciudadanía la mayor parte de los datos públicos que ésta maneja, para que puedan ser procesados por cualquier ciudadano, investigador, periodista, universidades y organizaciones nacionales y extranjeras \cite{areas-tematicas}. Estos datos figuran tanto en la página de la IM \cite{ckan}, como en el catálogo de datos abiertos del Gobierno uruguayo \cite{catalogo-datos}.
 
 % You must have at least 2 lines in the paragraph with the drop letter
 % (should never be an issue)
-A partir de estos mismos datos, la IM publica datos estadísticos sobre el desarrollo de ciertas áreas de interés \cite{montevidata}, donde la movilidad en todos su aspectos ha sido relevante el los últimos años \cite{movilidad}, en particular con la inclusión del sistema de transporte público metropolitano STM y su consiguiente digitalización y utilización de tarjetas de tipo MIFARE \cite{mifare} y la utilización de GPS para el posicionamiento de los vehículos, han ofrecido muchas posibilidades de  procesamiento  posterior a partir de las ventas y el seguimiento de los autobuses en su recorrido por la ciudad.
+A partir de estos mismos datos, la IM publica datos estadísticos sobre el desarrollo de ciertas áreas de interés \cite{montevidata}, donde la movilidad en todos su aspectos ha sido relevante el los últimos años \cite{movilidad}. En particular, con la inclusión del sistema de transporte público metropolitano STM y su consiguiente digitalización y utilización de tarjetas de tipo MIFARE \cite{mifare}, sumado a la utilización de GPS para el posicionamiento de los vehículos, han ofrecido muchas posibilidades de  procesamiento  posterior a partir de las ventas y el seguimiento de los autobuses en su recorrido por la ciudad.
 
-A partir de los datos abiertos publicados y de la captura de datos mediante la API propuesta por la IM \cite{api-im}, se propone calcular el retraso de los buses del sistema STM en Montevideo durante el mes de junio de 2024, luego relacionar estos datos con los datos históricos de la ventas en junio de años anteriores para lograr inferir a qué cantidad de personas afecta ese retraso, otras posibles métricas a mostrar podrían ser las paradas con más atraso, la distribución de los atrasos en el correr del día o en el mes, entre otras.
+A partir de los datos abiertos publicados y de la captura de datos mediante la API propuesta por la IM \cite{api-im}, se propone calcular el retraso de los buses del sistema STM en Montevideo durante el mes de junio de 2024, luego relacionar estos datos con los datos de la ventas de boletos en junio del mismo año, con el fin de lograr inferir a qué cantidad de personas afecta ese retraso. Otras posibles métricas a mostrar podrían ser las paradas con más atraso, la distribución de los atrasos en el correr del día o en el mes, entre otras.
 
-Realizamos a partir de la API de la IM, una captura cada 20 segundos en todo el mes de junio de 2024, de la ubicación de los buses en tiempo real. A su vez, capturamos diariamente los datos de los horarios estimados de pasada, por cada parada para cada variante y por tipo de día (hábil, sábado y domingo), esto lo hacemos por cualquier cambio eventual en los horarios al correr del mes.
+Realizamos a partir de la API de la IM, una captura cada 20 segundos de la ubicación de los buses en tiempo real en todo el mes de junio de 2024. A su vez, capturamos diariamente los datos de los horarios estimados de pasada, por cada parada para cada variante y por tipo de día (hábil, sábado y domingo). Esto lo hacemos por cualquier cambio eventual en los horarios al correr del mes.
 
-Además, vamos a utilizar los datos de ventas de boletos en junio de 2022 y 2023, ya que no contaremos de forma inmediata con los datos del presente año. Con estos datos y el procesamiento de retrasos de buses, podemos saber cuántas personas por parada por día son afectadas por este retraso.
+Además, vamos a utilizar los datos de ventas de boletos en el mes de junio del mismo año. Con estos datos y el procesamiento de retrasos de buses, podemos saber cuántas personas por parada por día son afectadas por este retraso.
 
 % \subsection{Subsection Heading Here}
 % Subsection text here.
@@ -592,18 +592,18 @@ Además, vamos a utilizar los datos de ventas de boletos en junio de 2022 y 2023
 
 \section{Implementación de la Solución}
 \subsection{Justificación de usar HPC}
-Cómo se realizará una captura cada 20 segundos durante 30 días. Esto nos da un total de 129600 capturas en total, como existe un promedio de unos 400 buses por captura (máximos de 1500 buses mínimos de 50). Por lo tanto, se necesita procesar unos 52 millones de registros aproximadamente para el mes de junio.
-En estos registros figuran la variante de la línea, la hora de salida de la terminal (llamado por la IM frecuencia), el número de coche, la ubicación geográfica entre otros datos relevantes. Recorriendo estos datos, se pretende calcular el atraso con la hora de pasada prevista para cada parada, este dato de  los horarios, se encuentran en otro archivo que cuenta con unas 2.5 millones de líneas. Encontrar la hora de pasada por cada parada, para determinada variante frecuencia y día en particular, implica un esfuerzo computacional considerable, lo que lleva a una tiempo prolongado de ejecución, si esta se realiza de forma secuencial. Otro detalle adicional a considerar es que la ubicación geográfica de las capturas de GPS se encuentra en formato WGS84 (EPSG:4326) mientras que los datos de los horarios junto con las ubicaciones de las paradas se encuentra en formato UTM 21S (EPSG:32721). Esta transformación necesaria, agrega más tiempo al procesamiento .
+Realizamos una captura cada 20 segundos durante 30 días. Esto nos da un total de 129600 capturas en total y un promedio de unos 400 buses por captura (máximos de 1500 buses mínimos de 50). Por lo tanto, se necesita procesar unos 52 millones de registros aproximadamente para el mes de junio.
+En estos registros figuran la variante de la línea, la hora de salida de la terminal (llamado por la IM frecuencia), el número de coche, la ubicación geográfica entre otros datos relevantes. Además, descargamos diariamente los archivos de horarios que se encuentra en la web de datos abiertos de la IM, por lo que contamos con 30 archivos de horarios distintos (uno por cada día del mes de junio del 2024). Es de hacer notar, que cada archivo de horarios cuenta con unas 2.5 millones de líneas. Recorriendo los datos de capturas y horarios, se pretende calcular el atraso con la hora de pasada prevista para cada parada. Encontrar la hora de pasada por cada parada, para determinada variante frecuencia y día en particular, implica un esfuerzo computacional considerable, lo que lleva a un tiempo prolongado de ejecución, si este se realiza de forma secuencial. Otro detalle adicional a considerar, es que la ubicación geográfica de las capturas de GPS se encuentra en formato WGS84 (EPSG:4326), mientras que los datos de los horarios junto con las ubicaciones de las paradas se encuentra en formato UTM 21S (EPSG:32721). Esta transformación necesaria, agrega más tiempo al procesamiento.
 
 \subsection{Pre-procesamiento de los datos}
-El archivo que la IM brinda para los horarios por paradas, no están geo-referenciados, para no aumentar el cómputo, se agregan a este archivo los campos de las coordenadas que brinda la IM para cada parada, que figura en en los datos abiertos de la IM \cite{paradas}
+Los archivos que la IM brinda para los horarios por paradas no están geo-referenciados. Para no aumentar el cómputo, se agregan a estos archivos, los campos de las coordenadas que brinda la IM para cada parada que figura en los datos abiertos de la IM. \cite{paradas}
 
 \subsection{Estrategia de resolución}
 Para el análisis utilizaremos estos dos términos: 
 
 \begin{itemize}
-  \item VFD (Variante,frecuencia,  dia): \\Representa de forma única, una variante de bus, una hora de partida desde el origen (llamada por la IM frecuencia) y una fecha determinada. Por ejemplo: variante \#4735 (191 - Punta Carretas), 19020 (19:02 hrs), 01/06/2024, corresponde al VFD 4735-19020-01/06/2024, estos datos se procesarán desde el archivo de capturas.
-  \item VFT (Variante, frecuencia, tipo de día): \\Representa de forma única una variante de bus, una hora de partida desde el origen, y un tipo de día (habil=1, sábado=2, domingo=3). Por ejemplo: 4735-19020-1, este dato se procesará desde el archivo de horarios.
+  \item VFD (Variante, frecuencia,  día): \\Representa de forma única, una variante de bus, una hora de partida desde el origen (llamada por la IM frecuencia) y una fecha determinada. Por ejemplo: variante \#4735 (191 - Punta Carretas), 19020 (19:02 horas), 01/06/2024, corresponde al VFD 4735-19020-01/06/2024, estos datos se procesarán desde el archivo de capturas.
+  \item VFT (Variante, frecuencia, tipo de día): \\Representa de forma única una variante de bus, una hora de partida desde el origen, y un tipo de día (hábil=1, sábado=2, domingo=3). Por ejemplo: 4735-19020-1, este dato se procesará desde el archivo de horarios.
 \end{itemize}
 
 \begin{figure}
@@ -612,79 +612,149 @@ Para el análisis utilizaremos estos dos términos:
   \caption{Esquema de resolución}
 \end{figure}
 
-El esquema de la figura 1 retrata la estrategia de resolución. En este esquema:\\
-El proceso master divide inicialmente el conjunto de datos entre los procesos esclavos utilizando MPI. Para eso, los datos se agrupan en carpetas, una por cada dia , se analizo los datos, y se creeyo conviente agrupar los 24 archivos de horarios por dia en carpetas. Inicialmente, se penso en la colaboracion entre los esclavos para el analisis delos VFT que esta procesando y la posibilidad de compartirlo con otros esclavos, pero debido a la alta velocidad que un nodo era capa de agrupar en VFT, se descarto esa posbilidad, ya que generaria un overhead importante en las comunicaiones, generando atrasos. Se opto entonces, en que cada nodo analice el archivo de horarios que le corresponde a cada bloque. 
-Los esclavos primero agrupan por VFD, y para cada VFD consiguen los datos del VFT correspondiente en el archivo de horarios, generando un archivo temporal que luego sera enviado a un proceso que corre en Python y utiliza bibliotecas de PyQGIS. Este una vez retornado los atrasos correspondiente, para cada parada en las que existen capturas cercanas, eliminan todo tipo de capa o memoria que pudo haber utilizado el QGIS.
-Al final del procesameinto del bloque, los esclavos retornan sus resultados al master, pero antes hace un preprocesamiento, para sacar datos incongruentes que surgen a partir del calculo de los atrasos. 
+En el proceso de capturas de ubicaciones de buses, generamos un archivo CSV con las capturas en el rango de una hora. Deberíamos contar con un total de 720 archivos (24 horas por 30 días). Sin embargo, debido a caídas en el sistema que creamos para la captura de datos, sumados a fallas en la API de la IM, se capturaron 702 archivos completos y 3 archivos parciales, resultando en una falta de 5 archivos de capturas lo que resulta en un 98\% de capturas aproximadamente. \\
 
-Para la implementación se utilizó un modelo maestro/esclavo usando un esquema de descomposición de dominio. Esta implementación se realizo  en C/C++ con la biblioteca MPI.
+El esquema de la figura 1 retrata la estrategia de resolución. Para la implementación se utilizó un modelo maestro/esclavo usando un esquema de descomposición de dominio. Esta implementación se realizo en C con la biblioteca MPI.
 
-Cada proceso esclavo realiza un procesamiento de los datos asignados agrupando por VFD y así obteniendo los retrasos para las paradas correspondientes. En gran parte debido a que los procesos llevarian gran parte del tiempo de computo, se pensó en preprocesar el archivo de ventas, este por su parte no se tomo de junio de años anteriores como se pensaba en un primer momento.  Debido en el atraso en la publicación de los datos, por suerte pudimos contar con las ventas de pasajes en el mes de junio casi al final del mes de julio del presente año. Con estos números, se tiene una idea de a que cantidad gente afecta los atrasos.
+Los datos se agrupan en directorios,para las capturas es uno por cada día (al cual le llamamos bloque), por su parte los horarios se guardaran en un directorio, donde el nombre denota el día al que pertenece. Cada proceso procesara al menos un bloque, con su correspondiente horario. El proceso master divide de forma equitativa, la ruta de los directorios entre los procesos esclavos, utilizando para esto MPI Scatter.
+Tanto el master como los esclavos primero agrupan las capturas de sus bloques asignados por VFD, y para cada VFD consiguen los datos del VFT , desde el archivo de horarios correspondiente, generando archivos temporales que luego serán utilizado por el algoritmo caja negra. Este algoritmo consta de un script en Python que utiliza bibliotecas de PyQGIS para el calculo de atrasos. Este algoritmo, retorna los atrasos correspondientes para cada parada en las que existen capturas cercanas y luego elimina todo tipo de capa o memoria que pudo haber utilizado el QGIS.
+Al final del procesamiento de cada bloque, los esclavos retornan sus resultados al master, pero antes realizan un pre-procesamiento para sacar datos incongruentes que surgen a partir del calculo de los atrasos. 
 
-Los datos obtenidos desde la API se dividieron por bloques de 24 horas. Estos bloques son distribuidos dependiendo de la cantidad de procesos con los que se cuente, pero para poder controlar el correcto funcionamiento de los nodos, con las pruebas realizadas, se determino que, la cantidad de bloques (días) a distribuir sera de una unidad. Con las medidas realizadas. se llega a que la contabilizacion de unas 24 horas de un día, insume aproximadamente media hora. Por tal motivo, la cantidad de bloques que se distribuirá, se dará por vez a cada uno, esto en vistas de analizar las posibles caídas del sistema y poder tener un parcial de los atrasos cumputados.
-Inicialmente, se pensó en separar por bloques desde las 3 AM (aproximadamente), los datos serian divididos entre bloques de 24 horas hasta las 2 AM del día siguiente, pero debido al poco timpo en que realizamos las pruebas, optamos por separar en bloques *carpetas* con las 24 horas del dia. De igual manera, los horarios de los buses cambian todos los dias, asi que generaromos un archivo pora cada dia. Como el archivo de Python procesara todo un dia, al final del procesamiento hecho por el codigo en C, los VFD parciales se limitaran a los datos que luego una el master.
+Una vez procesados los atrasos de todo el mes, el proceso master sumariza los retrasos y los cruza con los datos de las ventas de boletos del mismo mes,para cada variante, parada y día, con el fin de calcular la cantidad de personas afectadas en cada parada por los retrasos en las lineas. Inicialmente consideramos procesar los archivos de ventas de Junio de años anteriores, debido al atraso en la publicación de los datos. Afortunadamente, pudimos contar con las ventas de pasajes en el mes de Junio del presente año. Con estos números, se tiene una idea de a que cantidad gente afecta los atrasos.
+
+Los datos obtenidos desde la API se dividieron por bloques de 24 horas. Estos bloques son distribuidos dependiendo de la cantidad de procesos con los que se cuente, pero para poder controlar el correcto funcionamiento de los nodos, con las pruebas realizadas, se determino que, la cantidad de bloques (días) a distribuir sera de una unidad. Con las medidas realizadas, se llega a que la contabilizacion de las 24 horas de un día, insume aproximadamente media hora.
 
 Cada proceso deberá ordenar los datos por VFD antes de procesarlos. Esto hará que cada uno de ellos cuente con datos totales o parciales para determinado VFD. Luego del ordenamiento se realizará el procesamiento de los datos.
 
+Inicialmente, se pensó en separar por bloques desde las 3 AM (aproximadamente), los datos serian divididos entre bloques de 24 horas hasta las 2 AM del día siguiente, pero debido al poco tiempo en que realizamos las pruebas, optamos por separar en bloques (carpetas) con las 24 horas del día. De igual manera, los horarios de los buses cambian todos los días, así que generaremos un archivo para cada día. Como el archivo de Python procesara todo un día, al final del procesamiento hecho por el código en C, los VFD parciales serán procesados por el master una vez reciba los datos de los esclavos.
+
 Se implementaron dos algoritmos: uno para procesar el
-conjunto de datos en cada proceso (ordenar en VFDs y obtener VFTs), esta implementación se realiza en C y luego se utiliza para el cálculo de la demora, un script de Python utilizando librerías de QGIS \cite{qgis}, que realiza las siguientes tareas: transformar las coordenadas de las paradas del VFT de los sistemas WGS84 a UTM 21S, determinar qué paradas del VFT serán cubiertas por el recorrido del VFD (ya que pueden ser parciales). Luego, para estas paradas válidas se calcula la hora de pasada utilizando para ellos los dos registros más cercanos, retornando así la demora en minutos para cada parada e incluyendo datos relevantes para un posterior análisis . 
+conjunto de datos en cada proceso (ordenar en VFDs y obtener VFTs), esta implementación se realiza en C y luego se utiliza para el cálculo de la demora, un script de Python utilizando librerías de QGIS \cite{qgis}, que realiza las siguientes tareas: transformar las coordenadas de las paradas del VFT de los sistemas WGS84 a UTM 21S, determinar qué paradas del VFT serán cubiertas por el recorrido del VFD (ya que pueden ser parciales). Luego, para estas paradas válidas se calcula la hora de pasada utilizando para ellos los dos registros más cercanos, retornando así la demora en minutos para cada parada e incluyendo datos relevantes para un posterior análisis. 
 
 \subsection{Post-procesamiento de los resultados}
-Una vez el nodo termina de analizar el bloque , la informacion la procesa y se la envia al master, este a su vez mergea los datos para devolver la demora para cada parada para cada dia, variante y enlaza estos datos con la cantidad de personas por parada, que se estima afecta este retraso.
+Una vez el nodo termina de analizar el bloque, la información la procesa y se la envía al master. Este a su vez, fusiona los datos para devolver la demora para cada parada para cada día, variante y enlaza estos datos con la cantidad de vetas por parada, para de esta forma estimar como afecta este retraso.
+
+Es importante hacer notar que todo este mecanismo aplica cuando la aplicación se corre con mas de un proceso. En el caso de ejecutar con un único proceso, su ejecución sera secuencial.
 
 \section{Análisis experimental}
+\subsection{Escalabilidad}
+\begin{itemize}
+\item Comunicación entre procesos:\\
+La comunicación entre procesos se realiza al estilo rendevous, donde cada esclavo envía sus resultados calculados para cada día, utilizando un barrier para sincronizar los procesos y luego realizando envíos bloqueantes al master. 
+\item Balance de carga:\\
+Se utiliza una arquitectura de maestro-esclavo, donde el maestro distribuye los bloques de forma equitativa entre los esclavos utilizando MPI Scatter. 
+\item Granularidad:\\
+La granularidad esta definida por día de capturas 
+y horarios, con el fin de minimizar los cálculos parciales de atrasos en el recorrido y evitar posibles números erróneos.
+\end{itemize}
 \subsection{Rendimiento}
 Para evaluar el rendimiento del sistema se calcularán diferentes métricas:
 \begin{itemize}
-\item tiempo de ejecución.
-\item speedup logarítmico.
-\item eficiencia.
-\item paralelicidad.
+\item Tiempo de ejecución en minutos (TE).
+\item Speedup logarítmico.
+\item Eficiencia.
 \end{itemize}
-Cada una de estas métricas se van a calcular sobre diversas cantidades de nodos, e hilos dentro de cada nodo. En la siguiente tabla se observan los resultados de los datos: 
+Como ya se menciono anteriormente, en el caso de ejecución con un único proceso, esta se realiza de forma secuencial lo que implica que las métricas se basen en calculo de Speedup algorítmico y no de paralelidad.
 
-\begin{figure}
+\subsection{Evaluación experimental}
+Cada una de estas métricas se calcularon sobre diversas cantidades de procesos. En la siguiente tabla de la figura \ref{fig:table} se observan los resultados de los datos:
+
+\begin{figure}[h]
 \begin{tabular}{ |c|c|c|c|c|c| } 
 \hline
-Nodo & Hilos & TE & Speedup & Eficiencia & Paralelicidad \\
+Nodos & Procesos & TE & Speedup & Eficiencia \\
 \hline
-1 & 1 & X & X & X  & X \\
+1 & 1 & 293 & 1 & 1  \\
 \hline
-1 & 2 & X & X & X  & X \\
+2 & 2 & 276 & 1,06 & 0,53  \\
 \hline
-1 & 4 & X & X & X  & X \\
+3 & 3 & 261 & 1,12 & 0,37  \\
 \hline
-2 & 4 & X & X & X  & X \\
+5 & 5 & 228 & 1,29 & 0,26  \\
 \hline
-3 & 4 & X & X & X  & X \\
+6 & 6 & 214 & 1,36 & 0,23  \\
 \hline
-4 & 4 & X & X & X  & X \\
+15 & 15 & 170 & 1,72 & 0,11  \\
 \hline
-5 & 4 & X & X & X  & X \\
-\hline
-6 & 4 & X & X & X  & X \\
+30 & 30 & 104 & 2,8 & 0,09  \\
 \hline
 \end{tabular}
 \caption{Tabla de resultado de los datos}
+\label{fig:table}
 \end{figure}
 
-\subsection{Escalabilidad}
+En el gráfico de la figura \ref{fig:speedup}, podemos observar los valores de speedup calculados versus la función lineal:
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.48\textwidth]{speedup}
+    \caption{Gráfica del speedup}
+    \label{fig:speedup}
+\end{figure}
+
+\subsection{Discusión de resultados experimentales}
+Notamos que corremos un proceso por nodo debido a que el algoritmo de Python que corre QGIS consume una gran cantidad de recursos de memoria (memory-bound). Además, la cantidad de procesos/nodos es divisor de la cantidad de bloques asignados debido a la limitación del MPI Scatter convencional. Otro detalle a mencionar es que, dado que la granularidad esta dada a nivel de bloques, correr la aplicación con mas de 30 procesos seria contraproducente debido que los procesos quedarían ociosos ya que no tendrían tareas a realizar.
+
+Mediante los cálculos de tiempo estimado, speedup y eficiencia notamos que el rendimiento del sistema no mejora de manera deseada a medida que aumenta la cantidad de procesos. Creemos que esto sucede en parte por estas razones:
 \begin{itemize}
-\item Comunicación entre procesos\\
-Con el fin de minimizar el overhead existente para la comunicación entre procesos, se podría utilizar comunicación asincrónica, para reducir los tiempos ociosos. 
-\item Balance de carga.\\
-Se utilizará una arquitectura de maestro-esclavo, donde el maestro distribuye las tareas de forma dinámica entre los esclavos utilizando MPI. Cada esclavo utilizará OpenMP para paralelizar la tarea en múltiples hilos. 
-\item Granularidad\\
-Según se experimente, se hará la división y distribución con una granularidad que no utilice de forma intensiva la red, para no comprometer la eficiencia y tampoco que los procesos analicen bloques muy grandes de información por vez.
+\item La imposibilidad de correr mas de un proceso por nodo debido al gran consumo de memoria del algoritmo en PyQGIS.
+\item El overhead de comunicación entre los esclavos y el master para recolectar los retrasos.
+\item Cálculos extra realizados por el proceso master que se podrían haber paralelizado como por ejemplo la asociación de retrasos con ventas del mismo mes, debido a que lamentablemente por falta de tiempo, no pudimos implementarlo de forma paralela.
 \end{itemize}
 
-\subsection{Tolerancia a fallos}
-Se implementarán checkpoints para que el maestro esté al tanto del estado de cada esclavo o procesos dentro de este, para poder reasignar recursos hacia los esclavos que se van liberando o incluso matar procesos y asignar esa tarea a uno nuevo, en caso de ser necesario.
-\subsection{Evaluación experimental}
-\subsection{Discusión de resultados experimentales}
+\subsection{Posibles mejoras a realizar}
+Dentro de las posibles mejoras a realizar para mejorar la performance del sistema, se encuentran:
+\begin{itemize}
+\item Disminuir la cantidad de datos con la cual se ejecuta el algoritmo PyQGIS con el fin de disminuir el consumo de memoria y poder ejecutar mas de un proceso por nodo, aprovechando las ventajas de la localidad.
+\item Paralelizar en lo posible, tareas existentes que se realizan de forma secuencial.
+\item Utilización de ventanas de memoria compartida entre procesos. Esto se intento realizar de forma fallida.
+\item Utilizar MPI Gather para recolectar los resultados de los esclavos en vez de sincronización y comunicación bloqueantes del estilo rendevous.
+\end{itemize}
+
 \section{Resultados obtenidos y Conclusiones}
 \subsection{Resultados del procesamiento}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.48\textwidth]{Retraso2}
+    \caption{Mapa de calor con los atrasos}
+    \label{fig:map1}
+\end{figure}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.48\textwidth]{Pasajeros_v2}
+    \caption{Mapa de calor con los pasajeros afectados por los retrasos}
+    \label{fig:map2}
+\end{figure}
+
+Si observamos los mapas de calor de retrasos por parada de ómnibus (Figura \ref{fig:map1}) y venta de boletos en esas paradas (Figura \ref{fig:map2}), se puede ver que los focos de mayor retraso coinciden con mayores ventas.
+\newline
+
+Como muestra la Figura \ref{fig:map6}, los barrios mas afectados por los atrasos de los ómnibus son Centro, Cordón, La Unión, Aguada, La Blanqueada y Belvedere.
+\newline
+Y las avenidas con mas atrasos son 18 de Julio, 8 de Octubre, Agraciada y Carlos María Ramírez.
+\newline
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.48\textwidth]{Focos_fuertes}
+    \caption{Mapa de calor con focos de los atrasos}
+    \label{fig:map6}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.48\textwidth]{graficoAtrasosCategorizado}
+    \caption{Gráfico que muestra el porcentaje de personas afectadas por determinados minutos de retraso}
+    \label{fig:atrasos}
+\end{figure}
+
+En la figura \ref{fig:atrasos} se muestra , para las personas afectadas por los retrasos, que porcentaje  de estas se distribuidas por grupos de atrasos. Observando la gráfica, podemos notar que la mayoría de retrasos son de menos de 5 minutos. Sin embargo, existe una cantidad considerable de retrasos de hasta 10 minutos.
+
 \subsection{Conclusiones}
+En este informe, hemos mostrado la efectividad del uso de técnicas de programación paralela para procesar grandes volúmenes de datos relacionados con los retrasos en el sistema de transporte metropolitano de Montevideo. La implementación de un enfoque distribuido en los sistemas de cómputo disponibles en la Facultad de Ingeniería permitió procesar los datos de manera más eficiente, reduciendo de cierta manera el tiempo de cálculo en comparación con enfoques secuenciales.
+
+Los resultados obtenidos revelan patrones importantes en los retrasos de las líneas de buses, identificando tanto las zonas con atraso,como las corredores más afectadas. Estos hallazgos podrían ser útiles para la Intendencia de Montevideo y las empresas de transporte publico en la planificación de mejoras, ya sea en la red , en los horarios, y las ubicaciones de las paradas, para descongestionar el uso intensivo de estas y para con ello optimizar la puntualidad del servicio.
 
 % if have a single appendix:
 %\appendix[Proof of the Zonklar Equations]
@@ -830,3 +900,5 @@ URL: \url{https://www.qgis.org/es/site/about/index.html}
 
 % that's all folks
 \end{document}
+
+
